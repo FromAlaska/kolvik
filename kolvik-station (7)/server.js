@@ -1,0 +1,538 @@
+'use strict';
+// Kolvik Station game server.
+// Serves the page, keeps accounts and saves, runs lobbies and chat, keeps a leaderboard, and relays
+// raid traffic between players. Every connected player has one WebSocket for all of it.
+// In a raid, one player simulates the AI (the "host"); the server hands that job on if they leave.
+// Loot pickups are settled first-come on the server.
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { WebSocketServer } = require('ws');
+
+const PORT = Number(process.env.PORT) || 8080;
+const MAX_PLAYERS = Number(process.env.MAX_PLAYERS) || 8;
+const DUR = { kolvik: 540, whiteout: 420, vault: 360, skarsvik: 900, ironfjord: 600, ravnskar: 780, hrimfell: 720, storvidda: 900, skerries: 1200, kaldfjord: 1800 };
+const TEAM_MAPS = new Set(['skerries']);
+// co-op maps: everyone in the raid is on the same side (no player damage; revives and downed looting for all)
+const COOP_MAPS = new Set(['ravnskar']);
+const DIFFS = new Set(['normal', 'hard', 'brutal']);
+// PvP-only maps: no AI, so a raid needs at least two sides (players not in the same squad)
+const PVP_MAPS = new Set(['ironfjord', 'hrimfell']);
+const MAP_NAMES = { kolvik: 'Kolvik Station', whiteout: 'Whiteout', vault: 'Black Ice Vault', skarsvik: 'Skarsvik Island', ironfjord: 'Ironfjord Depot', ravnskar: 'Fort Ravnskar', hrimfell: 'Hrimfell Run', storvidda: 'Storvidda', skerries: 'Skjærgård', kaldfjord: 'Kaldfjord Reach' };
+const COND_SLOT_MS = 3 * 3600 * 1000; // raid conditions rotate on this clock; clients compute the same table
+const SQUAD_MAX = 4;
+// accounts allowed to use the debug tools (comma-separated usernames). Nobody else is even sent the debug code.
+const ADMINS = new Set(String(process.env.ADMINS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean));
+const isAdmin = name => !!name && ADMINS.has(name);
+const DEBUG_JS = path.join(__dirname, 'debug.js'), TESTS_JS = path.join(__dirname, 'item-tests.js');
+const STARTED = Date.now();
+// uncaught errors reported by players' browsers (kept in memory for the debug panel, and printed to the log)
+const clientErrors = []; const errRate = new Map();
+
+const GAME = path.join(__dirname, 'game.html');
+const THREE = path.join(__dirname, 'node_modules', 'three', 'build', 'three.min.js');
+// the page is built from src/ when that folder is present (see build.js); otherwise the shipped game.html is served as is
+let builder = null; try { if (fs.existsSync(path.join(__dirname, 'src', 'index.html'))) builder = require('./build.js'); } catch (e) { console.log('build.js: ' + e.message); }
+function loadPage() { if (builder) { try { return wrap(builder.build()); } catch (e) { console.log('build failed, serving the last game.html: ' + e.message); } } return wrap(fs.readFileSync(GAME, 'utf8')); }
+let page = loadPage(); if (builder) console.log('game.html built from src/');
+// the workshop (/workshop, see workshop.js) also needs the rebuild-on-change watcher
+const WORKSHOP_ON = !!(process.env.WORKSHOP || process.env.DEV); let WS = null;
+if (process.env.DEV || WORKSHOP_ON) {
+  if (builder) { // poll every source file, and rescan the folders so files you add or delete are picked up too
+    let t = null; const watched = new Set(); const rebuild = f => { clearTimeout(t); t = setTimeout(() => { page = loadPage(); const i = builder.info; console.log(`src/ changed: game.html rebuilt${i.errors.length ? ` (${i.errors.length} error${i.errors.length > 1 ? 's' : ''}: ${i.errors[0].file}:${i.errors[0].line} ${i.errors[0].message})` : ''}`); if (WS) WS.built(f); }, 100); };
+    const scan = () => { const now = builder.sourceFiles(); let changed = now.length !== watched.size; for (const f of now) if (!watched.has(f)) { watched.add(f); fs.watchFile(f, { interval: 500 }, () => rebuild(f)); changed = true; }
+      for (const f of [...watched]) if (!now.includes(f)) { fs.unwatchFile(f); watched.delete(f); changed = true; } return changed; };
+    scan(); setInterval(() => { if (scan()) rebuild(null); }, 1000); }
+  else fs.watchFile(GAME, { interval: 500 }, () => { page = wrap(fs.readFileSync(GAME, 'utf8')); console.log('game.html reloaded'); });
+}
+function wrap(body) {
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>' + body + '</body></html>';
+}
+
+/* ---------------- accounts: username + password, one JSON save per user under DATA_DIR ---------------- */
+const DATA = process.env.DATA_DIR || path.join(__dirname, 'data');
+// everything persistent lives in one SQLite file, kolvik.sqlite in the data directory (see db.js)
+const db = require('./db.js').open(DATA);
+let users = db.users();
+const tokens = new Map(); // token -> username
+for (const [n, u] of Object.entries(users)) if (u.token) tokens.set(u.token, n);
+function saveUser(name) { if (users[name]) db.putUser(name, users[name]); else db.delUser(name); }
+// daily snapshots of the database, kept for a week, in data/backups/ (plus the download buttons in the admin panel)
+const BACKUP_DIR = path.join(DATA, 'backups');
+function snapshot() { try { fs.mkdirSync(BACKUP_DIR, { recursive: true }); const f = path.join(BACKUP_DIR, `kolvik-${new Date().toISOString().slice(0, 10)}.sqlite`); db.copyTo(f);
+  const old = fs.readdirSync(BACKUP_DIR).filter(x => /^kolvik-\d{4}-\d\d-\d\d\.sqlite$/.test(x)).sort(); while (old.length > 7) fs.unlinkSync(path.join(BACKUP_DIR, old.shift())); return f; } catch (e) { console.log('backup failed: ' + e.message); return null; } }
+snapshot(); setInterval(snapshot, 864e5);
+function dbInfo() { let files = []; try { files = fs.readdirSync(BACKUP_DIR).filter(x => x.endsWith('.sqlite')).sort().reverse(); } catch (e) {} return Object.assign({ file: db.file, size: ['', '-wal'].reduce((n, x) => { try { return n + fs.statSync(db.file + x).size; } catch (e) { return n; } }, 0), snapshots: files }, db.counts()); }
+const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 32).toString('hex');
+const validName = n => typeof n === 'string' && /^[a-z0-9_]{3,16}$/i.test(n);
+const readSave = name => db.save(name);
+const writeSave = (name, s) => db.putSave(name, s);
+function readBody(req) { return new Promise((res, rej) => { let b = ''; req.on('data', c => { b += c; if (b.length > 1e6) { rej(new Error('too big')); req.destroy(); } }); req.on('end', () => { try { res(b ? JSON.parse(b) : {}); } catch (e) { rej(e); } }); }); }
+function json(res, code, o) { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(o)); }
+function authed(req) { const t = (req.headers.authorization || '').replace(/^Bearer /, ''); return tokens.get(t) || null; }
+const attempts = new Map(); // ip -> [count, resetAt]
+function throttled(req) { const ip = req.socket.remoteAddress; const a = attempts.get(ip) || [0, Date.now() + 60000]; if (Date.now() > a[1]) { a[0] = 0; a[1] = Date.now() + 60000; } a[0]++; attempts.set(ip, a); return a[0] > 20; }
+
+/* ---------------- leaderboard: save stats plus server-counted player kills ---------------- */
+let pvp = db.kv('pvp', {});
+let pvpDirty = false;
+setInterval(() => { if (pvpDirty) { pvpDirty = false; db.putKv('pvp', pvp); } }, 5000);
+/* ---------------- seasons: the server resets everyone's progress every SEASON_DAYS and archives a Hall of Fame ---------------- */
+const SEASON_DAYS = Number(process.env.SEASON_DAYS) || 30;
+let season = db.kv('season', null);
+/* world tuning edited by admins in the debug panel: snowmobile handling and Storvidda's layout. Every raid gets the
+   snapshot that was current when its room was created, so everyone in it builds the same map. */
+let world = db.kv('world', {}) || {};
+function cleanWorld(w) {
+  if (!w || typeof w !== 'object') return {};
+  const num = (v, lo, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : undefined;
+  const out = {};
+  if (w.sled && typeof w.sled === 'object') { const s = {}; for (const k of ['P', 'Fb', 'Cf', 'Cr', 'muF', 'muR', 'Kr', 'CdA', 'm', 'lock', 'turn', 'rMax', 'straight', 'Crr']) { const v = num(w.sled[k], 0, 1e6); if (v !== undefined) s[k] = v; } out.sled = s; }
+  if (w.storvidda && typeof w.storvidda === 'object') { const c = w.storvidda, o = {};
+    for (const [k, lo, hi] of [['spawnR', 150, 620], ['exR', 150, 625], ['zoneR', 40, 140], ['hill', 0, 4], ['hillScale', 0.3, 4], ['trees', 0, 3], ['rocks', 0, 4]]) { const v = num(c[k], lo, hi); if (v !== undefined) o[k] = v; }
+    if (Array.isArray(c.spawns)) o.spawns = c.spawns.slice(0, 16).map(q => ({ x: num(q.x, -640, 640) || 0, z: num(q.z, -640, 640) || 0 }));
+    if (Array.isArray(c.props)) o.props = c.props.slice(0, 400).filter(q => q && typeof q.t === 'string').map(q => ({ t: q.t.slice(0, 12), x: num(q.x, -640, 640) || 0, z: num(q.z, -640, 640) || 0, r: num(q.r, -7, 7) || 0 }));
+    out.storvidda = o; }
+  return out;
+}
+if (!season || !season.n) { season = { n: 1, start: Date.now(), end: Date.now() + SEASON_DAYS * 864e5 }; db.putKv('season', season); }
+let hall = db.kv('hall', []);
+function rollSeason() {
+  board = null; const rows = leaderboard();
+  const best = k => { const r = rows.slice().sort((a, b) => b[k] - a[k])[0]; return r && r[k] > 0 ? { name: r.name, value: r[k] } : null; };
+  const entry = { n: season.n, start: season.start, end: Date.now(), players: rows.length,
+    top: rows.slice().sort((a, b) => b.worth - a.worth).slice(0, 5).map(r => ({ name: r.name, worth: r.worth, extracts: r.extracts, kills: r.kills, pkills: r.pkills })),
+    kills: best('kills'), pkills: best('pkills'), extracts: best('extracts'), haul: best('best') };
+  hall.unshift(entry); db.putKv('hall', hall);
+  pvp = {}; db.putKv('pvp', pvp);
+  season = { n: season.n + 1, start: Date.now(), end: Date.now() + SEASON_DAYS * 864e5 }; db.putKv('season', season);
+  board = null; console.log(`season ${entry.n} archived; season ${season.n} begins`);
+  sendAll({ t: 'season', season, hall: entry });
+}
+setInterval(() => { if (Date.now() >= season.end) rollSeason(); }, 60000);
+let board = null, boardAt = 0;
+function leaderboard() {
+  if (board && Date.now() - boardAt < 10000) return board;
+  const rows = [];
+  for (const name of Object.keys(users)) {
+    const s = readSave(name); if (s && s.season != null && s.season !== season.n) continue; const st = (s && s.stats) || {}; const pv = pvp[name] || {};
+    if (!(st.raids > 0) && !pv.kills) continue;
+    rows.push({ name, worth: Math.round(st.worth || (s && s.cash) || 0), raids: st.raids || 0, extracts: st.extracts || 0, deaths: st.deaths || 0, kills: st.kills || 0, best: Math.round(st.best || 0), pkills: pv.kills || 0, pdeaths: pv.deaths || 0 });
+  }
+  board = rows; boardAt = Date.now(); return rows;
+}
+
+async function api(req, res, u) {
+  if (u === '/api/leaderboard' && req.method === 'GET') return json(res, 200, { rows: leaderboard(), at: boardAt, season, hall: hall.slice(0, 20) });
+  if (u === '/api/admin/season/next' && req.method === 'POST') {
+    if (!(process.env.ADMIN_TOKEN && (req.headers.authorization || '') === 'Bearer ' + process.env.ADMIN_TOKEN) && !isAdmin(authed(req))) return json(res, 404, { error: 'No such call.' });
+    rollSeason(); return json(res, 200, { ok: true, season });
+  }
+  if (u === '/api/world' && req.method === 'GET') return json(res, 200, { world });
+  if (u === '/api/register' && req.method === 'POST') {
+    if (throttled(req)) return json(res, 429, { error: 'Too many attempts. Wait a minute.' });
+    const b = await readBody(req); const name = String(b.name || '').toLowerCase();
+    if (!validName(name)) return json(res, 400, { error: 'Username: 3–16 letters, numbers or underscores.' });
+    if (typeof b.pass !== 'string' || b.pass.length < 6) return json(res, 400, { error: 'Password needs at least 6 characters.' });
+    if (users[name]) return json(res, 409, { error: 'That name is taken.' });
+    const salt = crypto.randomBytes(16).toString('hex'); const token = crypto.randomBytes(24).toString('hex');
+    users[name] = { salt, hash: hashPw(b.pass, salt), token, created: Date.now() }; tokens.set(token, name); saveUser(name);
+    if (b.save && typeof b.save === 'object') writeSave(name, b.save);
+    console.log(`account created: ${name}`);
+    return json(res, 200, { token, name, save: b.save || null });
+  }
+  if (u === '/api/login' && req.method === 'POST') {
+    if (throttled(req)) return json(res, 429, { error: 'Too many attempts. Wait a minute.' });
+    const b = await readBody(req); const name = String(b.name || '').toLowerCase(); const usr = users[name];
+    if (!usr || hashPw(String(b.pass || ''), usr.salt) !== usr.hash) return json(res, 401, { error: 'Wrong name or password.' });
+    return json(res, 200, { token: usr.token, name, save: readSave(name) });
+  }
+  if (u === '/api/clienterror' && req.method === 'POST') {
+    const ip = req.socket.remoteAddress; const r = errRate.get(ip) || [0, Date.now() + 60000]; if (Date.now() > r[1]) { r[0] = 0; r[1] = Date.now() + 60000; } r[0]++; errRate.set(ip, r); if (r[0] > 12) return json(res, 429, { error: 'Slow down.' });
+    const b = await readBody(req); const e = { t: Date.now(), name: cleanName(b.name) || '?', account: authed(req), msg: cleanText(b.msg), where: cleanText(b.where).slice(0, 60), stack: String(b.stack || '').slice(0, 800), ua: cleanText(b.ua).slice(0, 120) };
+    clientErrors.push(e); if (clientErrors.length > 200) clientErrors.shift(); console.log(`client error from ${e.name} (${e.where}): ${e.msg}`); return json(res, 200, { ok: true });
+  }
+  const name = authed(req); if (!name) return json(res, 401, { error: 'Not signed in.' });
+  if (u.startsWith('/api/admin/')) {
+    if (!isAdmin(name)) return json(res, 404, { error: 'No such call.' });
+    if (u === '/api/admin/state' && req.method === 'GET') return json(res, 200, {
+      uptime: Math.round((Date.now() - STARTED) / 1000), mem: Math.round(process.memoryUsage().rss / 1048576), season,
+      players: [...conns.values()].map(q => ({ id: q.id, name: q.name, account: q.account, room: q.room ? q.room.id : null, lobby: q.lobby ? q.lobby.id : null, squad: q.squad ? q.squad.id : null })),
+      lobbies: [...lobbies.values()].map(l => Object.assign(lobbyInfo(l), { members: [...l.members.keys()].map(id => (conns.get(id) || {}).name) })),
+      rooms: [...rooms.values()].map(r => ({ id: r.id, map: r.map, diff: r.diff, timeLeft: timeLeft(r), host: (conns.get(r.hostId) || {}).name || null, players: [...r.players.values()].map(q => q.name), events: r.events.length, taken: r.taken.size, bodies: r.bodies.length })),
+      accounts: Object.keys(users).length, admins: [...ADMINS], db: dbInfo() });
+    if (u === '/api/admin/errors' && req.method === 'GET') return json(res, 200, { errors: clientErrors.slice().reverse() });
+    if (u === '/api/admin/errors/clear' && req.method === 'POST') { clientErrors.length = 0; return json(res, 200, { ok: true }); }
+    const b = req.method === 'POST' ? await readBody(req) : {};
+    if (u === '/api/admin/broadcast' && req.method === 'POST') { const text = cleanText(b.text); if (text) sendAll({ t: 'sys', text: 'Server: ' + text }); return json(res, 200, { ok: true }); }
+    if (u === '/api/admin/endroom' && req.method === 'POST') { const r = rooms.get(String(b.id)); if (!r) return json(res, 404, { error: 'No such raid.' }); toRoom(r, { t: 'end' }); closeRoom(r); return json(res, 200, { ok: true }); }
+    if (u === '/api/admin/kick' && req.method === 'POST') { const q = conns.get(String(b.id)); if (!q) return json(res, 404, { error: 'No such player.' }); sys(q, 'You were disconnected by an admin.'); setTimeout(() => q.ws.close(), 200); return json(res, 200, { ok: true }); }
+    if (u === '/api/admin/season/next' && req.method === 'POST') { rollSeason(); return json(res, 200, { ok: true, season }); }
+    if (u === '/api/admin/backup' && req.method === 'GET') { // ?format=sqlite streams a consistent copy of the database; otherwise one JSON document with everything
+      const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+      if (/format=sqlite/.test(req.url)) { const tmp = path.join(DATA, `.backup-${process.pid}.sqlite`); db.copyTo(tmp); res.writeHead(200, { 'content-type': 'application/vnd.sqlite3', 'content-disposition': `attachment; filename="kolvik-${stamp}.sqlite"`, 'content-length': fs.statSync(tmp).size }); fs.createReadStream(tmp).on('close', () => fs.unlink(tmp, () => {})).pipe(res); return; }
+      res.writeHead(200, { 'content-type': 'application/json', 'content-disposition': `attachment; filename="kolvik-backup-${stamp}.json"` }); return res.end(JSON.stringify(db.exportAll())); }
+    if (u === '/api/admin/backup/info' && req.method === 'GET') return json(res, 200, dbInfo());
+    if (u === '/api/admin/snapshot' && req.method === 'POST') { const f = snapshot(); return json(res, f ? 200 : 500, { ok: !!f, file: f && path.basename(f) }); }
+    if (u === '/api/admin/world' && req.method === 'GET') return json(res, 200, { world });
+    if (u === '/api/admin/restore' && req.method === 'POST') { // merges a JSON backup into the database: accounts and saves in the file replace the ones here
+      let r; try { r = db.restore(b.backup); } catch (e) { return json(res, 400, { error: e.message }); }
+      users = db.users(); tokens.clear(); for (const [n2, u2] of Object.entries(users)) if (u2.token) tokens.set(u2.token, n2);
+      pvp = db.kv('pvp', {}); social = db.kv('social', {}); world = db.kv('world', {}) || {}; hall = db.kv('hall', []); dmCache.clear(); board = null;
+      console.log(`backup restored by ${name}: ${r.users} accounts, ${r.saves} saves`); return json(res, 200, Object.assign({ ok: true }, r)); }
+    if (u === '/api/admin/world' && req.method === 'POST') { world = cleanWorld(b.world); db.putKv('world', world); sendAll({ t: 'world', world }); console.log(`world config updated by ${name}`); return json(res, 200, { ok: true, world }); }
+    if (u === '/api/admin/give' && req.method === 'POST') {
+      const who = String(b.name || '').toLowerCase(); if (!users[who]) return json(res, 404, { error: 'No such account.' });
+      const g = { cash: Math.max(0, Math.min(1e7, b.cash | 0)), caches: Math.max(0, Math.min(500, b.caches | 0)), scrip: Math.max(0, Math.min(1e5, b.scrip | 0)), items: Array.isArray(b.items) ? b.items.slice(0, 20).map(x => [String(x[0]).slice(0, 20), x[1] | 0]) : [] };
+      const online = [...conns.values()].find(q => q.account === who);
+      if (online) { send(online, Object.assign({ t: 'grant' }, g)); return json(res, 200, { ok: true, delivered: 'online' }); }
+      const sv = readSave(who); if (!sv) return json(res, 404, { error: 'That account has no save yet.' });
+      sv.cash = (sv.cash || 0) + g.cash; if (sv.cos) { sv.cos.caches = (sv.cos.caches || 0) + g.caches; sv.cos.scrip = (sv.cos.scrip || 0) + g.scrip; }
+      writeSave(who, sv); return json(res, 200, { ok: true, delivered: 'save file (items are only delivered to players who are online)' });
+    }
+    return json(res, 404, { error: 'No such call.' });
+  }
+  if (u === '/api/load' && req.method === 'GET') return json(res, 200, { name, save: readSave(name) });
+  if (u === '/api/save' && req.method === 'PUT') { const b = await readBody(req); if (!b || typeof b !== 'object' || b.v !== 2) return json(res, 400, { error: 'Bad save.' }); writeSave(name, b); return json(res, 200, { ok: true, at: Date.now() }); }
+  if (u === '/api/logout' && req.method === 'POST') { const usr = users[name]; tokens.delete(usr.token); usr.token = crypto.randomBytes(24).toString('hex'); tokens.set(usr.token, name); saveUser(name); for (const p of conns.values()) if (p.account === name) { p.account = null; } return json(res, 200, { ok: true }); }
+  json(res, 404, { error: 'No such call.' });
+}
+
+/* ---------------- players, lobbies, rooms, chat ---------------- */
+const conns = new Map();   // player id -> player
+const lobbies = new Map(); // lobby id -> lobby
+const rooms = new Map();   // room id -> raid in progress
+const globalChat = [];     // last 40 messages on the "everyone" channel
+let nextRoom = 1, nextPlayer = 1, nextLobby = 1;
+
+const send = (p, o) => { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(o)); };
+function sendAll(o, filter) { const s = JSON.stringify(o); for (const p of conns.values()) if ((!filter || filter(p)) && p.ws.readyState === 1) p.ws.send(s); }
+function toRoom(r, o, except) { const s = JSON.stringify(o); for (const p of r.players.values()) if (p !== except && p.ws.readyState === 1) p.ws.send(s); }
+const timeLeft = r => Math.max(0, Math.round(r.dur - (Date.now() - r.start) / 1000));
+const cleanText = t => String(t || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200);
+const cleanName = n => String(n || '').replace(/[^\w \-]/g, '').trim().slice(0, 14);
+
+function lobbyInfo(l) { return { id: l.id, name: l.name, map: l.map, diff: l.diff || 'normal', air: l.air == null ? 1 : l.air, state: l.state, players: l.members.size, max: MAX_PLAYERS, timeLeft: l.room ? timeLeft(l.room) : null }; }
+function lobbyDetail(l) {
+  return Object.assign(lobbyInfo(l), { owner: l.owner, members: [...l.members].map(([id, m]) => { const q = conns.get(id); return { id, name: q ? q.name : '?', guest: !(q && q.account), squad: q && q.squad ? q.squad.id : null, side: m.side || 0, ready: m.ready, inRaid: !!(q && l.room && q.room === l.room) }; }) });
+}
+let lobbyTimer = null;
+function lobbiesChanged() {
+  if (lobbyTimer) return;
+  lobbyTimer = setTimeout(() => {
+    lobbyTimer = null;
+    sendAll({ t: 'lobbies', list: [...lobbies.values()].map(lobbyInfo) });
+    for (const l of lobbies.values()) { const d = lobbyDetail(l); for (const id of l.members.keys()) { const q = conns.get(id); if (q) send(q, { t: 'lobby', lobby: d }); } }
+  }, 40);
+}
+setInterval(() => { for (const l of lobbies.values()) if (l.room) return lobbiesChanged(); }, 10000);
+
+// team maps: new members go to the smaller side, squadmates stay together
+function pickSide(p, l) { if (!TEAM_MAPS.has(l.map)) return 0; if (p.squad) for (const [id, m] of l.members) { const q = conns.get(id); if (q && q !== p && q.squad === p.squad && m.side) return m.side; } let a = 0, b = 0; for (const m of l.members.values()) { if (m.side === 1) a++; else if (m.side === 2) b++; } return a <= b ? 1 : 2; }
+function joinLobby(p, l) { if (p.lobby && p.lobby !== l) leaveLobby(p); l.members.set(p.id, { ready: false, side: pickSide(p, l) }); p.lobby = l; lobbiesChanged(); touch(p); }
+function leaveLobby(p) {
+  const l = p.lobby; if (!l) return;
+  p.lobby = null; l.members.delete(p.id); send(p, { t: 'lobby', lobby: null }); touch(p);
+  if (l.owner === p.id) l.owner = l.members.keys().next().value || null;
+  if (l.members.size === 0 && !l.room) lobbies.delete(l.id);
+  lobbiesChanged();
+}
+
+function openRoom(l) {
+  const r = { id: 'r' + nextRoom++, map: l.map, world: JSON.parse(JSON.stringify(world)), seed: (Math.random() * 1e9) | 0, start: Date.now(), dur: DUR[l.map] || 480, players: new Map(), hostId: null, taken: new Set(), puts: [], bodies: [], doors: new Set(), estate: null, joins: 0, groups: new Map(), events: [], diff: l.diff || 'normal', coop: COOP_MAPS.has(l.map), lobby: l };
+  r.air = l.air == null ? 1 : l.air; r.teams = TEAM_MAPS.has(l.map);
+  r.timer = setTimeout(() => { toRoom(r, { t: 'end' }); closeRoom(r); }, r.dur * 1000 + 2000);
+  rooms.set(r.id, r); console.log(`raid ${r.id} started on ${r.map} from lobby "${l.name}"`);
+  return r;
+}
+function enterRoom(p, r) {
+  if (p.room) leaveRoom(p);
+  p.room = r; p.lastRoom = r.id; p.st = null; r.players.set(p.id, p); if (!r.hostId) r.hostId = p.id;
+  p.side = r.teams ? ((r.lobby && r.lobby.members.get(p.id) || {}).side || 1) : 0;
+  // squads share an insertion point; everyone else gets the next free one
+  const sq = p.squad ? p.squad.id : null; let slot, mate = 0;
+  if (sq && r.groups.has(sq)) { const g = r.groups.get(sq); slot = g.slot; mate = ++g.n; } else { slot = r.joins++; if (sq) r.groups.set(sq, { slot, n: 0 }); }
+  send(p, { t: 'launch', id: p.id, seed: r.seed, world: r.world, cslot: Math.floor(r.start / COND_SLOT_MS), map: r.map, timeLeft: timeLeft(r), hostId: r.hostId, slot, mate, diff: r.diff, side: p.side, air: r.air, events: r.events, players: [...r.players.values()].map(q => ({ id: q.id, name: q.name, st: q.st, squad: q.squad ? q.squad.id : null, side: q.side || 0 })), taken: [...r.taken], puts: r.puts, bodies: r.bodies, doors: [...r.doors], estate: r.estate });
+  toRoom(r, { t: 'pjoin', p: { id: p.id, name: p.name, squad: p.squad ? p.squad.id : null, side: p.side || 0 } }, p);
+  touch(p);
+}
+function sameSide(r, p, v) { return r.coop || (p.squad && v.squad === p.squad) || (p.side && v.side === p.side); }
+function closeRoom(r) {
+  clearTimeout(r.timer); rooms.delete(r.id);
+  for (const q of r.players.values()) { q.room = null; q.st = null; touch(q); }
+  r.players.clear();
+  const l = r.lobby;
+  if (l) { l.room = null; l.state = 'waiting'; for (const m of l.members.values()) m.ready = false; if (l.members.size === 0) lobbies.delete(l.id); }
+  console.log(`raid ${r.id} closed`); lobbiesChanged();
+}
+function leaveRoom(p) {
+  const r = p.room; if (!r) return;
+  r.players.delete(p.id); p.room = null; p.st = null; touch(p);
+  toRoom(r, { t: 'pleave', id: p.id });
+  if (r.players.size === 0) return closeRoom(r);
+  if (r.hostId === p.id) { r.hostId = r.players.keys().next().value; toRoom(r, { t: 'host', id: r.hostId }); }
+  lobbiesChanged();
+}
+
+function limited(p) {
+  const now = Date.now(); p.chatT = (p.chatT || []).filter(t => now - t < 5000);
+  if (p.chatT.length >= 5) { send(p, { t: 'chat', ch: 'sys', text: 'Slow down: five messages per five seconds.', ts: now }); return true; }
+  p.chatT.push(now); return false;
+}
+function chat(p, ch, text) {
+  text = cleanText(text); if (!text || limited(p)) return;
+  const m = { t: 'chat', ch, from: p.name, fromId: p.id, guest: !p.account, text, ts: Date.now() };
+  if (ch === 'global') { globalChat.push(m); if (globalChat.length > 40) globalChat.shift(); sendAll(m, q => !q.room); }
+  else if (ch === 'lobby' && p.lobby) { for (const id of p.lobby.members.keys()) { const q = conns.get(id); if (q && !q.room) send(q, m); } }
+  else if (ch === 'raid' && p.room) toRoom(p.room, m);
+  else if (ch === 'squad' && p.squad) { for (const id of p.squad.members) { const q = conns.get(id); if (q) send(q, m); } }
+}
+function bump(name, key) { if (!name) return; const s = pvp[name] = pvp[name] || { kills: 0, deaths: 0 }; s[key]++; pvpDirty = true; board = null; }
+
+/* ---------------- friends, direct messages, squads ---------------- */
+let social = db.kv('social', {});
+let socialDirty = false;
+setInterval(() => { if (socialDirty) { socialDirty = false; db.putKv('social', social); } }, 3000);
+const soc = n => social[n] = social[n] || { friends: [], in: [], out: [], reads: {} };
+const without = (arr, x) => arr.filter(v => v !== x);
+const pairKey = (a, b) => a < b ? a + '__' + b : b + '__' + a;
+const dmCache = new Map(); const dmDirty = new Set();
+function dmLoad(a, b) { const k = pairKey(a, b); if (!dmCache.has(k)) dmCache.set(k, db.dm(k) || []); return dmCache.get(k); }
+setInterval(() => { for (const k of dmDirty) db.putDm(k, dmCache.get(k)); dmDirty.clear(); }, 2000);
+function connsOf(name) { const out = []; if (name) for (const q of conns.values()) if (q.account === name) out.push(q); return out; }
+const fmtT = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+function presence(name) {
+  const cs = connsOf(name); if (!cs.length) return { online: false, state: 'offline', status: 'Offline' };
+  const q = cs.find(c => c.room) || cs.find(c => c.lobby) || cs[0];
+  if (q.room) return { online: true, state: 'raid', status: `In raid · ${MAP_NAMES[q.room.map]} · ${fmtT(timeLeft(q.room))} left` };
+  if (q.lobby) return { online: true, state: 'lobby', status: `In lobby · ${q.lobby.name}`, lobby: q.lobby.state === 'waiting' ? q.lobby.id : null };
+  return { online: true, state: 'hideout', status: 'At the hideout' };
+}
+function unreadFrom(me, f) { const r = soc(me).reads[f] || 0; let n = 0; for (const m of dmLoad(me, f)) if (m.from === f && m.ts > r) n++; return n; }
+function friendsPayload(name) {
+  const s = soc(name);
+  const friends = s.friends.map(f => Object.assign({ name: f, unread: unreadFrom(name, f) }, presence(f)))
+    .sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
+  return { t: 'friends', friends, incoming: s.in, outgoing: s.out };
+}
+function sendFriends(name) { const cs = connsOf(name); if (!cs.length) return; const pl = friendsPayload(name); for (const q of cs) send(q, pl); }
+const presTouched = new Set(); let presTimer = null;
+function presenceChanged(name) {
+  if (!name) return; presTouched.add(name); if (presTimer) return;
+  presTimer = setTimeout(() => { presTimer = null; const notify = new Set(); for (const n of presTouched) for (const f of soc(n).friends) notify.add(f); presTouched.clear(); for (const n of notify) sendFriends(n); }, 150);
+}
+setInterval(() => { for (const q of conns.values()) if (q.room && q.account) presenceChanged(q.account); }, 30000);
+function makeFriends(a, b) {
+  const A = soc(a), B = soc(b);
+  A.in = without(A.in, b); A.out = without(A.out, b); B.in = without(B.in, a); B.out = without(B.out, a);
+  if (!A.friends.includes(b)) A.friends.push(b); if (!B.friends.includes(a)) B.friends.push(a);
+  socialDirty = true; sendFriends(a); sendFriends(b);
+  for (const q of connsOf(a)) send(q, { t: 'note', text: `You and ${b} are now friends.` });
+  for (const q of connsOf(b)) send(q, { t: 'note', text: `You and ${a} are now friends.` });
+}
+
+const squads = new Map(); let nextSquad = 1;
+function squadDetail(sq) {
+  return { id: sq.id, leader: sq.leader, members: [...sq.members].map(id => { const q = conns.get(id); return { id, name: q ? q.name : '?', account: q ? q.account : null, state: q ? (q.room ? 'raid' : q.lobby ? 'lobby' : 'hideout') : 'gone' }; }) };
+}
+function squadSend(sq) { const d = squadDetail(sq); for (const id of sq.members) { const q = conns.get(id); if (q) send(q, { t: 'squad', squad: d }); } }
+function squadTag(q) { if (q.room) toRoom(q.room, { t: 'psquad', id: q.id, squad: q.squad ? q.squad.id : null }); }
+const sqTouched = new Set(); let sqTimer = null;
+function touch(p) {
+  presenceChanged(p.account);
+  if (p.squad) { sqTouched.add(p.squad); if (!sqTimer) sqTimer = setTimeout(() => { sqTimer = null; for (const sq of sqTouched) if (squads.has(sq.id)) squadSend(sq); sqTouched.clear(); }, 100); }
+}
+function leaveSquad(p) {
+  const sq = p.squad; if (!sq) return;
+  sq.members.delete(p.id); p.squad = null; send(p, { t: 'squad', squad: null }); squadTag(p);
+  if (sq.members.size <= 1) {
+    for (const id of sq.members) { const q = conns.get(id); if (q) { q.squad = null; send(q, { t: 'squad', squad: null }); squadTag(q); send(q, { t: 'note', text: 'Your squad broke up.' }); } }
+    squads.delete(sq.id);
+  } else {
+    if (sq.leader === p.id) sq.leader = sq.members.values().next().value;
+    squadSend(sq); for (const id of sq.members) { const q = conns.get(id); if (q) send(q, { t: 'note', text: `${p.name} left the squad.` }); }
+  }
+  lobbiesChanged();
+}
+const isFollower = p => p.squad && p.squad.members.size > 1 && p.squad.leader !== p.id;
+function followers(p) { if (!p.squad || p.squad.leader !== p.id) return []; return [...p.squad.members].filter(id => id !== p.id).map(id => conns.get(id)).filter(q => q && !q.room); }
+const sys = (p, text) => send(p, { t: 'sys', text });
+const uname = v => String(v || '').toLowerCase().trim().slice(0, 16);
+
+/* ---------------- http + websocket ---------------- */
+WS = require('./workshop.js')({ root: __dirname, enabled: WORKSHOP_ON, builder, getPage: () => page, userFor: authed, nameForToken: t => tokens.get(String(t || '')) || null, isAdmin, readBody, json });
+if (WORKSHOP_ON) console.log('workshop on: /workshop (admins only)');
+const server = http.createServer((req, res) => {
+  const u = (req.url || '/').split('?')[0];
+  if (u === '/' || u === '/index.html') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(page); }
+  if (u === '/api/ping') return json(res, 200, { ok: true, accounts: true, lobbies: lobbies.size, online: conns.size, season });
+  if (u === '/vendor/three.min.js') { res.writeHead(200, { 'content-type': 'application/javascript', 'cache-control': 'public, max-age=86400' }); return fs.createReadStream(THREE).pipe(res); }
+  if (u === '/healthz') { res.writeHead(200); return res.end('ok'); }
+  if (u === '/item-tests.js') { if (!isAdmin(authed(req))) { res.writeHead(404); return res.end('not found'); } res.writeHead(200, { 'content-type': 'application/javascript', 'cache-control': 'no-store' }); return fs.createReadStream(TESTS_JS).pipe(res); }
+  if (u === '/debug.js') { if (!isAdmin(authed(req))) { res.writeHead(404); return res.end('not found'); } res.writeHead(200, { 'content-type': 'application/javascript', 'cache-control': 'no-store' }); return fs.createReadStream(DEBUG_JS).on('error', () => res.end()).pipe(res); }
+  if (WS.handle(req, res, u)) return;
+  if (u.startsWith('/api/')) return api(req, res, u).catch(() => json(res, 400, { error: 'Bad request.' }));
+  res.writeHead(404); res.end('not found');
+});
+
+const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 256 * 1024 });
+wss.on('connection', ws => {
+  const p = { id: 'p' + nextPlayer++, name: 'Nomad', account: null, ws, room: null, lobby: null, st: null };
+  conns.set(p.id, p);
+  ws.on('message', data => {
+    let m; try { m = JSON.parse(data); } catch (e) { return; }
+    if (!m || typeof m.t !== 'string') return;
+    switch (m.t) {
+      case 'hello': {
+        const acct = tokens.get(String(m.token || '')) || null;
+        if (p.account !== acct) { const old = p.account; leaveSquad(p); p.account = acct; presenceChanged(old); }
+        p.name = acct || cleanName(m.name) || 'Nomad';
+        send(p, { t: 'hello', id: p.id, name: p.name, account: acct, admin: isAdmin(acct), world, chat: globalChat, list: [...lobbies.values()].map(lobbyInfo), season, hall: hall[0] || null });
+        if (acct) { send(p, friendsPayload(acct)); presenceChanged(acct); }
+        if (p.squad) squadSend(p.squad);
+        if (p.lobby) { lobbiesChanged(); send(p, { t: 'lobby', lobby: lobbyDetail(p.lobby) }); }
+        return;
+      }
+      case 'lcreate': {
+        if (p.room) return;
+        if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
+        if (lobbies.size >= 100) return send(p, { t: 'sys', text: 'Too many lobbies are open right now.' });
+        const l = { id: 'l' + nextLobby++, name: cleanText(m.name).slice(0, 32) || `${p.name}'s raid`, map: DUR[m.map] ? m.map : 'kolvik', diff: DIFFS.has(m.diff) ? m.diff : 'normal', owner: p.id, members: new Map(), state: 'waiting', room: null };
+        lobbies.set(l.id, l); joinLobby(p, l); for (const f of followers(p)) joinLobby(f, l); return;
+      }
+      case 'ljoin': {
+        const l = lobbies.get(m.id);
+        if (!l) return send(p, { t: 'sys', text: 'That lobby is gone.' });
+        if (l.state !== 'waiting') return send(p, { t: 'sys', text: 'That raid has already started.' });
+        if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
+        const fl = followers(p).filter(f => f.lobby !== l);
+        if (l.members.size + 1 + fl.length > MAX_PLAYERS) return send(p, { t: 'sys', text: fl.length ? 'Not enough room in that lobby for your squad.' : 'That lobby is full.' });
+        joinLobby(p, l); for (const f of fl) joinLobby(f, l); return;
+      }
+      case 'lleave': { const l = p.lobby; if (l && !p.room) for (const f of followers(p)) if (f.lobby === l) leaveLobby(f); return leaveLobby(p); }
+      case 'lready': { const l = p.lobby; if (l && l.state === 'waiting') { const me = l.members.get(p.id); if (me) { me.ready = !!m.ready; lobbiesChanged(); } } return; }
+      case 'ldiff': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DIFFS.has(m.diff)) { l.diff = m.diff; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
+      case 'lmap': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DUR[m.map]) { l.map = m.map; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (TEAM_MAPS.has(l.map)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
+      case 'lside': { const l = p.lobby; if (l && l.state === 'waiting' && TEAM_MAPS.has(l.map)) { const me = l.members.get(p.id); if (me) { me.side = me.side === 1 ? 2 : 1; me.ready = false; lobbiesChanged(); } } return; }
+      case 'lair': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && [0, 1, 2].includes(m.air)) { l.air = m.air; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
+      case 'lstart': {
+        const l = p.lobby; if (!l || l.owner !== p.id || l.state !== 'waiting') return;
+        if (![...l.members.values()].every(x => x.ready)) return send(p, { t: 'sys', text: 'Not everyone is ready.' });
+        if (PVP_MAPS.has(l.map)) { const sides = new Set([...l.members.keys()].map(id => { const q = conns.get(id); return q && q.squad ? 's' + q.squad.id : id; })); if (sides.size < 2) return send(p, { t: 'sys', text: `${MAP_NAMES[l.map]} is PvP only: it needs at least two players who are not in the same squad.` }); }
+        const r = openRoom(l); l.room = r; l.state = 'raid';
+        for (const id of l.members.keys()) { const q = conns.get(id); if (q) enterRoom(q, r); }
+        return lobbiesChanged();
+      }
+      case 'ljoinraid': {
+        const l = lobbies.get(m.id);
+        if (!l || !l.room) return send(p, { t: 'sys', text: 'That raid has ended.' });
+        if (timeLeft(l.room) < 90) return send(p, { t: 'sys', text: 'Too little time left in that raid.' });
+        if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
+        const fl = followers(p);
+        if (l.room.players.size + 1 + fl.length > MAX_PLAYERS) return send(p, { t: 'sys', text: 'That raid is full.' });
+        joinLobby(p, l); enterRoom(p, l.room); for (const f of fl) { joinLobby(f, l); enterRoom(f, l.room); } return lobbiesChanged();
+      }
+      case 'leaveRaid': case 'leave': return leaveRoom(p);
+      case 'chat': return chat(p, m.ch, m.text);
+
+      case 'fadd': {
+        if (!p.account) return sys(p, 'Sign in to add friends.');
+        const n = uname(m.name), me = p.account;
+        if (!n) return; if (n === me) return sys(p, "That's you.");
+        if (!users[n]) return sys(p, `Nobody here is called ${n}.`);
+        const a = soc(me), b = soc(n);
+        if (a.friends.includes(n)) return sys(p, `You and ${n} are already friends.`);
+        if (a.friends.length >= 100) return sys(p, 'Your friend list is full.');
+        if (a.in.includes(n)) return makeFriends(me, n);
+        if (!a.out.includes(n)) a.out.push(n); if (!b.in.includes(me)) b.in.push(me);
+        socialDirty = true; sendFriends(me); sendFriends(n); sys(p, `Friend request sent to ${n}.`);
+        for (const q of connsOf(n)) send(q, { t: 'note', text: `${me} sent you a friend request.`, kind: 'freq' });
+        return;
+      }
+      case 'faccept': { const n = uname(m.name); if (p.account && soc(p.account).in.includes(n)) makeFriends(p.account, n); return; }
+      case 'fdecline': case 'fcancel': {
+        if (!p.account) return; const n = uname(m.name), a = soc(p.account), b = soc(n);
+        if (m.t === 'fdecline') { a.in = without(a.in, n); b.out = without(b.out, p.account); } else { a.out = without(a.out, n); b.in = without(b.in, p.account); }
+        socialDirty = true; sendFriends(p.account); sendFriends(n); return;
+      }
+      case 'fremove': {
+        if (!p.account) return; const n = uname(m.name), a = soc(p.account), b = soc(n);
+        a.friends = without(a.friends, n); b.friends = without(b.friends, p.account); socialDirty = true; sendFriends(p.account); sendFriends(n); return;
+      }
+      case 'dm': {
+        if (!p.account) return sys(p, 'Sign in to message friends.');
+        const to = uname(m.to); if (!soc(p.account).friends.includes(to)) return sys(p, to ? `${to} isn't on your friend list.` : 'Who is that for?');
+        const text = cleanText(m.text); if (!text || limited(p)) return;
+        const msg = { from: p.account, to, text, ts: Date.now() };
+        const arr = dmLoad(p.account, to); arr.push(msg); if (arr.length > 200) arr.splice(0, arr.length - 200); dmDirty.add(pairKey(p.account, to));
+        const out = Object.assign({ t: 'dm' }, msg);
+        for (const q of connsOf(to)) send(q, out); for (const q of connsOf(p.account)) send(q, out);
+        sendFriends(to); return;
+      }
+      case 'dmhist': { if (!p.account) return; const w = uname(m.with); if (soc(p.account).friends.includes(w)) send(p, { t: 'dmhist', with: w, msgs: dmLoad(p.account, w).slice(-100) }); return; }
+      case 'dmread': { if (!p.account) return; const w = uname(m.with); soc(p.account).reads[w] = Date.now(); socialDirty = true; sendFriends(p.account); return; }
+
+      case 'sinvite': {
+        if (!p.account) return sys(p, 'Sign in to form a squad.');
+        const n = uname(m.name); if (!soc(p.account).friends.includes(n)) return sys(p, 'You can only invite friends.');
+        const ts = connsOf(n); if (!ts.length) return sys(p, `${n} is offline.`);
+        if (p.squad && p.squad.members.size >= SQUAD_MAX) return sys(p, `Your squad is full (${SQUAD_MAX}).`);
+        const t = ts.find(q => !q.room) || ts[0];
+        if (p.squad && t.squad === p.squad) return sys(p, `${n} is already in your squad.`);
+        t.invites = t.invites || new Map(); t.invites.set(p.account, { pid: p.id, at: Date.now() });
+        send(t, { t: 'sinvite', from: p.account }); sys(p, `Squad invite sent to ${n}.`); return;
+      }
+      case 'saccept': {
+        const from = uname(m.from); const inv = p.invites && p.invites.get(from);
+        if (!inv || Date.now() - inv.at > 180000) return sys(p, 'That invite has expired.');
+        p.invites.delete(from);
+        const host = conns.get(inv.pid); if (!host || host.account !== from) return sys(p, `${from} went offline.`);
+        let sq = host.squad;
+        if (sq && sq === p.squad) return;
+        if (sq && sq.members.size >= SQUAD_MAX) return sys(p, 'That squad is full.');
+        leaveSquad(p);
+        if (!sq) { sq = { id: 's' + nextSquad++, leader: host.id, members: new Set([host.id]) }; squads.set(sq.id, sq); host.squad = sq; squadTag(host); }
+        sq.members.add(p.id); p.squad = sq; squadTag(p);
+        const leader = conns.get(sq.leader);
+        if (leader && leader.lobby && !p.room && leader.lobby.state === 'waiting' && p.lobby !== leader.lobby && leader.lobby.members.size < MAX_PLAYERS) joinLobby(p, leader.lobby);
+        squadSend(sq); lobbiesChanged();
+        for (const id of sq.members) { const q = conns.get(id); if (q && q !== p) send(q, { t: 'note', text: `${p.name} joined the squad.` }); }
+        return;
+      }
+      case 'sdecline': { const from = uname(m.from); if (p.invites) p.invites.delete(from); for (const q of connsOf(from)) sys(q, `${p.name} declined your squad invite.`); return; }
+      case 'sleave': return leaveSquad(p);
+      case 'skick': { const sq = p.squad; if (!sq || sq.leader !== p.id) return; const q = conns.get(m.id); if (q && q.squad === sq && q !== p) { leaveSquad(q); sys(q, 'You were removed from the squad.'); } return; }
+      case 'spromote': { const sq = p.squad; if (!sq || sq.leader !== p.id || !sq.members.has(m.id)) return; sq.leader = m.id; squadSend(sq); lobbiesChanged(); return; }
+    }
+    const r = p.room; if (!r) return;
+    switch (m.t) {
+      case 'state': p.st = m; m.id = p.id; toRoom(r, m, p); break;
+      case 'take': if (r.taken.has(m.uid)) send(p, { t: 'deny', uid: m.uid }); else { r.taken.add(m.uid); toRoom(r, { t: 'take', cid: m.cid, uid: m.uid, from: p.id }, p); } break;
+      case 'put': if (m.item && typeof m.item === 'object') { r.puts.push({ cid: m.cid, item: m.item }); toRoom(r, { t: 'put', cid: m.cid, item: m.item, from: p.id }, p); } break;
+      case 'body': if (Array.isArray(m.items) && m.items.length <= 60) { r.bodies.push({ cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }); toRoom(r, { t: 'body', cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }, p); } break;
+      case 'phit': { const v = r.players.get(m.pid); if (v && !sameSide(r, p, v)) send(v, { t: 'phit', part: m.part, ammo: m.ammo, from: p.id }); break; }
+      case 'eshot': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'eshot', hits: m.hits, dmg: m.dmg, pen: m.pen, name: m.name }); break; }
+      case 'ehit': case 'shot': case 'dhit': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, Object.assign({}, m, { from: p.id })); break; }
+      case 'estate': if (p.id === r.hostId) { r.estate = { e: m.e, ap: m.ap, dr: m.dr }; toRoom(r, m, p); } break;
+      case 'pdmg': { const v = r.players.get(m.pid); if (v && v !== p && (!sameSide(r, p, v) || (m.ai && p.id === r.hostId))) send(v, { t: 'pdmg', i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), from: m.ai ? null : p.id }); break; }
+      case 'adm': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, { t: 'adm', i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), from: p.id }); break; }
+      case 'pev': if (['dead', 'dmg', 'boom'].includes(m.k)) toRoom(r, { t: 'pev', k: m.k, i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), by: m.by ? String(m.by) : null, x: +m.x || 0, y: +m.y || 0, z: +m.z || 0 }, p); break;
+      case 'msg': toRoom(r, { t: 'msg', text: String(m.text || '').slice(0, 120) }, p); break;
+      // a locked room someone opened stays open for everyone, including players who join later
+      case 'door': if (typeof m.id === 'string' && m.id.length < 32 && r.doors.size < 40) { r.doors.add(m.id); toRoom(r, { t: 'door', id: m.id }, p); } break;
+      // squad-only: going down, being looted while down, revives
+      case 'dbox': if ((p.squad || r.coop || p.side) && Array.isArray(m.items) && m.items.length <= 80) for (const q of r.players.values()) if (q !== p && (r.coop || q.squad === p.squad)) send(q, { t: 'dbox', cid: 'd' + p.id, x: +m.x || 0, z: +m.z || 0, name: p.name, items: m.items, from: p.id }); break;
+      case 'dboxgone': toRoom(r, { t: 'dboxgone', cid: 'd' + p.id }, p); break;
+      case 'reviving': case 'revive': { const v = r.players.get(m.pid); if (v && v !== p && (r.coop || (p.squad && v.squad === p.squad))) send(v, { t: m.t, on: !!m.on, from: p.id }); break; }
+      // boss fight events come from whoever runs the AI; lasting ones are kept for players who join late
+      case 'boss': if (p.id === r.hostId && typeof m.k === 'string') { const ev = { t: 'boss', k: m.k, x: +m.x || 0, z: +m.z || 0, p: m.p | 0, d: +m.d || 0, list: Array.isArray(m.list) ? m.list.slice(0, 16) : undefined }; if (ev.k !== 'mortar' && r.events.length < 40) r.events.push(ev); toRoom(r, ev, p); } break;
+      case 'kcredit': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'kcredit', i: m.i, kind: m.kind, head: !!m.head, w: m.w }); break; }
+      case 'pdied': { const k = conns.get(m.by); if (k && k !== p && (k.room === r || k.lastRoom === r.id)) { bump(k.account, 'kills'); bump(p.account, 'deaths'); } break; }
+    }
+  });
+  const gone = () => { if (!conns.has(p.id)) return; leaveRoom(p); leaveLobby(p); leaveSquad(p); conns.delete(p.id); presenceChanged(p.account); };
+  ws.on('close', gone); ws.on('error', gone);
+});
+
+server.listen(PORT, () => console.log(`Kolvik Station listening on http://0.0.0.0:${PORT}`));

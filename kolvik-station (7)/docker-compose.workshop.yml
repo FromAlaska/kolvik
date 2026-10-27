@@ -1,0 +1,17 @@
+# The workshop: edit the game live at http://<server>:<port>/workshop (admins only).
+#
+#   sudo docker compose -f docker-compose.yml -f docker-compose.workshop.yml up -d --build
+#
+# This adds WORKSHOP=1 and mounts your src/ and workshop/ folders into the container, so whatever you save in the
+# workshop (or in your own editor on the server) goes straight into your files, survives rebuilds, and the preview
+# reloads with it. Go back to the normal setup with:  sudo docker compose up -d --build
+#
+# The container runs as user 1000. If saving says "EACCES", give that user your folders:
+#   sudo chown -R 1000:1000 src workshop
+services:
+  kolvik:
+    environment:
+      - WORKSHOP=1
+    volumes:
+      - ./src:/app/src
+      - ./workshop:/app/workshop

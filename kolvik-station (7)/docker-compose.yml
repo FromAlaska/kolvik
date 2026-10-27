@@ -1,0 +1,19 @@
+services:
+  kolvik:
+    build: .
+    image: kolvik-station:latest
+    container_name: kolvik
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MAX_PLAYERS=8
+      - SEASON_DAYS=30
+      # - ADMINS=yourname         # accounts that get the debug tools (F9); comma-separated
+      # - ADMIN_TOKEN=change-me   # enables POST /api/admin/season/next
+    volumes:
+      - kolvik-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  kolvik-data:

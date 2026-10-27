@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kolvik Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@600;800&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+<style>
+:root{
+  --ice:#0b1215; --panel:#121c21; --panel2:#18252b; --line:#26363e; --frost:#dfe9ec; --dim:#7f949b;
+  --signal:#ff6b1a; --signal-ink:#1a0b02; --ok:#7cc9a4; --warn:#e8c55a; --bad:#e2574a;
+  --display:'Big Shoulders Stencil Display', Impact, 'Arial Narrow', sans-serif;
+  --body:'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{background:var(--ice); color:var(--frost); font-family:var(--body); font-size:14px; line-height:1.35; display:grid; grid-template-rows:auto 1fr; overflow:hidden}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--signal); outline-offset:1px}
+.lbl{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim)}
+.b{background:var(--panel2); border:1px solid var(--line); color:var(--frost); padding:4px 9px; font-family:var(--mono); font-size:11.5px; cursor:pointer; white-space:nowrap}
+.b:hover{border-color:var(--dim)} .b.on{border-color:var(--signal); color:#fff} .b.primary{background:var(--signal); color:var(--signal-ink); border-color:var(--signal); font-weight:600}
+.b:disabled{opacity:.45; cursor:default}
+.ico{min-width:30px; text-align:center}
+
+/* header */
+header{display:flex; align-items:center; gap:14px; padding:8px 14px; background:var(--panel); border-bottom:1px solid var(--line); min-width:0}
+.mark{font-family:var(--display); font-weight:800; font-size:26px; letter-spacing:.04em; line-height:1; white-space:nowrap}
+.mark em{font-style:normal; color:var(--signal)}
+#status{font-family:var(--mono); font-size:11.5px; color:var(--dim); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#status .dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--dim); margin-right:6px; vertical-align:1px}
+#status.live .dot{background:var(--ok)} #status.err .dot{background:var(--bad)} #status.busy .dot{background:var(--warn)}
+header .who{font-family:var(--mono); font-size:11.5px; color:var(--dim)}
+
+/* layout */
+main{display:grid; grid-template-columns:200px minmax(320px,1fr) minmax(380px,1.15fr); min-height:0}
+aside, .col{min-height:0; min-width:0; display:flex; flex-direction:column; border-right:1px solid var(--line)}
+aside{background:var(--panel); overflow:auto}
+aside h3{margin:12px 12px 6px; display:flex; align-items:center; justify-content:space-between}
+.flist{display:flex; flex-direction:column; padding:0 6px 8px}
+.flist button{all:unset; display:flex; align-items:center; gap:6px; padding:4px 8px; cursor:pointer; font-family:var(--mono); font-size:12px; color:var(--frost); border-left:2px solid transparent; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.flist button:hover{background:var(--panel2)} .flist button.open{border-left-color:var(--signal); background:var(--panel2)}
+.flist button .run{color:var(--ok); font-size:10px; width:10px} .flist button small{color:var(--dim); overflow:hidden; text-overflow:ellipsis}
+.flist button.err{color:var(--bad)}
+.flist .scene{font-family:var(--body); font-size:14px}
+
+/* editor */
+.edhead{display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid var(--line); background:var(--panel); min-width:0}
+#fname{font-family:var(--mono); font-size:12px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#fname .dirty{color:var(--signal)}
+#edwrap{flex:1; min-height:0; position:relative}
+#edwrap .CodeMirror, #edwrap textarea{position:absolute; inset:0; height:100%; width:100%}
+#edwrap textarea{background:#0e171b; color:var(--frost); border:0; padding:10px; font:12.5px/1.5 var(--mono); resize:none; tab-size:2; outline:none; white-space:pre}
+.CodeMirror{background:#0e171b; color:#d6e2e6; font:12.5px/1.5 var(--mono)}
+.CodeMirror-gutters{background:#0e171b; border-right:1px solid var(--line)} .CodeMirror-linenumber{color:#4c616a}
+.CodeMirror-cursor{border-left:2px solid var(--signal)} .CodeMirror-selected, .CodeMirror-focused .CodeMirror-selected{background:#24414f}
+.CodeMirror-matchingbracket{color:#fff!important; background:#30515f} .CodeMirror-activeline-background{background:#121f25}
+/* two classes deep so these beat CodeMirror's own .cm-s-default colours */
+.CodeMirror .cm-keyword{color:#ff9a5a} .CodeMirror .cm-def{color:#ffd27a} .CodeMirror .cm-variable{color:#d6e2e6} .CodeMirror .cm-variable-2{color:#b8d4de} .CodeMirror .cm-variable-3, .CodeMirror .cm-type{color:#7cc9a4}
+.CodeMirror .cm-property{color:#9fd0ea} .CodeMirror .cm-string, .CodeMirror .cm-string-2{color:#9fd27a} .CodeMirror .cm-number{color:#e8c55a} .CodeMirror .cm-atom{color:#e8c55a}
+.CodeMirror .cm-comment{color:#6a8790; font-style:italic} .CodeMirror .cm-operator{color:#c3d3d8} .CodeMirror .cm-builtin{color:#7cc9a4} .CodeMirror .cm-meta, .CodeMirror .cm-qualifier{color:#c08ae0}
+.CodeMirror .cm-tag{color:#ff9a5a} .CodeMirror .cm-attribute{color:#9fd0ea} .CodeMirror .cm-bracket{color:#8fa4ab} .CodeMirror .cm-error{color:#ff6b5b}
+.cm-error-line{background:rgba(226,87,74,.18)}
+.CodeMirror-dialog{background:var(--panel2); color:var(--frost)}
+.edfoot{font-family:var(--mono); font-size:11px; color:var(--dim); padding:4px 10px; border-top:1px solid var(--line); background:var(--panel); display:flex; gap:12px}
+
+/* preview */
+.prev{position:relative; flex:1.4; min-height:200px; background:#000}
+#frame{position:absolute; inset:0; width:100%; height:100%; border:0; display:block}
+#banner{position:absolute; left:8px; right:8px; top:8px; background:rgba(26,8,6,.92); border-left:3px solid var(--bad); padding:6px 10px; font-family:var(--mono); font-size:12px; color:#ffcbc4; white-space:pre-wrap; display:none; cursor:pointer}
+.tools{display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:6px 8px; border-bottom:1px solid var(--line); background:var(--panel)}
+.tools .sep{width:1px; height:20px; background:var(--line); margin:0 4px}
+.tools select{background:var(--panel2); border:1px solid var(--line); padding:3px 4px; font-family:var(--mono); font-size:11.5px}
+#time{font-family:var(--mono); font-size:11.5px; min-width:58px; text-align:right; color:var(--frost)}
+#scrub{width:110px; accent-color:var(--signal)}
+#stats{font-family:var(--mono); font-size:11px; color:var(--dim); padding:4px 10px; border-top:1px solid var(--line); background:var(--panel); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* lower panels */
+.lower{flex:1; min-height:160px; display:flex; flex-direction:column; border-top:1px solid var(--line)}
+.ptabs{display:flex; gap:2px; padding:4px 6px 0; background:var(--panel); border-bottom:1px solid var(--line)}
+.ptabs button{all:unset; cursor:pointer; padding:5px 10px 4px; font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); border-bottom:2px solid transparent}
+.ptabs button[aria-selected=true]{color:var(--frost); border-color:var(--signal)}
+.ptabs .count{color:var(--bad); margin-left:4px}
+.pane{flex:1; min-height:0; overflow:auto; padding:8px 10px; display:none}
+.pane.on{display:block}
+.prow{display:grid; grid-template-columns:120px 1fr 60px; align-items:center; gap:8px; padding:3px 0}
+.prow label{font-family:var(--mono); font-size:12px; color:var(--frost); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.prow input[type=range]{width:100%; accent-color:var(--signal)}
+.prow input[type=number], .prow select, .prow input[type=text]{background:var(--panel2); border:1px solid var(--line); padding:2px 4px; font-family:var(--mono); font-size:11.5px; width:100%}
+.prow input[type=color]{width:46px; height:22px; border:1px solid var(--line); background:none; padding:0}
+.empty{color:var(--dim); font-size:13px}
+#tree{font-family:var(--mono); font-size:11.5px; display:flex; flex-direction:column}
+#tree button{all:unset; cursor:pointer; padding:1px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--frost)}
+#tree button:hover{background:var(--panel2)} #tree button.sel{background:#2a3c22; color:#fff} #tree button i{color:var(--dim); font-style:normal}
+.insp{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.xf{display:grid; grid-template-columns:62px repeat(3,1fr); gap:4px; align-items:center; font-family:var(--mono); font-size:11.5px; margin:4px 0}
+.xf input{background:var(--panel2); border:1px solid var(--line); padding:2px 4px; width:100%; font-family:var(--mono); font-size:11.5px; min-width:0}
+#log{font-family:var(--mono); font-size:11.5px; white-space:pre-wrap; word-break:break-word}
+#log .l{padding:3px 0; border-bottom:1px solid #18252b} #log .l.err{color:#ffb4a8} #log .l.warn{color:var(--warn)} #log .l.ok{color:var(--ok)} #log .l small{color:var(--dim)}
+#log a{color:#9fd0ea; cursor:pointer; text-decoration:underline}
+
+/* overlays */
+.ov{position:fixed; inset:0; background:rgba(5,9,11,.82); display:grid; place-items:center; z-index:50}
+.ov[hidden]{display:none}
+.card{background:var(--panel); border:1px solid var(--line); padding:20px 22px; width:min(560px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto}
+.card h2{font-family:var(--display); font-weight:800; font-size:28px; letter-spacing:.04em; text-transform:uppercase; margin:0 0 10px}
+.card p{margin:0 0 10px; color:#c4d2d7} .card code{font-family:var(--mono); font-size:12px; color:#ffd27a}
+.card label{display:block; margin:8px 0 3px} .card input{width:100%; background:var(--panel2); border:1px solid var(--line); padding:7px 8px}
+.card .acts{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
+.card pre{background:#0e171b; border:1px solid var(--line); padding:10px; font:11.5px/1.45 var(--mono); overflow:auto; color:#d6e2e6}
+.card table{border-collapse:collapse; width:100%; font-size:13px} .card td{border-bottom:1px solid var(--line); padding:4px 6px; vertical-align:top} .card td:first-child{font-family:var(--mono); font-size:12px; color:#ffd27a; white-space:nowrap}
+.err{color:#ffb4a8; font-family:var(--mono); font-size:12px; min-height:16px}
+
+@media (max-width:1100px){ main{grid-template-columns:170px 1fr 1fr} }
+@media (max-width:820px){ body{overflow:auto} main{grid-template-columns:1fr; grid-auto-rows:auto} aside{max-height:180px} .col{min-height:70vh} }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">KOLVIK <em>WORKSHOP</em></div>
+  <div id="status"><span class="dot"></span><span id="statusText">Connecting…</span></div>
+  <span class="who" id="who"></span>
+  <button class="b" id="helpBtn">Help</button>
+  <a class="b" href="./" target="_blank" rel="noopener" style="text-decoration:none">Open game ↗</a>
+</header>
+<main>
+  <aside>
+    <h3><span class="lbl">Scenes</span><button class="b" id="newScene" title="New scene">+ New</button></h3>
+    <div class="flist" id="scenes"></div>
+    <h3><span class="lbl">Game source</span></h3>
+    <div class="flist" id="srcs"></div>
+  </aside>
+  <section class="col">
+    <div class="edhead">
+      <div id="fname">No file open</div>
+      <button class="b" id="delBtn" title="Delete this scene">Delete</button>
+      <button class="b" id="runBtn" title="Run this scene now, without saving (Ctrl+Enter)">▶ Run</button>
+      <button class="b primary" id="saveBtn" title="Save (Ctrl+S)">Save</button>
+    </div>
+    <div id="edwrap"></div>
+    <div class="edfoot"><span id="cursor">—</span><span id="edinfo"></span></div>
+  </section>
+  <section class="col" style="border-right:0">
+    <div class="tools">
+      <button class="b ico" id="playBtn" title="Play / pause (P)">❚❚</button>
+      <button class="b ico" id="stepBtn" title="One frame (.)">⏭</button>
+      <button class="b ico" id="restartBtn" title="Restart the scene (R)">↺</button>
+      <select id="speed" title="Playback speed"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+      <span id="time">0.00 s</span>
+      <input type="range" id="scrub" min="0" max="20" step="0.05" value="0" title="Jump to a time (rebuilds the scene and plays it forward to there)">
+      <span class="sep"></span>
+      <button class="b" data-view="grid">Grid</button>
+      <button class="b" data-view="ground">Snow</button>
+      <button class="b" data-view="pivots" title="Show the joints (groups) the game rotates to animate">Pivots</button>
+      <button class="b" data-view="wire">Wire</button>
+      <button class="b" data-view="pix" title="Render like the game: 300 pixels high with its vertex snapping">Game look</button>
+      <select id="sky" title="Background"><option value="day">Day</option><option value="night">Night</option><option value="studio">Studio</option></select>
+      <span class="sep"></span>
+      <button class="b" id="frameBtn" title="Point the camera at the selection, or everything (F)">Frame</button>
+      <button class="b" id="shotBtn" title="Save a PNG of the preview">PNG</button>
+    </div>
+    <div class="prev"><iframe id="frame" title="Preview"></iframe><div id="banner"></div></div>
+    <div id="stats">—</div>
+    <div class="lower">
+      <div class="ptabs" role="tablist">
+        <button data-pane="params" aria-selected="true">Parameters</button>
+        <button data-pane="insp" aria-selected="false">Scene tree</button>
+        <button data-pane="log" aria-selected="false">Console<span class="count" id="errCount"></span></button>
+      </div>
+      <div class="pane on" id="pane-params"><div id="params" class="empty">Run a scene to see its parameters.</div></div>
+      <div class="pane" id="pane-insp"><div class="insp"><div id="tree"></div><div id="selbox" class="empty">Click something in the preview, or in the list.</div></div></div>
+      <div class="pane" id="pane-log"><div style="display:flex;gap:6px;margin-bottom:6px"><button class="b" id="clearLog">Clear</button></div><div id="log"></div></div>
+    </div>
+  </section>
+</main>
+
+<div class="ov" id="login" hidden><div class="card">
+  <h2>Sign in</h2>
+  <p>The workshop is for admins: use an account listed in <code>ADMINS</code>. Signing in here also signs you in to the game in this browser.</p>
+  <label class="lbl" for="lname">Name</label><input id="lname" autocomplete="username">
+  <label class="lbl" for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password">
+  <div class="err" id="lerr"></div>
+  <div class="acts"><button class="b primary" id="lgo">Sign in</button></div>
+</div></div>
+
+<div class="ov" id="newov" hidden><div class="card">
+  <h2>New scene</h2>
+  <p>A scene is a short script in <code>workshop/scenes/</code> that builds something and animates it. It starts from a small template.</p>
+  <label class="lbl" for="nname">File name</label><input id="nname" placeholder="my-thing" autocomplete="off">
+  <div class="err" id="nerr"></div>
+  <div class="acts"><button class="b" id="ncancel">Cancel</button><button class="b primary" id="ngo">Create</button></div>
+</div></div>
+
+<div class="ov" id="help" hidden><div class="card" style="width:min(760px,calc(100vw - 32px))">
+  <h2>How the workshop works</h2>
+  <p>The preview runs <b>the game's own code</b>: every function in <code>src/js/</code> is loaded, the game just doesn't start. A <b>scene</b> (left, top) builds something with that code and animates it.</p>
+  <p><b>Edit a scene</b> and press <code>Ctrl+Enter</code> to run it straight away, or <code>Ctrl+S</code> to save. <b>Edit game source</b> (left, bottom) and save: the server rebuilds the game and the preview reloads with your change, keeping the camera, parameters and scene. Saving a file from your own editor (VS Code and so on) does the same. Syntax errors are caught before the preview reloads and shown with their file and line.</p>
+  <table>
+    <tr><td>add(obj, x, y, z)</td><td>put a THREE object in the scene; returns it</td></tr>
+    <tr><td>params({...})</td><td>controls in the Parameters tab: <code>speed:[8,1,20]</code> slider · <code>coat:'#5a6a4a'</code> colour · <code>armor:true</code> toggle · <code>gun:['akr','makar']</code> list. Read them as <code>p.speed</code>. A value read while building rebuilds the scene when you change it; one read in onUpdate changes live.</td></tr>
+    <tr><td>onUpdate((dt, t) =&gt; …)</td><td>runs every frame (dt seconds, t scene time)</td></tr>
+    <tr><td>keys</td><td>keys held while the preview has focus: <code>keys.KeyW</code>, <code>keys.Space</code></td></tr>
+    <tr><td>log(…)</td><td>print to the Console tab</td></tr>
+    <tr><td>frame(obj)</td><td>point the camera at something</td></tr>
+    <tr><td>inRaid(() =&gt; …)</td><td>call a game function that expects a raid (it reads <code>R</code>), e.g. <code>inRaid(() =&gt; animDead(e, dt))</code></td></tr>
+    <tr><td>hex('#rrggbb')</td><td>colour parameter → the number the game's builders take</td></tr>
+    <tr><td>ws.camera, ws.controls, ws.scene, ws.THREE</td><td>the camera, orbit controls, the scene's root group, three.js</td></tr>
+    <tr><td>game code</td><td><code>humanoid()</code>, <code>walkAnim()</code>, <code>buildGun()</code>, <code>planeModel()</code>, <code>sledModel()</code>, <code>heliModel()</code>, <code>MC()</code>, <code>M('crate')</code>, <code>ITEMS</code>, <code>EK</code>, <code>sfxShot()</code>…</td></tr>
+  </table>
+  <p style="margin-top:12px"><b>Preview:</b> drag to orbit, right-drag to pan, wheel to zoom. Click a part to select it; the Scene tree tab shows its position, rotation and scale (live, and you can type new values to try them; <i>Copy as code</i> gives you the line to paste). <b>Pivots</b> marks the groups the game rotates to animate. <b>Game look</b> renders at the game's 300-pixel height with its vertex wobble. The time slider jumps to a moment: it rebuilds the scene and plays it forward.</p>
+  <p><b>Keys</b> (when not typing): <code>P</code> play/pause · <code>.</code> one frame · <code>R</code> restart · <code>F</code> frame.</p>
+  <div class="acts"><button class="b primary" id="helpClose">Close</button></div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={ get(k,d){ try{ const v=localStorage.getItem('kw-'+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem('kw-'+k,JSON.stringify(v)); }catch(e){} } };
+
+/* ---------------- account ---------------- */
+let ACC=null; try{ ACC=JSON.parse(localStorage.getItem('kolvik-acc')||'null'); }catch(e){}
+async function api(url,method='GET',body){
+  const r=await fetch(url,{method,headers:Object.assign({'content-type':'application/json'},ACC&&ACC.token?{authorization:'Bearer '+ACC.token}:{}),body:body?JSON.stringify(body):undefined,cache:'no-store'});
+  const j=await r.json().catch(()=>({})); if(!r.ok){ const e=new Error(j.error||('HTTP '+r.status)); e.status=r.status; e.body=j; throw e; } return j;
+}
+function showLogin(msg){ $('#login').hidden=false; $('#lerr').textContent=msg||''; setTimeout(()=>$('#lname').focus(),0); }
+$('#lgo').onclick=async()=>{ try{ const j=await api('api/login','POST',{name:$('#lname').value.trim(),pass:$('#lpass').value}); ACC={token:j.token,name:j.name}; localStorage.setItem('kolvik-acc',JSON.stringify(ACC)); $('#login').hidden=true; start(); }catch(e){ $('#lerr').textContent=e.message; } };
+$('#lpass').onkeydown=e=>{ if(e.key==='Enter') $('#lgo').click(); };
+
+/* ---------------- status, console ---------------- */
+function status(text,kind){ $('#statusText').textContent=text; $('#status').className=kind||''; }
+let errN=0;
+function logLine(html,kind){ const d=document.createElement('div'); d.className='l '+(kind||''); d.innerHTML=`<small>${new Date().toLocaleTimeString()}</small> ${html}`; const L=$('#log'); L.appendChild(d); while(L.children.length>300) L.firstChild.remove(); L.scrollTop=L.scrollHeight; $('#pane-log').scrollTop=1e9;
+  if(kind==='err'){ errN++; $('#errCount').textContent=errN; } }
+$('#clearLog').onclick=()=>{ $('#log').innerHTML=''; errN=0; $('#errCount').textContent=''; };
+document.addEventListener('click',e=>{ const a=e.target.closest('a[data-file]'); if(!a) return; e.preventDefault(); openFile(a.dataset.file,+a.dataset.line||0); });
+const fileLink=(file,line,col)=>`<a data-file="${esc(file)}" data-line="${line||0}">${esc(file.replace(/^src\/js\//,'').replace(/^workshop\/scenes\//,'scene: '))}${line?':'+line:''}${col?':'+col:''}</a>`;
+
+/* ---------------- build map: game.html line → src file and line ---------------- */
+let MAP=[];
+async function loadMap(){ try{ MAP=(await api('api/workshop/map')).map; }catch(e){} }
+const mapLine=n=>{ for(const e of MAP) if(n>=e.start&&n<e.start+e.lines) return {file:e.file,line:n-e.start+1}; return null; };
+// turn "…/workshop-frame:3183:12" and "scenes/x.js:4:9" in a stack into links to the source
+function linkStack(stack){
+  return esc(stack).replace(/(?:https?:\/\/[^\s)]*?)?workshop-frame(?:\?[^:\s)]*)?:(\d+):(\d+)/g,(m,l,c)=>{ const s=mapLine(+l); return s?fileLink(s.file,s.line,c):m; })
+    .replace(/scenes\/([\w.-]+\.js):(\d+):(\d+)/g,(m,f,l,c)=>fileLink('workshop/scenes/'+f,+l,c));
+}
+function firstLoc(stack,line,file){
+  let m=/workshop-frame[^:\s)]*:(\d+):\d+/.exec(stack||''); if(m){ const s=mapLine(+m[1]); if(s) return s; }
+  m=/scenes\/([\w.-]+\.js):(\d+)/.exec(stack||''); if(m) return {file:'workshop/scenes/'+m[1],line:+m[2]};
+  if(line&&/workshop-frame/.test(file||'')) return mapLine(line); return null;
+}
+
+/* ---------------- files ---------------- */
+let FILES={scenes:[],src:[]}, BUILD=null;
+let ed=null, cur={path:null,text:'',saved:'',mtime:0}; let running=store.get('scene',null);
+async function loadFiles(){ FILES=await api('api/workshop/files'); BUILD=FILES.build; renderFiles(); }
+function renderFiles(){
+  const errFiles=new Set((BUILD&&BUILD.errors||[]).map(e=>e.file));
+  $('#scenes').innerHTML=FILES.scenes.map(s=>`<button class="scene ${cur.path===s.path?'open':''}" data-path="${esc(s.path)}" title="${esc(s.path)}"><span class="run">${running===s.path?'▶':''}</span><span>${esc(s.title)}</span></button>`).join('')||'<span class="empty" style="padding:4px 8px">No scenes yet.</span>';
+  $('#srcs').innerHTML=FILES.src.map(f=>`<button class="${cur.path===f.path?'open':''} ${errFiles.has(f.path)?'err':''}" data-path="${esc(f.path)}" title="${esc(f.path)}"><span>${esc(f.path.replace(/^src\/(js|css)\//,''))}</span>${f.path.endsWith('.css')?'<small>css</small>':''}</button>`).join('');
+  for(const b of document.querySelectorAll('.flist button[data-path]')) b.onclick=()=>{ const p=b.dataset.path; openFile(p).then(()=>{ if(p.startsWith('workshop/scenes/')) runScene(p,cur.text); }); };
+}
+const isScene=p=>p&&p.startsWith('workshop/scenes/');
+const dirty=()=>!!cur.path&&getText()!==cur.saved;
+function getText(){ return ed?ed.getValue():($('#edwrap textarea')||{}).value||''; }
+function setText(t,keepView){ if(ed){ const c=ed.getCursor(), s=ed.getScrollInfo(); ed.setValue(t); ed.clearHistory(); if(keepView){ ed.setCursor(c); ed.scrollTo(s.left,s.top); } } else { const ta=$('#edwrap textarea'); ta.value=t; } }
+function updName(){ $('#fname').innerHTML=cur.path?`${esc(cur.path)} ${dirty()?'<span class="dirty">● unsaved</span>':''}`:'No file open'; $('#runBtn').hidden=$('#delBtn').hidden=!isScene(cur.path); document.title=(dirty()?'● ':'')+'Kolvik Workshop'; }
+async function openFile(p,line){
+  if(cur.path!==p){
+    if(dirty()&&!confirm(`Discard your unsaved changes to ${cur.path}?`)) return;
+    const j=await api('api/workshop/file?path='+encodeURIComponent(p)); cur={path:p,text:j.text,saved:j.text,mtime:j.mtime};
+    if(ed) ed.setOption('mode',p.endsWith('.css')?'css':p.endsWith('.html')?'htmlmixed':'javascript');
+    setText(j.text); store.set('open',p); renderFiles();
+  }
+  updName(); markErrors();
+  if(line){ if(ed){ ed.focus(); ed.setCursor({line:line-1,ch:0}); ed.scrollIntoView({line:line-1,ch:0},120); } else { const ta=$('#edwrap textarea'); const lines=ta.value.split('\n'); const pos=lines.slice(0,line-1).join('\n').length+1; ta.focus(); ta.setSelectionRange(pos,pos); } }
+}
+async function save(force){
+  if(!cur.path) return; const text=getText();
+  try{ const j=await api('api/workshop/file','PUT',{path:cur.path,text,base:cur.mtime,force}); cur.saved=text; cur.mtime=j.mtime; updName();
+    logLine(`saved ${fileLink(cur.path)}`,'ok');
+    if(isScene(cur.path)){ if(running===cur.path) runScene(cur.path,text); loadFiles(); } else status('Saved: rebuilding…','busy');
+  }catch(e){
+    if(e.status===409){ if(confirm(`${cur.path} was changed on disk (another editor?) since you opened it.\n\nOK: overwrite it with what's in the workshop.\nCancel: keep the file on disk and load it here.`)) return save(true); cur.text=cur.saved=e.body.text; cur.mtime=e.body.mtime; setText(e.body.text,true); updName(); return; }
+    logLine(esc(e.message),'err'); alert(e.message);
+  }
+}
+let markedLine=null;
+function markErrors(){
+  if(!ed) return; if(markedLine!=null){ ed.removeLineClass(markedLine,'background','cm-error-line'); markedLine=null; }
+  const e=(BUILD&&BUILD.errors||[]).find(x=>x.file===cur.path)||(lastRunErr&&lastRunErr.file===cur.path?lastRunErr:null);
+  if(e&&e.line){ markedLine=ed.addLineClass(e.line-1,'background','cm-error-line'); }
+}
+
+/* ---------------- editor ---------------- */
+function makeEditor(){
+  const wrap=$('#edwrap');
+  if(window.CodeMirror){
+    ed=CodeMirror(wrap,{value:'',mode:'javascript',lineNumbers:true,indentUnit:2,tabSize:2,indentWithTabs:false,matchBrackets:true,autoCloseBrackets:true,styleActiveLine:true,lineWrapping:false,
+      extraKeys:{'Ctrl-S':()=>save(),'Cmd-S':()=>save(),'Ctrl-Enter':()=>runNow(),'Cmd-Enter':()=>runNow(),'Ctrl-/':'toggleComment','Cmd-/':'toggleComment',Tab:cm=>cm.somethingSelected()?cm.indentSelection('add'):cm.replaceSelection('  ')}});
+    ed.on('change',()=>updName()); ed.on('cursorActivity',()=>{ const c=ed.getCursor(); $('#cursor').textContent=`line ${c.line+1}, col ${c.ch+1}`; });
+    $('#edinfo').textContent='Ctrl+S save · Ctrl+Enter run · Ctrl+F find · Ctrl+/ comment';
+  } else {
+    const ta=document.createElement('textarea'); ta.spellcheck=false; wrap.appendChild(ta);
+    ta.addEventListener('input',updName);
+    ta.addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); const s=ta.selectionStart; ta.setRangeText('  ',s,ta.selectionEnd,'end'); updName(); }
+      if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); save(); } if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); runNow(); } });
+    ta.addEventListener('keyup',()=>{ const v=ta.value.slice(0,ta.selectionStart).split('\n'); $('#cursor').textContent=`line ${v.length}, col ${v[v.length-1].length+1}`; });
+    $('#edinfo').textContent='Plain editor (the syntax-highlighting editor could not load) · Ctrl+S save · Ctrl+Enter run';
+  }
+}
+addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); save(); } });
+addEventListener('beforeunload',e=>{ if(dirty()){ e.preventDefault(); e.returnValue=''; } });
+$('#saveBtn').onclick=()=>save();
+$('#runBtn').onclick=()=>runNow();
+$('#delBtn').onclick=async()=>{ if(!isScene(cur.path)||!confirm(`Delete ${cur.path}? This removes the file.`)) return; const p=cur.path;
+  try{ await api('api/workshop/file?path='+encodeURIComponent(p),'DELETE'); logLine(`deleted ${esc(p)}`,'ok'); cur={path:null,text:'',saved:'',mtime:0}; setText(''); await loadFiles();
+    if(running===p){ running=FILES.scenes.length?FILES.scenes[0].path:null; if(running) runScene(running); } if(running) await openFile(running); else updName(); }catch(e){ alert(e.message); } };
+function runNow(){ if(isScene(cur.path)) runScene(cur.path,getText(),true); else save(); }
+
+/* ---------------- preview frame ---------------- */
+const fr=$('#frame'); let ready=false, sceneCode=null, VIEW=Object.assign({grid:true,ground:true,pivots:false,wire:false,pix:false,sky:'day'},store.get('view',{}));
+let SPEED=store.get('speed',1), PAUSED=false, CAM=store.get('cam',null), PV=store.get('params',{}), lastRunErr=null, reloadT=0;
+const send=m=>{ if(ready) fr.contentWindow.postMessage(m,location.origin); };
+function reloadFrame(){ ready=false; reloadT=performance.now(); fr.src='workshop-frame?'+Date.now(); }
+async function runScene(p,code,reframe){
+  if(code==null){ const j=await api('api/workshop/file?path='+encodeURIComponent(p)); code=j.text; }
+  const changed=running!==p; running=p; sceneCode=code; store.set('scene',p); lastRunErr=null; hideBanner(); renderFiles();
+  send({kw:'scene',name:p.split('/').pop(),code,reframe:changed});
+  if(changed){ $('#params').innerHTML='<span class="empty">…</span>'; }
+}
+function hideBanner(){ $('#banner').style.display='none'; }
+function banner(html,loc){ const b=$('#banner'); b.innerHTML=html; b.style.display='block'; b.onclick=loc?()=>openFile(loc.file,loc.line):null; }
+addEventListener('message',ev=>{
+  if(ev.origin!==location.origin||ev.source!==fr.contentWindow||!ev.data||!ev.data.kw) return; const m=ev.data;
+  switch(m.kw){
+    case 'ready': ready=true; if(reloadT) logLine(`preview reloaded in ${((performance.now()-reloadT)/1000).toFixed(1)} s`,'ok');
+      send({kw:'init',view:VIEW,speed:SPEED,paused:PAUSED,cam:CAM,paramValues:PV[running]||{},name:running?running.split('/').pop():null,code:sceneCode}); break;
+    case 'error': {
+      const loc=firstLoc(m.stack,m.line,m.file); if(m.where!=='game code') lastRunErr=loc?{file:loc.file,line:loc.line}:null;
+      const where=loc?fileLink(loc.file,loc.line):(m.line?`page line ${m.line}`:'');
+      logLine(`<b>${esc(m.where)}</b>: ${esc(m.message)} ${where}${m.stack?'\n'+linkStack(m.stack.split('\n').slice(1,6).join('\n')):''}`,'err');
+      banner(`${esc(m.where)}: ${esc(m.message)}${loc?`  ·  ${esc(loc.file.replace(/^src\/js\//,''))}:${loc.line} (click to open)`:''}`,loc); markErrors(); break; }
+    case 'log': logLine(esc(m.text)); break;
+    case 'params': renderParams(m.list); break;
+    case 'stats': $('#stats').textContent=`${m.fps} fps · ${m.calls} draw calls · ${m.tris.toLocaleString()} triangles · ${m.objects} objects${m.broken?' · stopped by an error':''}`;
+      $('#time').textContent=m.t.toFixed(2)+' s'; if(!scrubbing) $('#scrub').value=Math.min(+$('#scrub').max,m.t);
+      if(m.paused!==PAUSED){ PAUSED=m.paused; updPlay(); } CAM=m.cam; store.set('cam',CAM); break;
+    case 'state': if(m.paused!=null){ PAUSED=m.paused; updPlay(); } break;
+    case 'tree': renderTree(m.nodes,m.sel); break;
+    case 'sel': renderSel(m); break;
+    case 'picked': SELID=m.id; send({kw:'tree'}); if(m.id) showPane('insp'); break;
+    case 'shot': { const a=document.createElement('a'); a.href=m.png; a.download=(running||'preview').split('/').pop().replace('.js','')+'.png'; a.click(); break; }
+  }
+});
+
+/* parameters */
+let paramSig='';
+function renderParams(list){
+  const box=$('#params'); if(!list.length){ paramSig=''; box.className='empty'; box.innerHTML='This scene has no parameters. Add some with <code>params({ speed:[1,0,5] })</code>.'; return; }
+  // same parameters as before (the scene just rebuilt because one changed): update in place, so a slider you're dragging keeps working
+  const sig=running+'|'+list.map(p=>[p.name,p.kind,p.min,p.max,p.step,(p.options||[]).join('/')].join(':')).join('|');
+  if(sig===paramSig&&box.querySelector('[data-p]')){ for(const p of list){ const el=box.querySelector(`[data-p="${CSS.escape(p.name)}"]`); if(!el||el===document.activeElement) continue; if(el.type==='checkbox') el.checked=!!p.value; else el.value=p.value; const num=box.querySelector(`[data-pn="${CSS.escape(p.name)}"]`); if(num&&num!==document.activeElement) num.value=p.value; } return; }
+  paramSig=sig; box.className=''; const pv=PV[running]=PV[running]||{};
+  box.innerHTML=list.map(p=>{ const id='p_'+p.name, v=p.value;
+    if(p.kind==='range') return `<div class="prow"><label for="${id}" title="${esc(p.name)}">${esc(p.name)}</label><input type="range" id="${id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${v}" data-p="${esc(p.name)}"><input type="number" step="${p.step}" value="${v}" data-pn="${esc(p.name)}"></div>`;
+    if(p.kind==='toggle') return `<div class="prow"><label for="${id}">${esc(p.name)}</label><span><input type="checkbox" id="${id}" ${v?'checked':''} data-p="${esc(p.name)}"></span><span></span></div>`;
+    if(p.kind==='choice') return `<div class="prow"><label for="${id}">${esc(p.name)}</label><select id="${id}" data-p="${esc(p.name)}">${p.options.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select><span></span></div>`;
+    if(p.kind==='color') return `<div class="prow"><label for="${id}">${esc(p.name)}</label><input type="color" id="${id}" value="${esc(v)}" data-p="${esc(p.name)}"><span class="lbl">${esc(v)}</span></div>`;
+    return `<div class="prow"><label for="${id}">${esc(p.name)}</label><input type="text" id="${id}" value="${esc(v)}" data-p="${esc(p.name)}"><span></span></div>`; }).join('')+`<div style="margin-top:8px"><button class="b" id="resetParams">Reset to defaults</button></div>`;
+  const setP=(name,value)=>{ pv[name]=value; store.set('params',PV); send({kw:'param',name,value}); };
+  box.querySelectorAll('[data-p]').forEach(el=>{ const n=el.dataset.p; const ev=el.type==='range'||el.type==='color'||el.type==='text'?'input':'change';
+    el.addEventListener(ev,()=>{ const v=el.type==='checkbox'?el.checked:el.type==='range'?+el.value:el.value; setP(n,v); const num=box.querySelector(`[data-pn="${CSS.escape(n)}"]`); if(num) num.value=v; if(el.type==='color') el.nextElementSibling.textContent=v; }); });
+  box.querySelectorAll('[data-pn]').forEach(el=>el.addEventListener('change',()=>{ const n=el.dataset.pn, v=+el.value; setP(n,v); box.querySelector(`[data-p="${CSS.escape(n)}"]`).value=v; }));
+  $('#resetParams').onclick=()=>{ PV[running]={}; store.set('params',PV); paramSig=''; if(sceneCode!=null) reloadFrame(); };
+}
+
+/* scene tree and inspector */
+let SELID=null;
+function renderTree(nodes,sel){ if(sel!==undefined) SELID=sel;
+  $('#tree').innerHTML=nodes.length?nodes.map(n=>`<button data-id="${n.id}" class="${n.id===SELID?'sel':''}" style="padding-left:${4+n.d*12}px" title="${esc(n.type)}">${n.kids?'▾':'·'} ${esc(n.name)} <i>${n.type==='Mesh'?'':esc(n.type)}${n.ud.length?' {'+esc(n.ud.join(', '))+'}':''}</i></button>`).join(''):'<span class="empty">Nothing added yet.</span>';
+  $('#tree').querySelectorAll('button').forEach(b=>b.onclick=()=>{ SELID=+b.dataset.id; send({kw:'select',id:SELID}); $('#tree').querySelectorAll('button').forEach(x=>x.classList.toggle('sel',x===b)); }); }
+function renderSel(s){
+  const box=$('#selbox');
+  if(!s.id){ box.className='empty'; box.innerHTML='Click something in the preview, or in the list.'; return; }
+  if(box.dataset.id==String(s.id)&&box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT') return; // don't overwrite what you're typing
+  const row=(k,v,lbl)=>`<div class="xf"><span class="lbl">${lbl}</span>${v.map((x,i)=>`<input data-k="${k}" data-i="${i}" value="${x}">`).join('')}</div>`;
+  box.className=''; box.dataset.id=s.id;
+  box.innerHTML=`<div style="font-family:var(--mono);font-size:12px;margin-bottom:4px"><b>${esc(s.name)}</b> <span class="lbl">${esc(s.type)}</span></div>
+    ${row('pos',s.pos,'position')}${row('rot',s.rot,'rotation')}${row('scale',s.scale,'scale')}
+    <label style="font-family:var(--mono);font-size:11.5px;display:flex;gap:6px;align-items:center;margin:4px 0"><input type="checkbox" id="selVis" ${s.visible?'checked':''}> visible</label>
+    ${s.ud.length?`<div class="lbl" style="margin:4px 0">userData: ${esc(s.ud.join(', '))}</div>`:''}
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px"><button class="b" id="selParent">Parent</button><button class="b" id="selFrame">Frame</button><button class="b" id="selCopy">Copy as code</button></div>
+    <p class="lbl" style="margin-top:8px;text-transform:none;letter-spacing:0">Values update live while it animates. Typed values last until the scene rebuilds.</p>`;
+  box.querySelectorAll('input[data-k]').forEach(inp=>inp.addEventListener('change',()=>{ const k=inp.dataset.k; const vals=[...box.querySelectorAll(`input[data-k="${k}"]`)].map(x=>+x.value||0); send({kw:'xform',[k]:vals}); }));
+  $('#selVis').onchange=e=>send({kw:'xform',visible:e.target.checked});
+  $('#selParent').onclick=()=>send({kw:'parent'}); $('#selFrame').onclick=()=>send({kw:'frame'});
+  $('#selCopy').onclick=()=>{ const t=`obj.position.set(${s.pos.join(', ')});\nobj.rotation.set(${s.rot.join(', ')});\nobj.scale.set(${s.scale.join(', ')});`; navigator.clipboard.writeText(t).then(()=>logLine('copied the transform as code','ok')); };
+}
+
+/* toolbar */
+function updPlay(){ $('#playBtn').textContent=PAUSED?'▶':'❚❚'; $('#playBtn').title=PAUSED?'Play (P)':'Pause (P)'; }
+$('#playBtn').onclick=()=>{ PAUSED=!PAUSED; send({kw:PAUSED?'pause':'play'}); updPlay(); if(!PAUSED) hideBanner(); };
+$('#stepBtn').onclick=()=>{ PAUSED=true; updPlay(); send({kw:'step'}); };
+$('#restartBtn').onclick=()=>{ hideBanner(); send({kw:'restart'}); };
+$('#speed').value=String(SPEED); $('#speed').onchange=e=>{ SPEED=+e.target.value; store.set('speed',SPEED); send({kw:'speed',value:SPEED}); };
+let scrubbing=false; $('#scrub').addEventListener('input',e=>{ scrubbing=true; PAUSED=true; updPlay(); send({kw:'pause'}); send({kw:'seek',t:+e.target.value}); }); $('#scrub').addEventListener('change',()=>{ scrubbing=false; });
+document.querySelectorAll('[data-view]').forEach(b=>{ const k=b.dataset.view; b.classList.toggle('on',!!VIEW[k]); b.onclick=()=>{ VIEW[k]=!VIEW[k]; b.classList.toggle('on',VIEW[k]); store.set('view',VIEW); send({kw:'view',view:{[k]:VIEW[k]}}); }; });
+$('#sky').value=VIEW.sky; $('#sky').onchange=e=>{ VIEW.sky=e.target.value; store.set('view',VIEW); send({kw:'view',view:{sky:VIEW.sky}}); };
+$('#frameBtn').onclick=()=>send({kw:'frame'}); $('#shotBtn').onclick=()=>send({kw:'shot'});
+function showPane(k){ document.querySelectorAll('.ptabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.pane===k))); document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+k)); store.set('pane',k); if(k==='insp') send({kw:'tree'}); }
+document.querySelectorAll('.ptabs button').forEach(b=>b.onclick=()=>showPane(b.dataset.pane));
+addEventListener('keydown',e=>{ if(e.ctrlKey||e.metaKey||e.altKey) return; const t=e.target; if(t.closest&&(t.closest('.CodeMirror')||/INPUT|TEXTAREA|SELECT/.test(t.tagName))) return;
+  if(e.key==='p'||e.key==='P') $('#playBtn').click(); else if(e.key==='.') $('#stepBtn').click(); else if(e.key==='r'||e.key==='R') $('#restartBtn').click(); else if(e.key==='f'||e.key==='F') $('#frameBtn').click(); });
+$('#helpBtn').onclick=()=>{ $('#help').hidden=false; }; $('#helpClose').onclick=()=>{ $('#help').hidden=true; store.set('helped',true); };
+
+/* new scene */
+const TEMPLATE=name=>`// ${name}
+// Build something with the game's code and animate it. Ctrl+Enter runs it, Ctrl+S saves it.
+const p = params({
+  spin: [0.5, -3, 3],         // a slider: [default, min, max]
+  colour: '#ff6b1a',          // a colour picker
+  bob: true,                  // a checkbox
+});
+
+// anything from the game works here: humanoid(), buildGun(), planeModel(), MC(), M('crate')...
+const h = humanoid({ coat: hex(p.colour) });
+h.g.name = 'character';
+add(h.g);
+
+const e = { lp: h.lp, rp: h.rp, walk: 0, moving: true };   // what walkAnim() expects
+onUpdate((dt, t) => {
+  h.g.rotation.y += dt * p.spin;
+  h.g.position.y = p.bob ? Math.abs(Math.sin(t * 2)) * 0.1 : 0;
+  walkAnim(e, dt);
+});
+`;
+$('#newScene').onclick=()=>{ $('#newov').hidden=false; $('#nerr').textContent=''; $('#nname').value=''; setTimeout(()=>$('#nname').focus(),0); };
+$('#ncancel').onclick=()=>{ $('#newov').hidden=true; };
+$('#nname').onkeydown=e=>{ if(e.key==='Enter') $('#ngo').click(); if(e.key==='Escape') $('#ncancel').click(); };
+$('#ngo').onclick=async()=>{ const n=$('#nname').value.trim().toLowerCase().replace(/\.js$/,'').replace(/[^a-z0-9_-]+/g,'-').replace(/^-|-$/g,''); if(!n){ $('#nerr').textContent='Give it a name.'; return; }
+  const p='workshop/scenes/'+n+'.js'; if(FILES.scenes.some(s=>s.path===p)){ $('#nerr').textContent='That scene exists already.'; return; }
+  try{ const title=n.replace(/[-_]+/g,' ').replace(/^./,c=>c.toUpperCase()); await api('api/workshop/file','PUT',{path:p,text:TEMPLATE(title)}); $('#newov').hidden=true; await loadFiles(); await openFile(p); runScene(p,cur.text,true); }catch(e){ $('#nerr').textContent=e.message; } };
+
+/* ---------------- live events from the server ---------------- */
+let es=null;
+function connect(){
+  if(es) es.close(); es=new EventSource('workshop/events?t='+encodeURIComponent(ACC.token));
+  es.onopen=()=>status(BUILD&&BUILD.errors.length?`Build has ${BUILD.errors.length} error(s)`:'Live: saving any file updates the preview',BUILD&&BUILD.errors.length?'err':'live');
+  es.onerror=()=>status('Lost the connection to the server: retrying…','err');
+  es.addEventListener('build',async ev=>{ const b=JSON.parse(ev.data); BUILD=b; await loadMap(); renderFiles(); markErrors();
+    for(const w of b.warnings) logLine(`warning: ${fileLink(w.file,w.line)} ${esc(w.message)}`,'warn');
+    if(!b.ok){ const e=b.errors[0]; status(`Syntax error in ${e.file}:${e.line} · the preview keeps the last good build`,'err');
+      for(const x of b.errors) logLine(`<b>syntax error</b> ${fileLink(x.file,x.line)} ${esc(x.message)}`,'err'); banner(`Syntax error: ${esc(x0(e))}  (click to open)`,{file:e.file,line:e.line}); return; }
+    status(`Rebuilt${b.file?' after '+b.file.replace(/^src\/js\//,''):''} · reloading the preview`,'live'); hideBanner(); reloadFrame();
+    if(b.file&&b.file===cur.path&&!dirty()) syncFromDisk(); });
+  es.addEventListener('file',ev=>{ const f=JSON.parse(ev.data);
+    if(isScene(f.path)){ loadFiles(); if(f.deleted) return; if(f.path===running&&!(cur.path===f.path&&dirty())) api('api/workshop/file?path='+encodeURIComponent(f.path)).then(j=>{ if(j.text!==sceneCode) runScene(f.path,j.text); }); }
+    if(f.path===cur.path&&!f.deleted&&Math.abs((f.mtime||0)-cur.mtime)>1) syncFromDisk(); });
+}
+const x0=e=>`${e.file.replace(/^src\/js\//,'')}:${e.line} ${e.message}`;
+async function syncFromDisk(){ const j=await api('api/workshop/file?path='+encodeURIComponent(cur.path)); if(j.text===getText()){ cur.saved=j.text; cur.mtime=j.mtime; updName(); return; }
+  if(dirty()){ logLine(`${fileLink(cur.path)} changed on disk while you have unsaved edits here: saving will ask which to keep`,'warn'); return; }
+  cur.text=cur.saved=j.text; cur.mtime=j.mtime; setText(j.text,true); updName(); logLine(`reloaded ${fileLink(cur.path)} from disk`); }
+
+/* ---------------- start ---------------- */
+async function start(){
+  if(!ACC||!ACC.token) return showLogin();
+  try{ await loadFiles(); }catch(e){ if(e.status===403||e.status===401) return showLogin(e.message); status(e.message,'err'); return; }
+  $('#who').textContent=ACC.name; await loadMap();
+  if(!FILES.sourceBuild) logLine('This server has no src/ folder, so only scenes can be edited here.','warn');
+  if(BUILD&&BUILD.errors.length){ for(const x of BUILD.errors) logLine(`<b>syntax error</b> ${fileLink(x.file,x.line)} ${esc(x.message)}`,'err'); }
+  for(const w of (BUILD&&BUILD.warnings)||[]) logLine(`warning: ${fileLink(w.file,w.line)} ${esc(w.message)}`,'warn');
+  if(!running||!FILES.scenes.some(s=>s.path===running)) running=FILES.scenes.length?FILES.scenes[0].path:null;
+  if(running){ try{ sceneCode=(await api('api/workshop/file?path='+encodeURIComponent(running))).text; }catch(e){} }
+  const open=store.get('open',running); if(open) await openFile(open).catch(()=>{});
+  renderFiles(); showPane(store.get('pane','params')); updPlay(); reloadFrame(); connect();
+  if(!store.get('helped',false)) $('#help').hidden=false;
+}
+makeEditor(); updName(); start();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "kolvik-station",
+  "version": "0.16.0",
+  "engines": { "node": ">=22.13" },
+  "description": "Browser extraction shooter with PvPvE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning server.js",
+    "dev": "DEV=1 node --no-warnings=ExperimentalWarning server.js",
+    "workshop": "WORKSHOP=1 node --no-warnings=ExperimentalWarning server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.128.0",
+    "ws": "^8.18.0"
+  }
+}
