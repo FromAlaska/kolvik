@@ -97,6 +97,20 @@ function scopeSvg(){ let dots=''; for(const v of [-24,-16,-8,8,16,24]) dots+=`<c
 function setReticle(kind){ if(!R||R.ret===kind) return; R.ret=kind; const el=$('#reticle'); el.hidden=!kind; el.innerHTML=kind?RETICLES[kind]:''; $('#prismRing').hidden=kind!=='prism'; }
 function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists')+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
 
+// guns in other people's hands: the same model as your own first-person gun (factory finish, no hands), merged into one
+// mesh per material and shared, so a raid full of armed scavs costs a few draw calls each
+const WGUN={};
+function worldGunMeshes(id){ if(WGUN[id]) return WGUN[id]; const g=buildGun(id,{att:{}},{noHands:true,skin:'w_factory'}); g.updateMatrixWorld(true); const by=new Map();
+  const shown=o=>{ for(let q=o;q;q=q.parent) if(!q.visible) return false; return true; };
+  g.traverse(o=>{ if(!o.isMesh||!shown(o)||(o.material&&o.material.transparent)) return; let L=by.get(o.material); if(!L) by.set(o.material,L=[]); L.push(o); });
+  const out=[]; for(const [mat,L] of by){ const pos=[],nor=[],uv=[]; let uvOk=true;
+    for(const m of L){ const ge=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone(); ge.applyMatrix4(m.matrixWorld); pos.push(...ge.attributes.position.array); nor.push(...ge.attributes.normal.array); if(ge.attributes.uv) uv.push(...ge.attributes.uv.array); else uvOk=false; ge.dispose(); }
+    const G=new THREE.BufferGeometry(); G.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); G.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3)); if(uvOk&&uv.length) G.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); out.push([G,mat]); }
+  g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); return WGUN[id]=out; }
+function setHeldGun(rig,id){ if(!rig||!rig.gun) return; id=id&&ITEMS[id]&&ITEMS[id].type==='weapon'?id:null; if(rig.gunId===id&&rig.gun.children.length===(id?worldGunMeshes(id).length:0)) return; rig.gunId=id;
+  const gp=rig.gun; for(const c of [...gp.children]) gp.remove(c); gp.visible=!!id; if(!id) return;
+  for(const [G,M] of worldGunMeshes(id)){ const m=new THREE.Mesh(G,M); m.layers.mask=gp.parent?gp.parent.layers.mask:1; gp.add(m); } }
+
 // an enemy's muzzle flash as a bright point that shows through fog, so you can see where shots come from
 const SPARKS=[]; let _sparkMat=null;
 function muzzleSpark(x,y,z,dist){ if(!scene) return; if(!_sparkMat) _sparkMat=new THREE.SpriteMaterial({color:0xffe0a0,fog:false,transparent:true,depthWrite:false});

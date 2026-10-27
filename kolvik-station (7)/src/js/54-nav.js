@@ -169,4 +169,4 @@ function killEnemy(e,head,by){
   if(NET.on) nsend({t:'body',cid,x:e.pos.x,z:e.pos.z,name:e.k.name,items:JSON.parse(JSON.stringify(items))});
   addBody(cid,e.pos.x,e.pos.z,e.k.name,items); { const bc=R.conts[R.conts.length-1]; bc.ally=true; bc.killer=by||'me'; }
 }
-function addBody(cid,x,z,name,items){ if(cid[0]==='g') return addDrop(cid,x,z,items); const cont={w:8,h:9,items:[]}; for(const it of items){ it.hid=true; place(cont,it); } R.conts.push({cid,type:'body',name,x,z,mesh:null,cont,opened:false,body:true}); }
+function addBody(cid,x,z,name,items){ if(cid[0]==='g') return addDrop(cid,x,z,items); const cont={w:8,h:9,items:[]}; for(const it of items){ it.hid=true; place(cont,it); } const corpse=cid[0]==='b'?addCorpse(cid,x,z,name):null; R.conts.push({cid,type:'body',name,x,z,mesh:null,cont,opened:false,body:true,corpse}); }

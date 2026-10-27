@@ -48,7 +48,8 @@ function humanoid(o){
   // a forgiving head hitbox: an invisible box a little bigger than the head and helmet, so headshots land when they look like they should
   { const hb=Bh(0.46,0.46,0.46,0,1.74,0,HITBOX,'head'); hb.visible=false; } if(o.hat) Bh(0.3,0.08,0.3,0,1.66,-0.01,MC(0x7a5a3a),null);
   if(o.helm!=null){ Bh(0.33,0.15,0.34,0,1.87,0,MC(o.helm),'head'); if(o.hv>=6) Bh(0.3,0.09,0.03,0,1.73,-0.16,MC(0x1a3a46),null); } else if(o.hg) addHeadgear(Bh,o.hg); else Bh(0.3,0.12,0.3,0,1.88,0,coat,'head');
-  const gun=B(0.06,0.09,0.7,0,1.4,-0.57,MC(0x222426),null,aim,1.42); gun.userData.z0=gun.position.z; // the gun, held between the two hands
+  // the gun, held between the two hands: the real model of whatever they carry (setHeldGun in 55-fx-viewmodel.js)
+  const gun=new THREE.Group(); gun.position.set(0,-0.02,-0.36); aim.add(gun); gun.userData.z0=gun.position.z;
   if(o.armor!=null) Bs(0.6,0.5,0.4,0,1.22,0,MC(o.armor),'thorax');
   const rig={g,pelvis,spine,aim,head,gun,la,ra,ll,rl,s:bodyNew()};
   return {g,lp:ll.hip,rp:rl.hip,la,ra,head,parts,rig};
@@ -68,7 +69,7 @@ function spawnEnemy(x,z,kind){
   { const gn=gaPick(kind); if(gn){ e.gen=gn; e.genes=gn.g; } aiApplyGenes(e); }
 
   const h=humanoid({coat:k.coat,face:(kind==='chief'||kind==='warden')?0xc9a487:0x1f2225,hat:kind==='chief',helm:e.helm?(ITEMS[e.helm.id].cls>=4?0x3e4a3a:0xd8b13a):null,armor:e.armor?(ITEMS[e.armor.id].cls>=4?0x3b4636:0x5b5f50):null,ud:{enemy:e}});
-  e.g=h.g; e.rig=h.rig; e.lp=h.lp; e.rp=h.rp; e.parts=h.parts; e.g.rotation.y=e.yaw; e.g.position.set(x,R.terrain?R.terrain(x,z):0,z); e.pos=e.g.position; e.grp=aiGroupOf(e); e.nx=x; e.nz=z; e.nyaw=e.yaw;
+  setHeldGun(h.rig,gunId); e.g=h.g; e.rig=h.rig; e.lp=h.lp; e.rp=h.rp; e.parts=h.parts; e.g.rotation.y=e.yaw; e.g.position.set(x,R.terrain?R.terrain(x,z):0,z); e.pos=e.g.position; e.grp=aiGroupOf(e); e.nx=x; e.nz=z; e.nyaw=e.yaw;
   if(k.boss){ e.g.scale.setScalar(1.45); const horn=MC(0xd8cfb8); for(const sx of [-1,1]){ const hn=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.2,0.05),horn); hn.position.set(sx*0.17,2.0-1.52,0); hn.rotation.z=-sx*0.5; hn.userData={part:null,enemy:e}; h.head.add(hn); } R.boss={e,awake:false,phase:1,mortT:6,maxHp:e.hp}; }
   scene.add(e.g); e.g.traverse(o=>o.layers.enable(1)); R.enemies.push(e);
 }

@@ -31,7 +31,7 @@ function dmBrief(b){ const I=DM_INFO[R.mode]; const h=b.querySelector('h2'); if(
 /* ---------------- dying and coming back ---------------- */
 function dmDeathTick(dt){
   if(R.deadT>0){ R.deadT-=dt; if(R.deadT<=0){ R.respawnT=DM_PAY.respawn; dmDeathCard(); } return; }
-  if(R.paused){ R.paused=false; $('#pause').hidden=true; }
+  if(R.paused||R.menu){ R.paused=false; R.menu=false; $('#pause').hidden=true; }
   if(R.dmOver) return; R.respawnT-=dt; const c=$('#dmCount'); if(c) c.textContent=Math.max(1,Math.ceil(R.respawnT));
   try{ recapTick(dt); }catch(e){}
   if(R.respawnT<=0) dmRespawn();

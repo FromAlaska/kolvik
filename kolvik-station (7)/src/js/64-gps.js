@@ -117,7 +117,7 @@ function gpsToggle(force){
     cv.onpointerup=e=>{ const d=g.drag; g.drag=null; if(!d||d.moved) return; if(d.btn===2){ g.wp=null; g.route=null; return; } const [x,z]=toWorld(e); const hit=gpsPick(x,z,12/(Math.min(cv.clientWidth,cv.clientHeight)/(2*g.B)*g.zoom)); gpsSet(hit?hit.x:x,hit?hit.z:z,hit?hit.name:''); };
     cv.oncontextmenu=e=>e.preventDefault();
     drawGpsMap();
-  } else { el.innerHTML=''; if(!R.noLock&&!R.over&&!R.paused) lockPointer(); }
+  } else { el.innerHTML=''; if(!R.noLock&&!R.over&&!R.paused&&!R.menu) lockPointer(); }
 }
 // clicking near an extract, a locked room or a building snaps the waypoint to it and names it
 function gpsPick(x,z,tol){ const c=[]; for(const e of R.extracts) c.push({x:e.x,z:e.z,name:e.name}); for(const d of (R.doors||[])) c.push({x:d.x+d.ox*1.2,z:d.z+d.oz*1.2,name:d.L.name}); for(const b of R.bld) if(b.name) for(const [dx,dz] of (b.doors||[]).slice(0,1)) c.push({x:dx,z:dz,name:b.name});

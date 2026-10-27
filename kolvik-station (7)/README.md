@@ -138,6 +138,20 @@ never closed, and brings the hideout back (and reports it in the admin Log tab).
 carry the shooter's position and weapon, so the hit direction and the death card are right for everyone, not just
 the host.
 
+## Online fixes (0.19.1)
+
+- **Guns in people's hands** are the real models now. Scavs, bosses and other players used to hold the same plain
+  black bar whatever they carried; now each holds its actual gun (pistol, SMG, shotgun, rifles, DMR, machine gun),
+  built from the same model as your own first-person gun. Other players' guns change when they switch weapons.
+- **No pausing online.** In an online raid, Esc opens the menu but the raid keeps running: you stand still, keep
+  sending your position, and can still be shot. Solo raids still pause.
+- **Dropped and handed-over items** can be picked up by anyone. Items that had been picked up earlier in the raid
+  used to be refused by the server ("Someone else grabbed that first") and vanished from the new owner's inventory.
+  Every item put into a shared bag, container or body now gets a fresh id.
+- **Player bodies.** A player who dies in a raid leaves a body lying where they fell, wearing their outfit. Walk up
+  and press **E** to search it: everything they carried except their secure pouch. (Deathmatch modes don't leave
+  bodies.)
+
 ## Attachments in a raid
 
 Click a gun in the raid inventory (Tab) and its details show the optic, muzzle and magazine slots. *Fit* puts on any

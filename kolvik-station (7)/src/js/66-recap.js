@@ -43,7 +43,7 @@ function deathTick(dt){
   if(R.dm) return dmDeathTick(dt);
   if(R.spec) return;
   if(R.deadT>0){ R.deadT-=dt; return; }
-  if(R.paused){ R.paused=false; $('#pause').hidden=true; } // died with the pause menu open (online the world doesn't stop)
+  if(R.paused||R.menu){ R.paused=false; R.menu=false; $('#pause').hidden=true; } // died with the pause menu open (online the world doesn't stop)
   if(R.invOpen) try{ closeInv(true); }catch(e){}
   if(!R.recap||$('#deathcard').hidden){ try{ R.recap=null; showRecap(); }catch(e){ recapFallback(e); } return; }
   try{ recapTick(dt); }catch(e){}

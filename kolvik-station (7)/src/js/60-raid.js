@@ -63,14 +63,15 @@ document.addEventListener('pointerlockchange',()=>{
   if(!R) return; const locked=document.pointerLockElement===$('#cv');
   if(locked){ R.locked=true; return; }
   if(R.chatOpen||performance.now()-R.chatClosedAt<400){ if(R.chatOpen) closeRaidChat(); return; }
-  if(R.locked && !R.invOpen && !(R.gps&&R.gps.open) && !R.over && !R.paused && !P.dead) showPause();
+  if(R.locked && !R.invOpen && !(R.gps&&R.gps.open) && !R.over && !R.paused && !R.menu && !P.dead) showPause();
 });
 document.addEventListener('pointerlockerror',()=>{ if(R){ R.noLock=true; msg('Mouse lock is blocked here. Open the page in its own tab for full mouse look.'); } });
-function showPause(){ R.paused=true; P.trigger=false; P.adsHeld=false; P.keys={}; const p=$('#pause'); p.hidden=false;
-  p.innerHTML=`<div class="card"><span class="lbl">Paused · ${fmtTime(R.timeLeft)} left</span><h2>Holding position</h2><canvas id="pmap" width="640" height="400"></canvas><div class="acts"><button class="btn" id="resBtn">Resume</button><button class="btn ghost" id="optBtn2">Settings</button><button class="btn ghost" id="abBtn">Leave raid</button></div><p class="muted" style="margin:0;font-size:13px" id="abNote">Leaving counts as missing in action. You lose everything you brought except the secure pouch.</p></div>`;
+// online the world can't stop for one player: the menu opens but the raid keeps running around you (R.menu, not R.paused)
+function showPause(){ if(NET.on) R.menu=true; else R.paused=true; P.trigger=false; P.adsHeld=false; P.keys={}; const p=$('#pause'); p.hidden=false;
+  p.innerHTML=`<div class="card"><span class="lbl">${NET.on?'Menu · online, the raid keeps going':'Paused'} · ${fmtTime(R.timeLeft)} left</span><h2>${NET.on?'Stay sharp':'Holding position'}</h2>${NET.on?'<p class="warnline" style="margin:0">Nothing is paused: you are standing still and can still be shot.</p>':''}<canvas id="pmap" width="640" height="400"></canvas><div class="acts"><button class="btn" id="resBtn">Resume</button><button class="btn ghost" id="optBtn2">Settings</button><button class="btn ghost" id="abBtn">Leave raid</button></div><p class="muted" style="margin:0;font-size:13px" id="abNote">${R.dm?'Leaving ends the match for you. Your own gear is safe at home.':'Leaving counts as missing in action. You lose everything you brought except the secure pouch.'}</p></div>`;
   drawRaidMap($('#pmap'));
   $('#optBtn2').onclick=openOpts;
-  $('#resBtn').onclick=()=>{ p.hidden=true; R.paused=false; lockPointer(); };
+  $('#resBtn').onclick=()=>{ p.hidden=true; R.paused=false; R.menu=false; lockPointer(); };
   $('#abBtn').onclick=e=>{ if(e.target.dataset.sure){ p.hidden=true; endRaid('mia','Left the raid'); } else { e.target.dataset.sure='1'; e.target.textContent='Confirm: leave and lose gear'; } };
 }
 function drawRaidMap(cv){
