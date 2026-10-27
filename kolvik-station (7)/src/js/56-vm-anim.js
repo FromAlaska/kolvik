@@ -10,7 +10,7 @@
      rotX + tips the muzzle up · rotY + swings the muzzle left · rotZ + rolls the top to the left. */
 const VMA={
   // which reload each gun uses
-  style:{makar:'pistol',vintik:'mag',akr:'mag',kestrel:'mag',nordlys:'mag',jarlmg:'mag',tundra:'tube',nord:'bolt'},
+  style:{bow:'mag',cbow:'mag',makar:'pistol',vintik:'mag',akr:'mag',kestrel:'mag',nordlys:'mag',jarlmg:'mag',tundra:'tube',nord:'bolt'},
   inspect:3.8,          // seconds to turn the gun over and check it (I)
   draw:0.5,             // seconds to bring a weapon up after switching
   sway:{gain:0.024, max:0.07, k:70, d:13},   // how far the gun lags behind the mouse, and its spring

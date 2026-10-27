@@ -138,6 +138,60 @@ never closed, and brings the hideout back (and reports it in the admin Log tab).
 carry the shooter's position and weapon, so the hit direction and the death card are right for everyone, not just
 the host.
 
+## Leaning
+
+Hold **Q** to lean left and **E** to lean right. E still opens, searches and uses things whenever there's something
+in front of you to use; otherwise it leans. Your view slides about 38 cm sideways and tilts, stopping short of walls.
+Other players see your upper body lean, and enemies see your head where you're peeking from. No leaning while
+sprinting, riding, flying or down.
+
+## Grenades
+
+Bought from the trader (Grenades). **8** throws the selected type, **9** switches to the next type you carry; the
+weapon panel shows which is selected and how many you have. Grenades bounce off walls and the ground. Online, every
+player's game flies the same grenade, so it hits everyone the same way.
+
+| Grenade | Price | What it does |
+|---|---|---|
+| Frag | ~$420 | 3 s fuse. Up to 190 damage within 7 m with open line of sight, spread over the body |
+| Flashbang | ~$280 | 2 s fuse. Blinds and deafens anyone within 15 m who can see it (less if facing away); enemies can't shoot for about 4 s |
+| White smoke | ~$140 | 8 m cloud for 45 s. Enemies and their drones can't see through it |
+| Red smoke | ~$160 | Smoke, plus an "Enemy" marker with distance on your squad's HUD for 60 s |
+| Green smoke | ~$160 | Smoke, plus a "Regroup" marker on your squad's HUD for 60 s |
+
+## Bows
+
+Two cheap, nearly silent primaries at the trader, using **Arrows** (20 to a stack, $3 each):
+
+- **Hunting bow** (~$150): hold fire to draw (about 1 s to full draw), let go to shoot. 52 m/s at full draw.
+- **Compound bow** (~$900): faster draw (0.7 s), flatter and faster arrow (82 m/s), tighter.
+
+Arrows are real projectiles: they drop, take time to arrive, and stick in what they hit. A weaker draw means a slower,
+weaker arrow. Holding full draw slowly tires you. One arrow at a time; the next is nocked automatically from your rig,
+pockets or pack. Other players barely hear the string, and they see your arrows fly.
+
+## Your own drone
+
+The trader sells a **Recon drone** (Tools, loyalty 2, ~$4,800). Carry it and press **0** in a raid to fly it:
+WASD to move, mouse to look, Space up, C or Ctrl down, Shift faster. Its camera marks enemies (and hostile players)
+it can see within 80 m with a red diamond and distance for 20 seconds, for you and your squad; click to mark what's
+under the crosshair. Press **0** again and it flies back to you and into your pack. Your body stands still while you
+fly, and can be shot. 150 s of battery, recharged before every raid; weak signal past 200 m and it comes home on its
+own past 240. Other players see it and can shoot it down (about two hits); a destroyed or flat drone is lost.
+
+## Hearing other players
+
+Every shot a player fires is sent to everyone in the raid. You hear it with distance (a sharp crack close by, a dull
+thump far away, out to about 600 m) and a little late, at the speed of sound, and you see the tracer and muzzle
+flash when you're close enough. Suppressed guns are quieter and show no flash; bows are almost silent. AI shots now
+carry the same way.
+
+## Squadmates
+
+In a raid, squadmates (and your team in team deathmatch) show as green markers with their name and distance, at the
+edge of the screen when they're off it, as well as on the minimap and the map (M). At the hideout, the squad panel on
+the Friends tab shows which map each squadmate is raiding and how long they have left.
+
 ## Time of year and weather
 
 Four times of year go round every 8 real days (two days each), the same for everyone on the server. The current one
@@ -1051,7 +1105,7 @@ browsers still allow it, but a few do not.
     `22-tasks` · `23-seasons` · `24-save` · `25-goals` (goals, titles, collection log) · `30-music` · `31-sfx` · `32-music-slavic` (the Russian instruments and tracks) · `33-music-chant` (the church pieces) · `34-voices` (footsteps, voices, positional sound) · `35-raid-music` · `40-hub` · `41-deploy` (conditions rotation, Deploy tab, lobbies
     and teams) · `42-leaderboard-maps` (leaderboard, overview maps) · `50-engine` (renderer, textures, collision, building helpers) · `51-maps`
     (Kolvik, Whiteout, Vault, Skarsvik, Ironfjord, Ravnskar) · `52-helis-drops` · `53-enemies` · `54-nav` ·
-    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `47-melee` (branches, shivs, spears) · `48-year` (time of year) · `70-hrimfell` (also the snowmobile physics and the
+    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `47-melee` (branches, shivs, spears) · `48-year` (time of year) · `49-lean` (leaning, hearing other players' shots) · `75-grenades` · `76-bows` · `77-pdrone` (your own drone) · `70-hrimfell` (also the snowmobile physics and the
     world config) · `71-storvidda` · `72-skjaergard` (aircraft) · `73-boss` · `74-kaldfjord` (Kaldfjord Reach) · `80-hud` · `81-loop-input` · `90-net` ·
     `91-accounts` · `99-boot`
 - `build.js` – `node build.js` assembles `src/` into `game.html`, and checks it: a syntax error in a file is reported

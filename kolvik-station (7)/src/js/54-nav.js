@@ -119,7 +119,7 @@ function enemyShoot(e,t,dist){
   const d=ITEMS[e.gun.id], am=ITEMS[e.gun.ammo]; e.gun.mag--;
   e.cool=60/d.rpm*(d.auto?1:1.4)+(d.auto?0:rand()*0.5); e.burst--; if(e.burst<=0){ e.burst=d.auto?(e.k.boss?8+Math.floor(rand()*8):3+Math.floor(rand()*4)):1; e.cool+=e.k.boss?0.7+rand()*0.6:0.45+rand()*0.8; } if(e.enraged) e.cool*=0.7;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, ty=t.eye-0.35, my=e.pos.y+eGunY(e); e.shotT=R.t; bodyKick(e.rig);
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShotAt(e.gun.id,myD);
   // the bullet has to actually get there: anything solid in the way eats it
   _a.set(mx,my,mz); _b.set(t.x-mx,ty-my,t.z-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd-0.2;
   const wall=ray.intersectObjects(R.ray,false)[0];

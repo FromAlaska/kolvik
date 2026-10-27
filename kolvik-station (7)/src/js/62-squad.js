@@ -54,7 +54,7 @@ function updHitDirs(dt){ if(!R||!R.hitDirs) return; for(let i=R.hitDirs.length-1
   const a=Math.atan2(-(h.x-P.pos.x),-(h.z-P.pos.z)), rel=((a-P.yaw+Math.PI*3)%(Math.PI*2))-Math.PI; h.el.classList.toggle('miss',h.miss);
   h.el.style.transform=`rotate(${-rel}rad)`; h.el.style.opacity=Math.min(1,h.t/0.6); } }
 function updMates(){
-  const box=$('#mates'); if(!box) return; if(!NET.on||(!mySquad()&&!coopRaid())){ if(box.firstChild) box.innerHTML=''; return; }
+  const box=$('#mates'); if(!box) return; if(!NET.on||!mateIds().length){ if(box.firstChild) box.innerHTML=''; return; }
   camera.updateMatrixWorld(); const W=innerWidth, H=innerHeight; const seen=new Set();
   for(const id of mateIds()){ const q=NET.players[id], st=q.st; if(st.dead||(R.spec&&R.spec.id===id)) continue; seen.add(id);
     let el=box.querySelector(`[data-m="${id}"]`); if(!el){ el=document.createElement('div'); el.className='matemk'; el.dataset.m=id; box.appendChild(el); }

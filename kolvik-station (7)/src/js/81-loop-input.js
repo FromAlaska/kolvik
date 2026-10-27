@@ -11,7 +11,7 @@ function loop(now){
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
     for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
-    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
+    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; pdTick(dt); pdCamera(); grenadesTick(dt); arrowTick(dt); pdRemoteTick(); spotsTick(); doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);
     updFx(dt); updSnow(dt); updCulling(dt); updExtract(dt); if(!R||R.over) return;
     if(R.invOpen){ revealTick(dt); if(R.dirty&&!drag){ R.dirty=false; renderRaidInv(); } }
@@ -29,6 +29,7 @@ addEventListener('keydown',e=>{
   const tg=e.target; if(tg&&(tg.tagName==='INPUT'||tg.tagName==='SELECT'||tg.tagName==='TEXTAREA')) return;
   if(drag&&e.code==='KeyR'){ e.preventDefault(); rotateDrag(); return; }
   if(!R||R.over||(R.paused||R.menu)&&e.code!=='Escape') return;
+  if(R.pd&&R.pd.ctl&&!R.chatOpen&&pdKey(e.code,true)){ e.preventDefault(); return; } // flying your drone (77-pdrone.js)
   if(e.code==='Space'&&R.heli&&R.heli.phase==='in'){ e.preventDefault(); R.heli.t=R.heli.T; return; }
   if((e.code==='Enter'||e.code==='KeyT')&&NET.connected&&!R.invOpen&&!R.chatOpen){ e.preventDefault(); openRaidChat(); return; }
   if(e.code==='KeyM'&&!R.chatOpen){ e.preventDefault(); gpsToggle(); return; }
@@ -58,15 +59,18 @@ addEventListener('keydown',e=>{
     case 'Digit4': if(R.airMap&&R.fly){ seatSwap(3); break; } hotUse(d=>d.med==='bandage'); break;
     case 'Digit5': if(R.airMap&&R.fly){ seatSwap(4); break; } hotUse(d=>d.med==='splint'); break;
     case 'Digit6': hotUse(d=>d.med==='heal'); break;
+    case 'Digit8': nadeThrow(); break;
+    case 'Digit9': nadeCycle(); break;
+    case 'Digit0': pdLaunch(); break;
     case 'Digit7': hotUse(d=>d.type==='warm'); break;
   }
   if(['Space','ArrowUp','ArrowDown','ControlLeft'].includes(e.code)) e.preventDefault();
 });
-addEventListener('keyup',e=>{ if(P) P.keys[e.code]=false; });
+addEventListener('keyup',e=>{ if(P) P.keys[e.code]=false; if(R&&R.pd) pdKey(e.code,false); });
 addEventListener('blur',()=>{ if(P){ P.keys={}; P.trigger=false; P.adsHeld=false; } });
 const cvEl=$('#cv');
-cvEl.addEventListener('mousedown',e=>{ if(R&&R.spec&&!R.over){ specNext(); return; } if(!R||R.over||R.invOpen||(R.gps&&R.gps.open)||R.paused||R.menu||P.dead) return; if(!document.pointerLockElement&&!R.noLock){ lockPointer(); return; } if(e.button===0){ P.trigger=true; } if(e.button===2) P.adsHeld=true; });
+cvEl.addEventListener('mousedown',e=>{ if(R&&R.spec&&!R.over){ specNext(); return; } if(!R||R.over||R.invOpen||(R.gps&&R.gps.open)||R.paused||R.menu||P.dead) return; if(!document.pointerLockElement&&!R.noLock){ lockPointer(); return; } if(R.pd&&R.pd.ctl){ if(e.button===0) pdClick(); return; } if(e.button===0){ P.trigger=true; } if(e.button===2) P.adsHeld=true; });
 addEventListener('mouseup',e=>{ if(!P) return; if(e.button===0){ P.trigger=false; P.semiLock=false; } if(e.button===2) P.adsHeld=false; });
 cvEl.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{ if(R&&R.fly&&R.fly.tv){ const tv=R.tv||(R.tv={w:0,z:1,cool:0,load:[0,0]}); tv.z=clamp(tv.z+(e.deltaY>0?-1:1),0,TVZ.length-1); } },{passive:true});
-addEventListener('mousemove',e=>{ if(!R||R.over||R.invOpen||(R.gps&&R.gps.open)||R.paused||R.menu||!P||P.dead) return; if(document.pointerLockElement===cvEl||R.noLock){ const s=0.0022*OPTS.sens*(P.fov/72); if(R.fly&&R.fly.seat===0&&!OPTS.chase){ const st=R.stick||(R.stick={x:0,y:0}); st.x=clamp(st.x+e.movementX*s*1.3,-0.6,0.6); st.y=clamp(st.y-e.movementY*s*1.3,-0.6,0.6); return; } P.yaw-=e.movementX*s; P.pitch=clamp(P.pitch-e.movementY*s,-1.45,1.45); } });
+addEventListener('mousemove',e=>{ if(!R||R.over||R.invOpen||(R.gps&&R.gps.open)||R.paused||R.menu||!P||P.dead) return; if(document.pointerLockElement===cvEl||R.noLock){ if(R.pd&&R.pd.ctl){ pdLook(e.movementX,e.movementY); return; } const s=0.0022*OPTS.sens*(P.fov/72); if(R.fly&&R.fly.seat===0&&!OPTS.chase){ const st=R.stick||(R.stick={x:0,y:0}); st.x=clamp(st.x+e.movementX*s*1.3,-0.6,0.6); st.y=clamp(st.y-e.movementY*s*1.3,-0.6,0.6); return; } P.yaw-=e.movementX*s; P.pitch=clamp(P.pitch-e.movementY*s,-1.45,1.45); } });

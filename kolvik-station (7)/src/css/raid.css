@@ -181,3 +181,13 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
 .dmresp{margin:0; font-family:var(--mono)} .dmresp b{font-size:24px; color:var(--signal)}
 #deathcard h2.ok{color:var(--ok)}
 body.dmmode #taskHud{display:none}
+
+/* grenades, signals, spotting, drone */
+#flashwhite{position:absolute; inset:0; background:#fff; pointer-events:none; z-index:40}
+#sigs,#spots{position:absolute; inset:0; overflow:hidden; pointer-events:none}
+.sigmk.red{color:#ff6a5a} .sigmk.red i{background:#e2574a} .sigmk.green{color:#7cd98a} .sigmk.green i{background:#3fa34d}
+.spotmk{position:absolute; left:0; top:0; display:flex; flex-direction:column; align-items:center; gap:1px; margin:-6px 0 0 -30px; width:60px; font-size:10px; color:#ff7a6a; font-family:var(--mono); text-shadow:0 1px 0 #000}
+.spotmk i{width:9px; height:9px; border:2px solid #ff4a3a; transform:rotate(45deg)}
+#pdhud{position:absolute; left:50%; top:calc(60px + env(safe-area-inset-top,0px)); transform:translateX(-50%); background:rgba(11,18,21,.75); border:1px solid var(--line); padding:6px 12px; font-family:var(--mono); font-size:13px; text-align:center; pointer-events:none; white-space:nowrap}
+#pdhud small{display:block; color:var(--dim); font-size:11px} #pdhud b{color:#3cf07a} #pdhud.weak{animation:mkpulse .5s steps(2) infinite}
+#weph .nd{font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:2px} #weph .nd kbd{font-size:10px}

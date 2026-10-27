@@ -269,7 +269,7 @@ function afterHaul(el){ saveGame(); sfxPickup(); if(el.id==='haulBox'){ renderHa
 function sellItem(it,loc){ if(it.items&&it.items.length){ toast('Empty it first.'); return; } const p=sellPrice(it); removeAt(loc,it); S.cash+=p; SEL=null; sfxPickup(); saveGame(); renderTab(); toast(`Sold ${ITEMS[it.id].name} for ${fmt$(p)}.`); }
 
 /* ---------- trader ---------- */
-const CATALOG=[['Weapons',['makar','vintik','tundra','nord','akr','kestrel']],['Ammo',['a918','a12','a545','a762','a545bp']],['Armor',['hardhat','vest','aramid','bastion','plate','glacier','warden']],['Rigs & packs',['belt','chestrig','sack','ruck','sled']],['Medical',['bandage','tourniquet','splint','handwarm','thermos','ration','ifak','combatkit','fieldkit']],['Tools',['lockpick','jammer']],['Attachments',['reddot','holo','supp9','tube','extmag','prism','suppr','brake','scope4','dmrmag']]];
+const CATALOG=[['Weapons',['bow','cbow','makar','vintik','tundra','nord','akr','kestrel']],['Ammo',['arrow','a918','a12','a545','a762','a545bp']],['Grenades',['frag','flash','smokew','smoker','smokeg']],['Armor',['hardhat','vest','aramid','bastion','plate','glacier','warden']],['Rigs & packs',['belt','chestrig','sack','ruck','sled']],['Medical',['bandage','tourniquet','splint','handwarm','thermos','ration','ifak','combatkit','fieldkit']],['Tools',['lockpick','jammer','pdrone']],['Attachments',['reddot','holo','supp9','tube','extmag','prism','suppr','brake','scope4','dmrmag']]];
 function renderTrader(body){
   const ll=loyalty(); const nxt=LOYAL[ll+1];
   body.innerHTML=`<section class="trader">

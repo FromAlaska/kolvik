@@ -30,6 +30,7 @@ function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
   const d=ITEMS[w.id], ws=wstats(w);
   if(w.mag<=0){ sfxDry(); P.semiLock=true; if(!d.auto) startReload(); return; }
+  if(d.bow) return loose(w,1); // bows shoot arrows (76-bows.js)
   if(!DBG.ammo) w.mag--; R.fired=true; const am=ITEMS[w.ammo];
   const moving=Math.hypot(P.vx,P.vz)>0.6;
   let spread=ws.spread*(P.adsT>0.6?0.3*ws.ads:1)+(moving?0.012:0)-(P.crouch?0.002:0)+(P.vy!==0?0.03:0);
@@ -40,7 +41,8 @@ function fire(w){
     _dir.set((rand()-0.5)*2*spread,(rand()-0.5)*2*spread,-1).normalize().applyQuaternion(camera.quaternion);
     ray.set(camera.position,_dir); ray.far=260; const hits=ray.intersectObjects(R.targets,false);
     if(i===0) dronesShotAt(camera.position,_dir);
-    for(const h of hits){ const ud=h.object.userData; if(ud.drone){ if(ud.drone.dead) continue; droneHit(ud.drone,am,h.point); break; } const e=ud.enemy; if(e&&e.dead) continue; if(ud.player&&NET.players[ud.player]&&NET.players[ud.player].st&&NET.players[ud.player].st.dead) continue;
+    if(i===0) R.shotEnd=hits.length?hits[0].point.clone():camera.position.clone().addScaledVector(_dir,120);
+    for(const h of hits){ const ud=h.object.userData; if(ud.pdrone){ puff(h.point,0x555555,3,1.2); nsend({t:'pdhit',pid:ud.pdrone,dmg:am.dmg}); break; } if(ud.drone){ if(ud.drone.dead) continue; droneHit(ud.drone,am,h.point); break; } const e=ud.enemy; if(e&&e.dead) continue; if(ud.player&&NET.players[ud.player]&&NET.players[ud.player].st&&NET.players[ud.player].st.dead) continue;
       if(e) hitEnemy(e,ud.part,am,h.point);
       else if(ud.player){ if(isMate(ud.player)) friendlyFire(ud.player,h.point); else { puff(h.point,0x8a1010,6,1.5); hitmark(ud.part==='head'); nsend({t:'phit',pid:ud.player,part:ud.part,ammo:am.id}); } }
       else puff(h.point,R.map==='whiteout'?0x6b7378:R.map==='vault'?0x3a3f44:0xc9d2d6,3,1.4);
@@ -49,7 +51,7 @@ function fire(w){
   const rec=ws.recoil*(P.adsT>0.6?0.72:1)*(0.85+rand()*0.3); P.pitch=Math.min(1.45,P.pitch+rec); P.yaw+=(rand()-0.5)*ws.recoil*0.6; P.kick=1;
   if(vmGun&&vmGun.userData.flash){ vmGun.userData.flash.visible=ws.noise>=1&&OPTS.flash!=='off'; setTimeout(()=>{ if(vmGun&&vmGun.userData.flash) vmGun.userData.flash.visible=false; },OPTS.flash==='full'?45:25); }
   if(ws.noise>=1) flashAt(camera.position.x,camera.position.y,camera.position.z,true);
-  sfxShot(w.id,0,ws.noise); const nr=(w.id==='makar'?40:65)*ws.noise; hearShot(P.pos.x,P.pos.z,nr); if(NET.on&&!NET.host) nsend({t:'shot',x:P.pos.x,z:P.pos.z,r:nr});
+  sfxShot(w.id,0,ws.noise); const nr=(w.id==='makar'?40:65)*ws.noise; hearShot(P.pos.x,P.pos.z,nr); sendShot(w,R.shotEnd,ws.noise<1?1:0,nr); // everyone in the raid hears it (49-lean.js)
 }
 // fists, or the shiv or spear you carry (47-melee.js): returns how long until the next swing
 function punch(){
@@ -195,7 +197,8 @@ function updatePlayer(dt){
   if(P.reloadT>0){ P.reloadT-=dt; if(P.reloadT<=0){ const w=curW(); if(w){ const n=takeAmmoFrom(playerConts(),w); if(R.invOpen) renderRaidInv(); if(!n) msg('Out of ammo.'); } } }
   if(P.using){ P.using.t-=dt; if(P.using.t<=0) finishUse(); }
   const w=curW();
-  if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock&&!R.cutting){ P.cool=punch()||0.5; P.semiLock=true; } }
+  if(w&&ITEMS[w.id].bow) bowTick(w,dt,can&&!(R.fly&&!R.fly.hand));
+  else if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock&&!R.cutting){ P.cool=punch()||0.5; P.semiLock=true; } }
   const wantAds=P.adsHeld&&can&&!P.down&&!P.sprint&&!!w&&P.reloadT<=0;
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
@@ -206,10 +209,10 @@ function updatePlayer(dt){
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
   if(R.windy&&!P.dead){ const gust=Math.max(0,Math.sin(R.t*0.6)*Math.sin(R.t*1.7+1)); sway+=Math.sin(R.t*2.3)*0.006*gust*(P.adsT>0.5?1.4:1); swy+=Math.cos(R.t*1.9)*0.003*gust; } // windstorm gusts push your aim
   if(P.hp.larm<=0||P.hp.rarm<=0){ sway+=Math.sin(R.t*1.7)*0.01; swy+=Math.sin(R.t*1.3)*0.008; }
-  const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch;
+  const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch; leanTick(dt); const lx=C.x+(P.leanX||0), ly=C.y-LEAN.drop*Math.abs(P.lean||0);
   const sh=(P.shake||0)*0.06;
-  camera.position.set(P.pos.x+C.x*Math.cos(P.yaw),P.y+P.eye+C.y,P.pos.z-C.x*Math.sin(P.yaw));
-  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?(R.recap?0.15:0.6):P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll));
+  camera.position.set(P.pos.x+lx*Math.cos(P.yaw),P.y+P.eye+ly,P.pos.z-lx*Math.sin(P.yaw));
+  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?(R.recap?0.15:0.6):P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll+leanRoll()));
   if(R.fly&&!P.dead) flyCam();
   // viewmodel pose
   syncVM();
@@ -219,7 +222,8 @@ function updatePlayer(dt){
       // everything the hands do lives in 56-vm-anim.js; this hands it what the player is doing
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
-        using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene); } }
+        using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene);
+      if(d.bow){ vmGun.position.z+=(P.draw||0)*0.09; const am=vmGun.userData.pt&&vmGun.userData.pt.mag; if(am){ am.visible=w.mag>0||P.reloadT>0; am.position.z+=(P.draw||0)*0.12; } } } }
   if(R&&R.spec) specCam(dt);
   if(R&&!P.dead) pouchSaveTick();
 }

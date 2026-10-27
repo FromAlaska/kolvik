@@ -26,6 +26,8 @@ const GUNGEO={
  kestrel:{top:.04,oz:-.1,builtin:{kind:'prism',y:.085}},
  nordlys:{top:.054,oz:-.12,front:-.5,rear:-.02},
  jarlmg:{top:.057,oz:-.1,front:-.5,rear:-.02},
+ bow:{top:.03,oz:-.3,front:-.36,rear:null},
+ cbow:{top:.03,oz:-.3,front:-.36,rear:null},
 };
 function buildGun(id,w,o={}){
   const g=new THREE.Group(); if(w===undefined) w=curW();
@@ -48,6 +50,10 @@ function buildGun(id,w,o={}){
   if(id==='kestrel'){ B(.055,.08,.5,0,0,-.12,olive); B(.024,.024,.3,0,.015,-.5,dark); pt.mag=B(.04,.12,.07,0,-.1,-.12,dark); B(.05,.08,.24,0,-.01,.22,olive); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(id==='jarlmg'){ B(.07,.09,.46,0,0,-.08,dark); B(.03,.03,.42,0,.015,-.5,steel); B(.05,.05,.26,0,.015,-.42,dark); pt.mag=B(.09,.09,.1,.06,-.06,-.12,olive); B(.05,.09,.22,0,-.02,.24,dark); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.34,0,.051,-.1,dark); B(.012,.12,.012,-.03,-.09,-.62,steel,.6); B(.012,.12,.012,.03,-.09,-.62,steel,.6); muz=-.72; }
   if(id==='nordlys'){ B(.058,.085,.54,0,0,-.12,snowM); B(.026,.026,.34,0,.015,-.55,dark); B(.032,.032,.1,0,.015,-.74,steel); pt.mag=B(.045,.14,.07,0,-.11,-.12,dark,.15); B(.055,.085,.26,0,-.01,.24,snowM); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.3,0,.048,-.12,dark); muz=-.8; }
+  // bows: held upright in front, string toward you, the nocked arrow is the 'mag' so the reload animation nocks the next one (76-bows.js)
+  if(id==='bow'||id==='cbow'){ const lim=id==='cbow'?MC(0x3a4030):wood, cam=steel; B(.035,.16,.05,0,0,-.36,id==='cbow'?MC(0x2a2d30):MC(0x5a3a1e)); B(.026,.3,.035,0,.22,-.33,lim,-.25); B(.026,.3,.035,0,-.22,-.33,lim,.25);
+    if(id==='cbow'){ B(.03,.05,.05,0,.37,-.28,cam); B(.03,.05,.05,0,-.37,-.28,cam); B(.004,.7,.004,.012,0,-.3,MC(0x8a8a80)); }
+    B(.004,.72,.004,0,0,-.22,MB(0xd8d8d0)); pt.mag=B(.01,.01,.62,0,0,-.42,MC(0x6b4a2a)); const tip=new THREE.Mesh(new THREE.BoxGeometry(.018,.018,.05),steel); tip.position.set(0,0,-.32); pt.mag.add(tip); muz=-.75; }
   if(id==='tundra'){ B(.05,.06,.3,0,0,-.05,dark); B(.03,.03,.46,0,.012,-.42,steel); pt.pump=B(.05,.045,.16,0,-.04,-.38,wood); B(.045,.07,.22,0,-.02,.2,wood); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(!o.noHands) vmHands(g,pt,id,glove,o);
   if(att.muzzle){ B(.034,.034,.16,0,.012,muz-.06,dark); muz-=.14; }
@@ -71,7 +77,7 @@ function buildGun(id,w,o={}){
 }
 // grip and support hand spots on each gun (gun space: x right, y up, z toward you), and the forearms in your coat sleeve
 const VM_HANDS={ makar:{r:[0,-.075,.025],l:[-.04,-.092,.045]}, vintik:{r:[0,-.08,.035],l:[-.01,-.04,-.19]}, akr:{r:[0,-.085,.045],l:[-.005,-.045,-.33]}, kestrel:{r:[0,-.085,.045],l:[0,-.05,-.31]},
-  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]} };
+  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]}, bow:{r:[0,0,-.2],l:[0,0,-.36]}, cbow:{r:[0,0,-.2],l:[0,0,-.36]} };
 function vmHands(g,pt,id,glove,o){
   const coat=(S&&S.cos)?cosMat(o.coat||S.cos.fit.coat):MC(0x4d5a48), cuff=MC(0x1e2224), H=VM_HANDS[id]||VM_HANDS.akr, Z=new THREE.Vector3(0,0,1);
   const hand=(at,dir,len)=>{ const h=new THREE.Group(); h.position.set(...at); g.add(h);

@@ -23,7 +23,9 @@ function updHUD(dt){
     <div><div class="t"><span>Stamina</span><span>${P.sneak?'sneaking':P.crouch?'crouched':''}</span></div><div class="bar"><i style="width:${P.stam}%;background:var(--dim)"></i></div></div>`;
   const w=curW();
   if(w){ const d=ITEMS[w.id], ws=wstats(w); $('#weph').innerHTML=`<div class="wn">${esc(d.name)} · ${esc(ITEMS[w.ammo].short)}${d.auto?(P.auto?' · auto':' · semi'):''}</div><div class="am">${w.mag}<small> / ${ws.magSize}</small></div><div class="wn">Reserve ${CALS[d.cal].reduce((s,a)=>s+ammoCount(a),0)}</div>`; }
-  else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; }
+  const ns=nadeSel(), extra=`${ns?`<div class="nd"><kbd>8</kbd> ${esc(ITEMS[ns].short)} ×${nadeCount(ns)} <kbd>9</kbd> next</div>`:''}${pdItem()?`<div class="nd"><kbd>0</kbd> drone${R.pd?' (flying)':''}</div>`:''}`;
+  if(w) $('#weph').insertAdjacentHTML('beforeend',extra);
+  else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; $('#weph').insertAdjacentHTML('beforeend',extra); }
   const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr; R.nearTree=(!R.invOpen&&!P.dead&&!c&&!dr)?nearTree():null;
   const rt=(!R.invOpen&&!R.rev)?reviveTarget():null; const rp=R.airMap?flyPrompt():R.sleds?ridePrompt():'';
   $('#prompt').innerHTML=R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
@@ -83,7 +85,7 @@ function raidTeardown(){
   raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
   $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
   document.body.classList.remove('inraid');
-  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode');
+  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode'); for(const id of ['flashwhite','pdhud']){ const el=$('#'+id); if(el) el.hidden=true; } for(const id of ['sigs','spots']){ const el=$('#'+id); if(el) el.innerHTML=''; }
 }
 function endRaidInner(kind,detail){
   if(R.dm) return dmFinish(kind);

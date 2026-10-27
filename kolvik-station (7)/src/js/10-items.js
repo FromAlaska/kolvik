@@ -38,6 +38,15 @@ const ITEMS = {
  scrap:{name:'Scrap metal',short:'SCRAP',type:'loot',w:2,h:1,value:130,rar:0,desc:'Sells for cash. Workbench material.'},
  wire:{name:'Copper wire',short:'WIRE',type:'loot',w:1,h:1,value:320,rar:0,desc:'Sells for cash.'},
  battery:{name:'Lantern battery',short:'BATT',type:'loot',w:1,h:1,value:280,rar:0,desc:'Sells for cash.'},
+ frag:{name:'Frag grenade',short:'FRAG',type:'nade',w:1,h:1,value:420,rar:1,tier:1,desc:'3 second fuse. Up to 190 damage within 7 m of open line of sight. Key 8 throws, 9 picks the type.'},
+ flash:{name:'Flashbang',short:'FLASH',type:'nade',w:1,h:1,value:280,rar:1,tier:1,desc:'2 second fuse. Blinds and deafens anyone within 15 m who can see it (less if they look away); enemies cannot shoot for 4 s.'},
+ smokew:{name:'White smoke',short:'SMK W',type:'nade',w:1,h:1,value:140,rar:0,tier:1,desc:'An 8 m cloud for 45 s that enemies and their drones cannot see through.'},
+ smoker:{name:'Red smoke',short:'SMK R',type:'nade',w:1,h:1,value:160,rar:0,tier:1,desc:'Smoke that also marks "enemy here" on your squad\'s HUD for 60 s.'},
+ smokeg:{name:'Green smoke',short:'SMK G',type:'nade',w:1,h:1,value:160,rar:0,tier:1,desc:'Smoke that also marks "friendly, regroup" on your squad\'s HUD for 60 s.'},
+ bow:{name:'Hunting bow',short:'BOW',type:'weapon',slot:'primary',w:1,h:4,value:150,rar:0,tier:1,cal:'arrow',magSize:1,rpm:70,auto:false,spread:0.006,recoil:0,reload:0.9,bow:true,draw:0.95,speed:52,desc:'Recurve bow. Nearly silent and dirt cheap. Hold fire to draw, let go to shoot. Arrows drop and take time to arrive.'},
+ cbow:{name:'Compound bow',short:'CMPD',type:'weapon',slot:'primary',w:1,h:4,value:900,rar:1,tier:1,cal:'arrow',magSize:1,rpm:80,auto:false,spread:0.0025,recoil:0,reload:0.75,bow:true,draw:0.7,speed:82,desc:'Cams and cables: a faster, flatter arrow for less effort. Still nearly silent.'},
+ arrow:{name:'Arrows',short:'ARROW',type:'ammo',cal:'arrow',w:1,h:1,value:3,rar:0,tier:1,dmg:92,pen:14,stack:20,desc:'Broadhead arrows for both bows.'},
+ pdrone:{name:'Recon drone',short:'DRONE',type:'pdrone',w:2,h:2,value:4800,rar:2,tier:2,batt:150,desc:'A small quadcopter you fly yourself (key 0). Marks what its camera sees for you and your squad. 150 s of battery, recharged between raids.'},
  branch:{name:'Spruce branch',short:'BRNCH',type:'craft',w:1,h:3,value:15,rar:0,desc:'Cut from a tree in a raid (E at a tree). Carve one into a shiv, or two into a spear.'},
  shiv:{name:'Wooden shiv',short:'SHIV',type:'melee',w:1,h:2,value:60,rar:0,dmg:52,pen:5,reach:1.7,rate:0.42,wear:15,desc:'A sharpened spruce stake. Quick and quiet. Breaks after about 15 hits. Carried anywhere, it replaces your fists (key 3).'},
  spear:{name:'Spruce spear',short:'SPEAR',type:'melee',w:1,h:4,value:160,rar:0,dmg:78,pen:9,reach:2.7,rate:0.85,wear:25,desc:'Two branches lashed together and fire-hardened. Long reach, slow thrust. Breaks after about 25 hits. Carried anywhere, it replaces your fists (key 3).'},
@@ -129,8 +138,8 @@ function fixMag(w){ const m=wstats(w).magSize; if(w.mag>m){ const back=mk(w.ammo
 for(const k in ITEMS) ITEMS[k].id=k;
 for(const k of ['reddot','holo','prism','scope4','suppr','brake']) ITEMS[k].fits.push('nordlys','jarlmg');
 const RAR=['Common','Uncommon','Rare','Very rare','Legendary'];
-const GLYPH={craft:'≡',melee:'†',jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
-const CALS={'9x18':['a918'],'5.45':['a545','a545bp'],'7.62R':['a762'],'12g':['a12']};
+const GLYPH={nade:'●',pdrone:'✈',craft:'≡',melee:'†',jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
+const CALS={'arrow':['arrow'],'9x18':['a918'],'5.45':['a545','a545bp'],'7.62R':['a762'],'12g':['a12']};
 const SLOTS=['primary','secondary','helmet','armor','rig','pack'];
 const SLOT_NAME={primary:'Primary',secondary:'Sidearm',helmet:'Helmet',armor:'Body armor',rig:'Rig',pack:'Backpack',pockets:'Pockets',pouch:'Secure pouch'};
 // trader loyalty: lifetime spend thresholds
@@ -145,6 +154,7 @@ function mk(id, o={}){
   if(d.hp) it.hp=d.hp;
   if(d.uses) it.uses=d.uses;
   if(d.wear) it.wear=d.wear;
+  if(d.batt) it.batt=d.batt;
   return Object.assign(it,o);
 }
 const dims = it => { const d=ITEMS[it.id]; return it.r?[d.h,d.w]:[d.w,d.h]; };

@@ -4,6 +4,7 @@ function startRaid(mapId,launch){
   const bail=()=>{ if(launch){ wsend({t:'leaveRaid'}); NET.on=false; } };
   if(R){ bail(); return; }
   if(MG.on) mgAbort(true); // a lobby launching pulls you out of a rec-room game
+  try{ pdRecharge(); }catch(e){} // drones charge between raids (77-pdrone.js)
   if(TRADE.on){ wsend({t:'trcancel'}); TRADE.on=false; tradeRestore(); saveGame(); tradeUI(); }
   if(!initGL()){ toast('WebGL is not available in this browser.'); bail(); return; }
   const map=MAPS[mapId]; if(map.pvp&&!launch){ toast(`${map.name} is PvP only. Host a lobby to play it.`); return; }

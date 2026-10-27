@@ -70,7 +70,7 @@ function testDefinition(r,d,key){
       ck(r,fin(d.recoil)&&d.recoil>=0,`bad recoil ${d.recoil}`); ck(r,fin(d.reload)&&d.reload>0,`bad reload ${d.reload}`);
       if(d.pellets!=null) ck(r,int(d.pellets,1,30),`bad pellets ${d.pellets}`);
       ck(r,!!GUNGEO[d.id],'no 3D model in GUNGEO, so it uses a generic gun',true);
-      ck(r,fitsWeapons(d.id).length>0,'no attachment fits it',true);
+      ck(r,d.bow||fitsWeapons(d.id).length>0,'no attachment fits it',true); // bows take no attachments
       break;
     case 'ammo':
       ck(r,!!CALS[d.cal]&&CALS[d.cal].includes(d.id),`not listed under caliber "${d.cal}" in CALS, so no gun can load it`);
@@ -229,7 +229,7 @@ function raidWeapon(r,d,res){
     clearPlayer(); giveAmmo(am,w); w.mag=0;
     tryk(r,`load ${am}`,()=>{ takeAmmoFrom(playerConts(),w); if(w.ammo!==am) throw new Error(`loaded ${w.ammo} instead`); if(w.mag!==wstats(w).magSize) throw new Error(`magazine has ${w.mag}/${wstats(w).magSize}`); });
     tryk(r,`fire ${am}`,()=>{ const m0=w.mag, n=Math.min(3,m0); for(let i=0;i<n;i++) fire(w); if(w.mag!==m0-n) throw new Error(`magazine went ${m0} → ${w.mag} after ${n} shots`); });
-    tryk(r,`reload ${am}`,()=>{ w.mag=1; P.reloadT=0; P.using=null; startReload(); if(!(P.reloadT>0)) throw new Error('reload did not start'); loop(d.reload+0.2); if(P.reloadT>0) throw new Error('reload never finished'); if(w.mag!==wstats(w).magSize) throw new Error(`magazine has ${w.mag}/${wstats(w).magSize} after reloading`); });
+    tryk(r,`reload ${am}`,()=>{ w.mag=wstats(w).magSize>1?1:0; P.reloadT=0; P.using=null; startReload(); if(!(P.reloadT>0)) throw new Error('reload did not start'); loop(d.reload+0.2); if(P.reloadT>0) throw new Error('reload never finished'); if(w.mag!==wstats(w).magSize) throw new Error(`magazine has ${w.mag}/${wstats(w).magSize} after reloading`); });
   }
   tryk(r,'fire empty',()=>{ w.mag=0; fire(w); P.reloadT=0; P.semiLock=false; });
   for(const a of fitsWeapons(d.id)){

@@ -81,7 +81,7 @@ function targets(){
   const list=[];
   // someone in an aircraft is a target only while it's low and slow enough for a rifleman: the airframe takes the hits (see playerHit)
   const airAlt=(x,z,y)=>y-Math.max(R.terrain?R.terrain(x,z):0,0);
-  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x,z:P.pos.z,eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
+  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x+(P.leanX||0)*Math.cos(P.yaw),z:P.pos.z-(P.leanX||0)*Math.sin(P.yaw),eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
   if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,fresh:st.gf??1,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
   return list;
 }

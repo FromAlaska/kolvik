@@ -180,4 +180,5 @@ function animDead(e,dt){ if(!e.rig) return; if(e.rig.s.dying<0) bodyDie(e.rig,e.
 
 /* ---- other players ---- */
 function remotePose(p,dt){ if(!p.rig) return; const st=p.st;
-  bodyAnim(p.rig,{yaw:p.g.rotation.y,crouch:!!st.crouch,aim:clamp(st.p||0,-0.75,0.75),alert:true,sit:!!st.rd,down:!!st.down},dt); }
+  bodyAnim(p.rig,{yaw:p.g.rotation.y,crouch:!!st.crouch,aim:clamp(st.p||0,-0.75,0.75),alert:true,sit:!!st.rd,down:!!st.down},dt);
+  p.lean=(p.lean||0)+((st.ln||0)-(p.lean||0))*Math.min(1,dt*10); if(Math.abs(p.lean)>0.01){ p.rig.spine.rotation.z-=p.lean*0.34; p.rig.spine.position.x+=p.lean*0.06; } } // leaning (49-lean.js)

@@ -382,7 +382,7 @@ function makeFriends(a, b) {
 
 const squads = new Map(); let nextSquad = 1;
 function squadDetail(sq) {
-  return { id: sq.id, leader: sq.leader, members: [...sq.members].map(id => { const q = conns.get(id); return { id, name: q ? q.name : '?', account: q ? q.account : null, state: q ? (q.room ? 'raid' : q.lobby ? 'lobby' : 'hideout') : 'gone' }; }) };
+  return { id: sq.id, leader: sq.leader, members: [...sq.members].map(id => { const q = conns.get(id); return { id, name: q ? q.name : '?', account: q ? q.account : null, state: q ? (q.room ? 'raid' : q.lobby ? 'lobby' : 'hideout') : 'gone', map: q && q.room ? q.room.map : null, left: q && q.room ? timeLeft(q.room) : null, room: q && q.room ? q.room.id : null }; }) };
 }
 function squadSend(sq) { const d = squadDetail(sq); for (const id of sq.members) { const q = conns.get(id); if (q) send(q, { t: 'squad', squad: d }); } }
 function squadTag(q) { if (q.room) toRoom(q.room, { t: 'psquad', id: q.id, squad: q.squad ? q.squad.id : null }); }
@@ -621,6 +621,9 @@ wss.on('connection', ws => {
       case 'body': if (Array.isArray(m.items) && m.items.length <= 60) { r.bodies.push({ cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }); toRoom(r, { t: 'body', cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }, p); } break;
       case 'phit': { const v = r.players.get(m.pid); if (v && !sameSide(r, p, v)) send(v, { t: 'phit', part: m.part, ammo: m.ammo, from: p.id }); break; }
       case 'eshot': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'eshot', hits: m.hits, dmg: m.dmg, pen: m.pen, name: m.name, x: Number.isFinite(m.x) ? m.x : undefined, z: Number.isFinite(m.z) ? m.z : undefined, gun: typeof m.gun === 'string' ? m.gun.slice(0, 24) : undefined }); break; }
+      case 'pdhit': { const v = r.players.get(m.pid); if (v && v !== p) send(v, { t: 'pdhit', dmg: Math.min(200, +m.dmg || 0), from: p.id }); break; }
+      case 'pshot': case 'nade': case 'arrow': toRoom(r, Object.assign({}, m, { from: p.id }), p); break;
+      case 'spot': case 'sig': for (const q of r.players.values()) if (q !== p && sameSide(r, p, q) && (p.squad && q.squad === p.squad || r.mode === 'tdm' || r.coop)) send(q, Object.assign({}, m, { from: p.id })); break;
       case 'ehit': case 'shot': case 'dhit': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, Object.assign({}, m, { from: p.id })); break; }
       case 'estate': if (p.id === r.hostId) { r.estate = { e: m.e, ap: m.ap, dr: m.dr }; toRoom(r, m, p); } break;
       case 'pdmg': { const v = r.players.get(m.pid); if (v && v !== p && (!sameSide(r, p, v) || (m.ai && p.id === r.hostId))) send(v, { t: 'pdmg', i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), from: m.ai ? null : p.id }); break; }

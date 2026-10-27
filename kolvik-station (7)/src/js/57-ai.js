@@ -255,7 +255,7 @@ function aiAct(e,dt){
 function aiSuppress(e,x,z){
   const d=ITEMS[e.gun.id]; e.gun.mag--; e.cool=60/d.rpm*(d.auto?1.6:2.2)+0.15+Math.random()*0.35;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, my=e.pos.y+eGunY(e), ty=(R.terrain?R.terrain(x,z):0)+1.1+_gauss()*0.4, ex=x+_gauss()*1.2, ez=z+_gauss()*1.2;
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShotAt(e.gun.id,myD);
   _a.set(mx,my,mz); _b.set(ex-mx,ty-my,ez-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd+20;
   const wall=ray.intersectObjects(R.ray,false)[0]; const end=wall?wall.point:{x:mx+_b.x*(dd+20),y:my+_b.y*(dd+20),z:mz+_b.z*(dd+20)};
   tracer(mx,my-0.05,mz,end.x,end.y,end.z,0xffcf7a); R.shots.push([mx,mz,end.x,end.y,end.z]); if(wall) puff(wall.point,0xc9d2d6,3,1.4);
