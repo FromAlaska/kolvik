@@ -20,8 +20,9 @@ function renderTab(){
   else if(TAB==='friends') renderFriends(body);
   else if(TAB==='operator') renderOperator(body);
   else if(TAB==='rec') renderRec(body);
+  else if(TAB==='wayout') renderWayout(body);
   else renderDeploy(body);
-  tabTip(body); guestBar();
+  tabTip(body); guestBar(); woCheck(); woBar();
 }
 function getCont(key){
   if(key==='stash') return S.stash;

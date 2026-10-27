@@ -26,8 +26,8 @@ const GUNGEO={
  kestrel:{top:.04,oz:-.1,builtin:{kind:'prism',y:.085}},
  nordlys:{top:.054,oz:-.12,front:-.5,rear:-.02},
  jarlmg:{top:.057,oz:-.1,front:-.5,rear:-.02},
- bow:{top:.03,oz:-.3,front:-.36,rear:null},
- cbow:{top:.03,oz:-.3,front:-.36,rear:null},
+ bow:{top:.02,oz:-.42,front:-.43,rear:null,noSights:true},
+ cbow:{top:.02,oz:-.42,front:-.43,rear:null,noSights:true},
 };
 function buildGun(id,w,o={}){
   const g=new THREE.Group(); if(w===undefined) w=curW();
@@ -50,10 +50,8 @@ function buildGun(id,w,o={}){
   if(id==='kestrel'){ B(.055,.08,.5,0,0,-.12,olive); B(.024,.024,.3,0,.015,-.5,dark); pt.mag=B(.04,.12,.07,0,-.1,-.12,dark); B(.05,.08,.24,0,-.01,.22,olive); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(id==='jarlmg'){ B(.07,.09,.46,0,0,-.08,dark); B(.03,.03,.42,0,.015,-.5,steel); B(.05,.05,.26,0,.015,-.42,dark); pt.mag=B(.09,.09,.1,.06,-.06,-.12,olive); B(.05,.09,.22,0,-.02,.24,dark); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.34,0,.051,-.1,dark); B(.012,.12,.012,-.03,-.09,-.62,steel,.6); B(.012,.12,.012,.03,-.09,-.62,steel,.6); muz=-.72; }
   if(id==='nordlys'){ B(.058,.085,.54,0,0,-.12,snowM); B(.026,.026,.34,0,.015,-.55,dark); B(.032,.032,.1,0,.015,-.74,steel); pt.mag=B(.045,.14,.07,0,-.11,-.12,dark,.15); B(.055,.085,.26,0,-.01,.24,snowM); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.3,0,.048,-.12,dark); muz=-.8; }
-  // bows: held upright in front, string toward you, the nocked arrow is the 'mag' so the reload animation nocks the next one (76-bows.js)
-  if(id==='bow'||id==='cbow'){ const lim=id==='cbow'?MC(0x3a4030):wood, cam=steel; B(.035,.16,.05,0,0,-.36,id==='cbow'?MC(0x2a2d30):MC(0x5a3a1e)); B(.026,.3,.035,0,.22,-.33,lim,-.25); B(.026,.3,.035,0,-.22,-.33,lim,.25);
-    if(id==='cbow'){ B(.03,.05,.05,0,.37,-.28,cam); B(.03,.05,.05,0,-.37,-.28,cam); B(.004,.7,.004,.012,0,-.3,MC(0x8a8a80)); }
-    B(.004,.72,.004,0,0,-.22,MB(0xd8d8d0)); pt.mag=B(.01,.01,.62,0,0,-.42,MC(0x6b4a2a)); const tip=new THREE.Mesh(new THREE.BoxGeometry(.018,.018,.05),steel); tip.position.set(0,0,-.32); pt.mag.add(tip); muz=-.75; }
+  // bows (76-bows.js): built from short segments so the limbs can bend and the string can come back into a V as you draw (bowPose)
+  if(id==='bow'||id==='cbow') muz=buildBow(g,id,pt,{wood,steel,dark});
   if(id==='tundra'){ B(.05,.06,.3,0,0,-.05,dark); B(.03,.03,.46,0,.012,-.42,steel); pt.pump=B(.05,.045,.16,0,-.04,-.38,wood); B(.045,.07,.22,0,-.02,.2,wood); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(!o.noHands) vmHands(g,pt,id,glove,o);
   if(att.muzzle){ B(.034,.034,.16,0,.012,muz-.06,dark); muz-=.14; }
@@ -64,8 +62,9 @@ function buildGun(id,w,o={}){
   else if(geo.builtin){ addOptic(g,B,geo.builtin.kind,geo.builtin.y,geo.oz); g.userData.sightY=geo.builtin.y; }
   else {
     const y=geo.top+.02, ph=.02;
-    B(.005,ph,.008,0,y-ph/2,geo.front,dark);
-    if(geo.rear!=null){ B(.008,ph,.012,-.011,y-ph/2,geo.rear,dark); B(.008,ph,.012,.011,y-ph/2,geo.rear,dark); B(.03,.006,.012,0,y-ph+.003,geo.rear,dark); }
+    if(!geo.noSights) B(.005,ph,.008,0,y-ph/2,geo.front,dark);
+    if(geo.noSights){}
+    else if(geo.rear!=null){ B(.008,ph,.012,-.011,y-ph/2,geo.rear,dark); B(.008,ph,.012,.011,y-ph/2,geo.rear,dark); B(.03,.006,.012,0,y-ph+.003,geo.rear,dark); }
     else { const bead=new THREE.Mesh(new THREE.BoxGeometry(.008,.008,.008),MB(0xe8e4d0)); bead.position.set(0,y-.004,geo.front); g.add(bead); }
     g.userData.sightY=y;
   }
@@ -77,7 +76,7 @@ function buildGun(id,w,o={}){
 }
 // grip and support hand spots on each gun (gun space: x right, y up, z toward you), and the forearms in your coat sleeve
 const VM_HANDS={ makar:{r:[0,-.075,.025],l:[-.04,-.092,.045]}, vintik:{r:[0,-.08,.035],l:[-.01,-.04,-.19]}, akr:{r:[0,-.085,.045],l:[-.005,-.045,-.33]}, kestrel:{r:[0,-.085,.045],l:[0,-.05,-.31]},
-  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]}, bow:{r:[0,0,-.2],l:[0,0,-.36]}, cbow:{r:[0,0,-.2],l:[0,0,-.36]} };
+  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]}, bow:{r:[0,0,-.2],l:[-.01,-.03,-.42]}, cbow:{r:[0,0,-.2],l:[-.01,-.03,-.42]} };
 function vmHands(g,pt,id,glove,o){
   const coat=(S&&S.cos)?cosMat(o.coat||S.cos.fit.coat):MC(0x4d5a48), cuff=MC(0x1e2224), H=VM_HANDS[id]||VM_HANDS.akr, Z=new THREE.Vector3(0,0,1);
   const hand=(at,dir,len)=>{ const h=new THREE.Group(); h.position.set(...at); g.add(h);
@@ -85,7 +84,7 @@ function vmHands(g,pt,id,glove,o){
     const d=new THREE.Vector3(...dir).normalize(), q=new THREE.Quaternion().setFromUnitVectors(Z,d);
     const c=new THREE.Mesh(new THREE.BoxGeometry(.078,.078,.04),cuff); c.position.copy(d).multiplyScalar(.07); c.quaternion.copy(q); h.add(c);
     const a=new THREE.Mesh(new THREE.BoxGeometry(.084,.084,len),coat); a.position.copy(d).multiplyScalar(.09+len/2); a.quaternion.copy(q); h.add(a); return h; };
-  pt.rh=hand(H.r,[.35,-.55,1],.42);
+  const bowk=id==='bow'||id==='cbow'; pt.rh=hand(H.r,bowk?[1,-.3,.45]:[.35,-.55,1],bowk?.5:.42);
   pt.lh=hand(H.l,id==='makar'?[-.45,-.65,1]:[-.5,-.5,1],id==='makar'?.3:.5);
   // a shell for the shotgun's hand to feed, hidden until it reloads
   if(id==='tundra'){ const sh=new THREE.Mesh(new THREE.BoxGeometry(.022,.022,.06),MC(0xb8402d)); sh.position.set(0,.03,-.03); sh.visible=false; pt.lh.add(sh); pt.shell=sh; }
@@ -126,3 +125,45 @@ function setHeldGun(rig,id){ if(!rig||!rig.gun) return; id=id&&ITEMS[id]&&ITEMS[
 const SPARKS=[]; let _sparkMat=null;
 function muzzleSpark(x,y,z,dist){ if(!scene) return; if(!_sparkMat) _sparkMat=new THREE.SpriteMaterial({color:0xffe0a0,fog:false,transparent:true,depthWrite:false});
   let s=SPARKS.find(q=>!q.parent); if(!s){ s=new THREE.Sprite(_sparkMat); SPARKS.push(s); } const k=Math.max(0.35,dist*0.012)*(OPTS.flash==='off'?0.6:1); s.scale.set(k,k,1); s.position.set(x,y,z); scene.add(s); setTimeout(()=>{ if(s.parent) s.parent.remove(s); },70); }
+
+/* ---- bows ----
+   Bow space inside the gun group: the bow stands upright in the y-z plane with its grip at z=BOW.z (in front of you),
+   the string on your side of it, and the arrow along -z at the arrow rest. The whole bow is canted a little (top to the
+   right) the way archers hold it, so you see the curve of the limbs rather than a thin edge.
+   Recurve: a riser with a grip and shelf, long limbs that curve back toward you and flip forward at the tips.
+   Compound: a long angular riser with a sight, short stiff limbs, a cam at each tip and the cables crossing.
+   bowPose(g,draw) bends the limbs, pulls the string into a V and slides the arrow back with your hand. */
+const BOW={z:-.42, cant:-.22, brace:.2, drawLen:.533}; /* drawLen: how far behind the grip the nock sits at full draw */
+function buildBow(g,id,pt,m){ const cb=id==='cbow'; const bg=new THREE.Group(); bg.position.set(-.01,0,BOW.z); bg.rotation.z=BOW.cant; g.add(bg);
+  const box=(w,h,d,x,y,z,mat)=>{ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); o.position.set(x,y,z); bg.add(o); return o; };
+  const seg=mat=>{ const o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mat); bg.add(o); return o; };
+  const riser=cb?MC(0x2a2d30):MC(0x5a3a1e), limbM=cb?MC(0x3a4030):m.wood, grip=MC(0x1e1a16), strM=MB(0xd8d4c8);
+  if(cb){ box(.03,.36,.05,0,0,.01,riser); box(.03,.1,.03,0,.13,-.04,riser); box(.03,.1,.03,0,-.13,-.04,riser); box(.034,.11,.055,0,-.01,.02,grip);
+    // sight housing with pins, and the arrow rest
+    box(.012,.07,.07,.045,.06,-.02,riser); box(.004,.004,.05,.045,.06,-.02,MB(0x3cf07a)); box(.004,.004,.05,.045,.045,-.02,MB(0xffd040)); box(.004,.004,.05,.045,.03,-.02,MB(0xff4a3a)); box(.03,.008,.03,-.025,.025,0,riser); }
+  else { box(.032,.24,.05,0,0,0,riser); box(.036,.1,.056,0,-.03,.004,grip); box(.02,.012,.035,-.022,.022,0,riser); }
+  const N=cb?3:6, limbs={u:[],l:[]}; for(let i=0;i<N;i++){ limbs.u.push(seg(limbM)); limbs.l.push(seg(limbM)); }
+  const cams=cb?[box(.025,.07,.07,0,0,0,m.steel),box(.025,.07,.07,0,0,0,m.steel)]:null;
+  const cables=cb?[seg(MC(0x111316)),seg(MC(0x111316))]:null;
+  const str=[seg(strM),seg(strM)];
+  // the nocked arrow: shaft, broadhead and fletching; it's the "mag", so reloading nocks a fresh one
+  const ar=new THREE.Group(); bg.add(ar); const sh=new THREE.Mesh(new THREE.BoxGeometry(.006,.006,.72),MC(0x6b4a2a)); sh.position.z=-.36; ar.add(sh);
+  const hd=new THREE.Mesh(new THREE.BoxGeometry(.02,.006,.05),m.steel); hd.position.z=-.74; ar.add(hd); const hd2=new THREE.Mesh(new THREE.BoxGeometry(.006,.02,.05),m.steel); hd2.position.z=-.74; ar.add(hd2);
+  for(const [x,y] of [[.012,0],[-.006,.01],[-.006,-.01]]){ const f=new THREE.Mesh(new THREE.BoxGeometry(x?0.002:0.014,x?0.014:0.002,.07),MC(0xc03a2a)); f.position.set(x*0.6,y*0.6,-.06); ar.add(f); }
+  pt.mag=ar; g.userData.bow={bg,cb,limbs,cams,cables,str,ar}; bowPose(g,0); return BOW.z-.8; }
+function segTo(o,a,b,t){ const dx=b[0]-a[0], dy=b[1]-a[1], dz=b[2]-a[2], L=Math.hypot(dx,dy,dz)||1e-4; o.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2); o.scale.set(t*(o.userData.wide||1),L,t); o.rotation.set(Math.atan2(dz,dy),0,0); if(dx) o.rotation.z=-Math.atan2(dx,Math.hypot(dy,dz)); }
+function bowPose(g,draw){ const B2=g&&g.userData.bow; if(!B2) return; draw=Math.max(0,Math.min(1,draw||0));
+  // limb shape from the grip out to the tip, for the upper limb (s=1) or the lower (s=-1)
+  const pts=s=>{ const P0=[]; const N=B2.limbs.u.length;
+    for(let i=0;i<=N;i++){ const t=i/N; let y,z;
+      if(B2.cb){ y=.15+.17*t*(1-.08*draw); z=-.03+(.05+.07*draw)*t; }
+      else { y=.11+.46*t*(1-.07*draw); z=.17*Math.pow(t,1.5)*(1+.75*draw)-.05*Math.pow(Math.max(0,(t-.78)/.22),2)*(1-.4*draw); }
+      P0.push([0,s*y,z]); } return P0; };
+  for(const [s,arr] of [[1,B2.limbs.u],[-1,B2.limbs.l]]){ const P0=pts(s); for(let i=0;i<arr.length;i++){ arr[i].userData.wide=B2.cb?1.6:2.4; segTo(arr[i],P0[i],P0[i+1],B2.cb?.03:.016); } }
+  const tu=pts(1).pop(), tl=pts(-1).pop();
+  let au=tu, al=tl; if(B2.cb){ B2.cams[0].position.set(0,tu[1],tu[2]); B2.cams[1].position.set(0,tl[1],tl[2]); B2.cams[0].rotation.x=B2.cams[1].rotation.x=-draw*2.4;
+    au=[0,tu[1]-.02,tu[2]+.03]; al=[0,tl[1]+.02,tl[2]+.03]; segTo(B2.cables[0],[.008,tu[1],tu[2]-.02],[.008,tl[1]*0.2,tl[2]-.01*draw],.004); segTo(B2.cables[1],[-.008,tl[1],tl[2]-.02],[-.008,tu[1]*0.2,tu[2]-.01*draw],.004); }
+  // the string: straight at brace, a V back to your hand at full draw
+  const nb=BOW.brace+(B2.cb?-.04:0), nz=nb+(BOW.drawLen-nb)*draw, nock=[-.012,.022,nz];
+  segTo(B2.str[0],au,nock,.0016); segTo(B2.str[1],al,nock,.0016);
+  B2.ar.position.set(-.012,.022,nz); B2.nock=nock; }

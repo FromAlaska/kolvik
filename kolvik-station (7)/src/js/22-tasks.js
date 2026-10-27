@@ -73,7 +73,7 @@ function qKill(e,head,w){ const dist=e.pos?Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.
 function qVisit(){ qEachActive((o,p,i,title)=>{ if(o.type!=='visit'||p[i]>=1) return; const z=ZONES[o.zone]; if(z.map!==R.map) return; if(Math.hypot(z.x-P.pos.x,z.z-P.pos.z)<z.r){ p[i]=1; const line=`${title}: ${objLabel(o)} ✓`; (R.qlog=R.qlog||[]).push(line); msg('Task · '+line); sfxBeep(); } }); }
 function taskHud(){
   const lines=[]; qEachActive((o,p,i)=>{ if(p[i]>=o.n||o.type==='hand'||o.type==='craft') return; if(o.map&&o.map!==R.map) return; if(o.type==='visit'&&ZONES[o.zone].map!==R.map) return; lines.push(`<div>${esc(objLabel(o))} <b>${p[i]}/${o.n}</b></div>`); });
-  $('#taskHud').innerHTML=lines.length?'<span class="lbl">Tasks</span>'+lines.slice(0,4).join(''):'';
+  $('#taskHud').innerHTML=woHudLine()+(lines.length?'<span class="lbl">Tasks</span>'+lines.slice(0,4).join(''):'');
 }
 const qDone=q=>q.obj.every((o,i)=>(S.q.active[q.id]||{p:[]}).p[i]>=o.n);
 const dDone=d=>d.obj.every((o,i)=>d.p[i]>=o.n);

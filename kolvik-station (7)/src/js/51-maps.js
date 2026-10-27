@@ -270,6 +270,7 @@ function applyMods(sps){
     const q=randomOpen(8); R.drop={t:rr(70,MAPS[R.map].time*0.5),x:q.x,z:q.z,cont,state:'pending'};
   }
   if(R.map==='skarsvik'){ const z=SK_EVAC[Math.floor(rand()*SK_EVAC.length)]; R.evac={t:MAPS.skarsvik.time*rr(0.45,0.6),x:z.x,z:z.z,name:z.name,dur:100,state:'pending'}; R.evacEx={name:'Helicopter evac',x:z.x,z:z.z,r:7,active:false,time:5,evac:true}; R.extracts.push(R.evacEx); }
+  woRaidSetup(); /* 79-wayout.js: the last flight on Kaldfjord */
 }
 function applyWeather(){
   const W=R.cond.W; R.sight=W.sight; R.slip=W.slip||1; R.hear=W.hear||1; R.windy=!!W.wind; // 48-year.js: slippery ground, how far sound carries, gusts

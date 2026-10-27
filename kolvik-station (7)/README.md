@@ -3,6 +3,25 @@
 Browser extraction shooter: PS1-style arctic research station, Tetris-grid inventory, body-part damage,
 a cash economy with a trader, hideout and build kits, and PvPvE online raids.
 
+## The goal: the way out
+
+Kolvik Station is cut off, and everyone on the server is after the same thing: a seat on the last flight out. The
+**The way out** tab (first in the row) lays out six stages, and a banner on every other tab shows which one you're on:
+
+1. **Call for help**: bring a Radio module, 2 Lantern batteries and 3 Copper wire home and hand them over. ($5,000)
+2. **Prove yourself**: kill any boss (Halvorsen, Brekke, Rask, Jarl Hrafn, Dahl or Vinter). (1 sealed cache)
+3. **Learn the ground**: extract from 4 different maps. ($10,000)
+4. **Hold the mast**: hold Last Light through wave 5, solo or with friends. (2 sealed caches)
+5. **Buy a seat**: pay the pilot $150,000.
+6. **The last flight**: go into Kaldfjord Reach. About five minutes in, your evac flight lands at the Old airstrip and
+   waits eight minutes. Get to it alive and hold for 8 seconds.
+
+Stages 2 to 4 count from the start of the season in any order; the radio and the fare are paid on the tab. Getting
+out pays $50,000, 5 sealed caches, the Evac parka and the title *Escapee* (*Frequent flyer* from your third escape),
+tells everyone on the server, and puts you in the **Hall of Escapees** for the season (on the Way Out and Leaderboard
+tabs; the leaderboard also has a *Way out* column). A season wipe starts everyone's race again; your career escape
+count carries over. After you get out you can go back in for another run, and the fare goes up by half each time.
+
 ## Help on the main screen
 
 Every hideout tab opens with a short tip saying what it's for and how to work it (Deploy lists the raid controls).
@@ -22,6 +41,25 @@ docker compose up -d --build
 
 Then open `http://<server-ip>:8080`. Solo raids work the moment the page loads; the **Online** buttons on the
 Deploy tab appear when the page is served by this server.
+
+### HTTPS with a Cloudflare Tunnel
+
+Works behind any router or carrier NAT, with no ports to open and no certificates to renew. You need a domain on
+Cloudflare (the free plan is fine).
+
+1. Cloudflare dashboard → **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*. Name it, then copy
+   the token from the install command (the long string after `--token`).
+2. On the tunnel's **Public hostname** tab, add e.g. `kolvik.yourdomain.com` with service type **HTTP** and URL
+   `kolvik:8080` (the compose service name and the port inside the container).
+3. Next to your compose file, create `.env` containing `TUNNEL_TOKEN=<the token>`.
+4. Add the `tunnel` service and `TRUST_PROXY=1` from `docker-compose.tunnel.yml` to your `docker-compose.yml`, then
+   `docker compose up -d --build`.
+
+Open `https://kolvik.yourdomain.com`. The page connects to the server over `wss://` by itself, and the plain-HTTP
+password warning goes away. `TRUST_PROXY=1` makes the login and error rate limits use each player's real address
+(Cloudflare's `CF-Connecting-IP`); without it, everyone shares the tunnel's address. Only set it when the server sits
+behind a proxy. Guest progress is stored per address in the browser, so guests moving from the old `http://` link
+start over; registered accounts carry across.
 
 Without Docker:
 
@@ -169,6 +207,10 @@ Two cheap, nearly silent primaries at the trader, using **Arrows** (20 to a stac
 Arrows are real projectiles: they drop, take time to arrive, and stick in what they hit. A weaker draw means a slower,
 weaker arrow. Holding full draw slowly tires you. One arrow at a time; the next is nocked automatically from your rig,
 pockets or pack. Other players barely hear the string, and they see your arrows fly.
+
+In first person the bow is held canted at your side with its string visible. Drawing brings it up in front of you:
+the string comes back to your jaw and the arrow runs from the bottom of the screen to the rest on the riser, its head
+just under the crosshair, the way a drawn bow looks from behind.
 
 ## Your own drone
 

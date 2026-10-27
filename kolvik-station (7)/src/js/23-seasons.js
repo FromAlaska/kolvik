@@ -8,7 +8,7 @@ function applySeason(){
   const old=S, career=old.career; const final={n:old.season,worth:worthOf(old),raids:old.stats.raids,extracts:old.stats.extracts,kills:old.stats.kills}; career.seasons.push(final);
   S=newSave(); S.name=old.name; S.music=old.music; S.career=career; S.cos=old.cos; S.goals=old.goals; S.season=sn.n; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); saveGame(); BOARD.rows=null; renderTab();
   const h=NET.hall&&NET.hall.n===old.season?NET.hall:null; const champ=h&&h.top&&h.top[0];
-  notice(`Season ${sn.n} has begun`,`<p>The server wiped everyone's stash, cash, hideout and tasks. You start again with $4,000, a pistol and a sack. Your career totals, goals and titles, collection log, cosmetics, sealed caches and scrip carry over.</p>${champ?`<p>Season ${h.n} champion: <b>${esc(champ.name)}</b> at ${fmt$(champ.worth)}.</p>`:''}<p>You finished season ${final.n} worth <b>${fmt$(final.worth)}</b> after ${final.raids} raid${final.raids===1?'':'s'}.</p>`);
+  notice(`Season ${sn.n} has begun`,`<p>The server wiped everyone's stash, cash, hideout and tasks. You start again with $4,000, a pistol and a sack. The race for the way out starts again for everyone. Your career totals and escapes, goals and titles, collection log, cosmetics, sealed caches and scrip carry over.</p>${champ?`<p>Season ${h.n} champion: <b>${esc(champ.name)}</b> at ${fmt$(champ.worth)}.</p>`:''}<p>You finished season ${final.n} worth <b>${fmt$(final.worth)}</b> after ${final.raids} raid${final.raids===1?'':'s'}.</p>`);
 }
 function hofHtml(){
   const hall=BOARD.hall||[]; const c=S.career;

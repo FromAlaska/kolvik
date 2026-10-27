@@ -198,3 +198,4 @@ body.dmmode #taskHud{display:none}
 .tdbar{position:relative; height:16px; background:rgba(11,18,21,.75); border:1px solid var(--line); margin-top:4px} .tdbar i{position:absolute; inset:0 auto 0 0; background:#c0392b; transition:width .3s}
 .tdbar span{position:relative; display:block; text-align:center; font-size:11px; line-height:16px} .tdbar.hit{border-color:#ff6a5a}
 body.tdmode #taskHud{display:none}
+#taskHud .wohud{color:#ffb07a; margin-bottom:6px} #taskHud .wohud .lbl{color:#ff6b1a}

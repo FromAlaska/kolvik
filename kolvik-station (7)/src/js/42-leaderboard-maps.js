@@ -1,7 +1,7 @@
 /* 42-leaderboard-maps: leaderboard, and the overview map drawn on each map card */
 /* ---------- leaderboard ---------- */
 const BOARD={rows:null,sort:'worth',at:0,err:null,loading:false};
-const BCOLS=[['worth','Net worth',v=>fmt$(v)],['extracts','Extracts'],['surv','Survival',v=>v+'%'],['kills','AI kills'],['pkills','Player kills'],['best','Best haul',v=>fmt$(v)],['raids','Raids']];
+const BCOLS=[['worth','Net worth',v=>fmt$(v)],['extracts','Extracts'],['surv','Survival',v=>v+'%'],['kills','AI kills'],['pkills','Player kills'],['best','Best haul',v=>fmt$(v)],['raids','Raids'],['wo','Way out',v=>v>=6?'Out':`${v+1}/6`]];
 async function loadBoard(){
   if(BOARD.loading) return; BOARD.loading=true;
   try{ const r=await fetch('api/leaderboard',{cache:'no-store'}); const j=await r.json(); BOARD.season=j.season; BOARD.hall=j.hall||[]; BOARD.rows=j.rows.map(x=>Object.assign(x,{surv:x.raids?Math.round(100*x.extracts/x.raids):0})); BOARD.err=null; }
@@ -18,7 +18,7 @@ function renderBoard(body){
    <div class="boardwrap"><table class="board"><thead><tr><th class="rk">#</th><th class="nm">Operator</th>${BCOLS.map(([k,l])=>`<th><button data-sort="${k}" aria-pressed="${BOARD.sort===k}">${l}${BOARD.sort===k?' ▾':''}</button></th>`).join('')}</tr></thead>
    <tbody>${rows.map((r,i)=>`<tr class="${r.name===ACC.name?'me':''}"><td class="rk">${i+1}</td><td class="nm">${esc(r.name)}</td>${BCOLS.map(([k,,f])=>`<td class="${BOARD.sort===k?'on':''}">${f?f(r[k]):r[k]}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${BCOLS.length+2}" class="nm muted" style="font-weight:400">Nobody with an account has finished a raid yet.</td></tr>`}</tbody></table></div>
    <div class="acts" style="margin-top:12px"><button class="btn ghost sm" id="boardRefresh">Refresh</button><span class="lbl" style="align-self:center">Updated ${ago<5?'just now':ago+' s ago'}</span></div>
-   <p class="muted" style="max-width:70ch;font-size:13px">Net worth is cash plus everything in your stash and loadout. Survival is extracts divided by raids. Player kills are counted by the server; everything else comes from each player's save. Every season the server wipes stashes, cash, hideouts and tasks, and the final standings go into the Hall of Fame below.</p>${hofHtml()}`;
+   <p class="muted" style="max-width:70ch;font-size:13px">Net worth is cash plus everything in your stash and loadout. Survival is extracts divided by raids. Player kills are counted by the server; everything else comes from each player's save. Every season the server wipes stashes, cash, hideouts and tasks, and the final standings go into the Hall of Fame below.</p>${woHallHtml()}${hofHtml()}`;
   body.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{ BOARD.sort=b.dataset.sort; renderTab(); });
   $('#boardRefresh').onclick=()=>{ BOARD.at=0; loadBoard(); };
 }

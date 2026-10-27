@@ -110,17 +110,17 @@ function endRaidInner(kind,detail){
   S.cash+=deposited; const gained=kind==='extract'?carriedValue()+deposited-R.startValue:deposited-R.startValue;
   if(kind==='extract') S.stats.best=Math.max(S.stats.best||0,gained);
   if(kind==='extract'){ const haul=value+deposited; qBump(o=>o.type==='extract'&&(!o.map||o.map===R.map)&&(!o.noFire||!R.fired)&&(!o.weather||o.weather===R.cond.weather)&&(!o.minHaul||haul>=o.minHaul)?1:0); }
-  const fresh=kind==='extract'?goalExtract(value+deposited):[];
+  const fresh=kind==='extract'?goalExtract(value+deposited):[]; const woOut=woEscaping(kind,detail)?woEscape():null;
   const qlog=R.qlog||[];
   S.inRaid=false; saveGame(); accFlush();
   raidTeardown();
-  const title=kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
+  const title=woOut?['ok','Escaped']:kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
   const sub=kind==='extract'?`Out through ${detail}.`:kind==='kia'?`${detail}.`:(detail||'The raid timer ran out.')+'.';
   const r=$('#result'); r.hidden=false;
   r.innerHTML=`<div class="card"><span class="lbl">${mapName} · ${fmtTime(time)} in raid</span><h2 class="${title[0]}">${title[1]}</h2><p class="muted" style="margin:0">${esc(sub)} ${kind==='extract'?'Everything you carried is yours. Sell what you don\'t need.':'Your gear is gone. The secure pouch made it back.'}</p>
    ${killedBy?`<p class="killedby"><span class="lbl">Killed by</span> ${esc(killedBy)}</p>`:''}
    <dl class="stats"><dt>Kills</dt><dd>${kills}</dd><dt>Cash deposited</dt><dd class="cash">${fmt$(deposited)}</dd><dt>${kind==='extract'?'Gear brought home':'Gear lost'}</dt><dd>${fmt$(kind==='extract'?value:startV)}</dd><dt>Net change</dt><dd class="cash" style="color:${gained>=0?'var(--cash)':'var(--bad)'}">${gained>=0?'+':'−'}${fmt$(Math.abs(gained))}</dd><dt>Balance</dt><dd class="cash" id="resBal">${fmt$(S.cash)}</dd>${bossRw?`<dt>Jarl's bounty</dt><dd class="cash">+${fmt$(bossRw.cash)} <span class="muted" style="font-size:12px">and ${bossRw.caches} sealed caches</span></dd>`:''}${cacheIn+cacheBonus.length?`<dt>Sealed caches</dt><dd style="color:var(--warn)">+${cacheIn+cacheBonus.length} <span class="muted" style="font-size:12px">${[cacheIn?`${cacheIn} carried out`:'',...cacheBonus].filter(Boolean).join(' · ')}</span></dd>`:''}</dl>${qlog.length?`<div class="qlog"><span class="lbl">Task progress</span>${qlog.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''}<div class="haulbox" id="haulBox" hidden></div>
-   ${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
+   ${woOut?woResultHtml(woOut):''}${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
   renderHaul($('#haulBox')); stinger(kind==='extract'?'extract':'down');
   $('#backBtn').onclick=goHub;

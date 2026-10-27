@@ -1,0 +1,34 @@
+# Kolvik Station over HTTPS through a Cloudflare Tunnel: no open ports, no certificates to manage.
+# 1. Put your tunnel token in a file named .env next to this one:   TUNNEL_TOKEN=eyJh...
+# 2. In the Cloudflare dashboard, give the tunnel a public hostname pointing at  http://kolvik:8080
+# 3. docker compose -f docker-compose.tunnel.yml up -d --build
+# (Or copy the "tunnel" service and the two kolvik lines marked NEW into your own docker-compose.yml.)
+services:
+  kolvik:
+    build: .
+    image: kolvik-station:latest
+    container_name: kolvik
+    ports:
+      - "8080:8080"             # optional: keeps http://<server-ip>:8080 working on your own network
+    environment:
+      - PORT=8080
+      - MAX_PLAYERS=8
+      - SEASON_DAYS=30
+      - TRUST_PROXY=1           # NEW: rate limits use each player's real address, not the tunnel's
+      # - ADMINS=yourname
+    volumes:
+      - kolvik-data:/app/data
+    restart: unless-stopped
+
+  tunnel:                       # NEW
+    image: cloudflare/cloudflared:latest
+    container_name: kolvik-tunnel
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - kolvik
+    restart: unless-stopped
+
+volumes:
+  kolvik-data:

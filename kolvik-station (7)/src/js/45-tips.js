@@ -4,6 +4,7 @@
    them to register, with a plain warning not to reuse a real password: the game is served over plain HTTP, so the
    password crosses the network unencrypted. */
 const TAB_TIPS={
+  wayout:`<b>The way out.</b> The goal of the game. Six stages stand between you and a seat on the last flight out of Kolvik: fix the radio, kill a boss, extract from four maps, hold Last Light to wave 5, pay the pilot, then board the evac flight on Kaldfjord Reach. The banner on every tab shows where you are. Getting out puts you in the Hall of Escapees for the season.`,
   gear:`<b>Stash &amp; gear.</b> Drag items between your stash and your loadout (gun slots, armor, rig, pockets, backpack). Double-click (or double-tap) an item to move it in one go, and press <kbd>R</kbd> while dragging to rotate it. Click an item to see its stats and to sell it, load ammo, or fit attachments (you can also drag an optic, muzzle or magazine onto a gun). Whatever is in the <b>secure pouch</b> comes home even if you die. Drop loot on the sell strip, or use <i>Sell all loot</i>.`,
   trader:`<b>Trader.</b> Buy guns, ammo, armor, meds and ready-made kits from Quartermaster Ilse. The more you spend, the higher your loyalty and the better the gear she offers. She buys anything at 60% of its value: drop it on the sell strip on the Stash &amp; gear tab.`,
   tasks:`<b>Tasks.</b> Jobs from the people at the station. Take one, do what it asks in a raid (find something, kill something, extract from somewhere) and claim the reward here. Daily tasks change every day.`,

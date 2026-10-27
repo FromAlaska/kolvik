@@ -223,7 +223,10 @@ function updatePlayer(dt){
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
         using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene);
-      if(d.bow){ vmGun.position.z+=(P.draw||0)*0.09; const am=vmGun.userData.pt&&vmGun.userData.pt.mag; if(am){ am.visible=w.mag>0||P.reloadT>0; am.position.z+=(P.draw||0)*0.12; } } } }
+      if(d.bow){ // bows ignore the gun animation: held out to the left at rest, drawn so the arrow sits just under your eye (76-bows.js)
+        const dr=P.draw||0, a=Math.max(dr,P.adsT*0.7), L=(u,v)=>u+(v-u)*a, bx=Math.sin(P.bob)*0.008*(1-a), by=Math.abs(Math.cos(P.bob))*0.008*(1-a), rl=P.reloadT>0?0.06:0;
+        vmGun.position.set(L(-0.09,0.042)+bx,L(-0.2,-0.108)+by-rl,L(-0.32,-0.145)+(P.sprint?0.04:0)); vmGun.rotation.set(L(-0.22,0.085)+P.kick*0.03-rl,L(1.15,0.05),0); if(vmGun.userData.bow) vmGun.userData.bow.bg.rotation.z=L(-0.42,-0.2); /* full draw: the arrow runs from your jaw to the rest and points at the crosshair */
+        bowPose(vmGun,dr); const B2=vmGun.userData.bow, pt=vmGun.userData.pt; if(pt&&pt.mag) pt.mag.visible=w.mag>0||P.reloadT>0; if(B2&&pt&&pt.rh&&B2.nock&&P.reloadT<=0){ _bowV.set(...B2.nock).applyEuler(B2.bg.rotation).add(B2.bg.position); const dd=P.draw||0; _bowV.x+=0.045*dd; _bowV.y-=0.05*dd; _bowV.z+=0.07*dd; pt.rh.position.lerp(_bowV,dd>0.02?1:0.35); /* the drawing hand sits at your jaw, just out of view */ } } } }
   if(R&&R.spec) specCam(dt);
   if(R&&!P.dead) pouchSaveTick();
 }

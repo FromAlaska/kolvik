@@ -308,6 +308,23 @@ kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line); borde
 .yearbar.yr-polar{border-left-color:#6d5ab8} .yearbar.yr-thaw{border-left-color:#7cc9a4} .yearbar.yr-sun{border-left-color:#e8c55a} .yearbar.yr-storm{border-left-color:#e2574a}
 .condline .yr-polar{background:#2c2550} .condline .yr-thaw{background:#21433a} .condline .yr-sun{background:#5e4518} .condline .yr-storm{background:#4a1f1a}
 .condline .wx-sleet{background:#34505a} .condline .wx-icefog{background:#3e4a52} .condline .wx-windstorm{background:#4a3a2a} .condline .wx-calm{background:#2a3e4a}
+/* 79-wayout: the banner on every tab and the Way Out tab */
+.tabs .wotab{color:var(--signal)}
+#woBar{display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding-block:10px; background:linear-gradient(90deg,#2a1608,var(--panel) 60%); border-bottom:1px solid #4a2a12}
+#woBar b{font-family:var(--display); font-weight:800; font-size:18px; letter-spacing:.03em}
+#woBar .muted{font-size:13px; flex:1 1 220px}
+.wosteps{display:inline-flex; gap:3px} .wosteps i{width:18px; height:6px; background:var(--line)} .wosteps i.on{background:var(--ok)} .wosteps i.cur{background:var(--signal)}
+.wopath{list-style:none; margin:0; padding:0; display:grid; gap:10px; max-width:820px}
+.wostage{display:flex; gap:14px; background:var(--panel); border:1px solid var(--line); padding:14px}
+.wostage h3{font-family:var(--display); font-weight:800; font-size:22px; letter-spacing:.03em; margin:0 0 4px}
+.wostage p{margin:0 0 6px} .wostage .wopg{font-family:var(--mono); font-size:12px; color:var(--frost)}
+.wonum{flex:0 0 34px; height:34px; display:grid; place-items:center; font-family:var(--mono); font-weight:600; border:1px solid var(--line); color:var(--dim)}
+.wostage.done{opacity:.72} .wostage.done .wonum{background:#1f3a2e; color:var(--ok); border-color:#2f5a46}
+.wostage.cur{border-color:var(--signal); box-shadow:inset 3px 0 0 var(--signal)} .wostage.cur .wonum{background:var(--signal); color:var(--signal-ink); border-color:var(--signal)}
+.wostage.lock h3{color:var(--dim)}
+.woout{background:#1f2a14; border:1px solid #4a6a2a; padding:14px; margin:12px 0}
+.woout h3{font-family:var(--display); font-weight:800; font-size:28px; margin:2px 0 6px; color:var(--cash)} .woout p{margin:0 0 6px}
+.woesc{margin:0; padding-left:22px; display:grid; gap:4px; max-width:620px} .woesc li{display:flex; gap:10px; flex-wrap:wrap} .woesc li.me b{color:var(--signal)}
 
 /* ---------- raid ---------- */
 #raid{position:fixed; inset:0; background:#000; z-index:50}
@@ -509,6 +526,7 @@ body.dmmode #taskHud{display:none}
 .tdbar{position:relative; height:16px; background:rgba(11,18,21,.75); border:1px solid var(--line); margin-top:4px} .tdbar i{position:absolute; inset:0 auto 0 0; background:#c0392b; transition:width .3s}
 .tdbar span{position:relative; display:block; text-align:center; font-size:11px; line-height:16px} .tdbar.hit{border-color:#ff6a5a}
 body.tdmode #taskHud{display:none}
+#taskHud .wohud{color:#ffb07a; margin-bottom:6px} #taskHud .wohud .lbl{color:#ff6b1a}
 </style>
 
 <div id="hub">
@@ -528,6 +546,7 @@ body.tdmode #taskHud{display:none}
     </div>
   </header>
   <nav class="tabs gut" role="tablist" id="tabs">
+    <button role="tab" data-tab="wayout" aria-selected="false" class="wotab">The way out</button>
     <button role="tab" data-tab="gear" aria-selected="true">Stash &amp; gear</button>
     <button role="tab" data-tab="trader" aria-selected="false">Trader</button>
     <button role="tab" data-tab="tasks" aria-selected="false">Tasks<span class="badge" id="taskBadge" hidden></span></button>
@@ -540,6 +559,7 @@ body.tdmode #taskHud{display:none}
     <button role="tab" data-tab="board" aria-selected="false" id="boardTab" hidden>Leaderboard</button>
   </nav>
   <div id="guestBar" class="gut" hidden></div>
+  <div id="woBar" class="gut" hidden></div>
   <main id="tabbody" class="gut"></main>
 </div>
 
@@ -1265,7 +1285,7 @@ function qKill(e,head,w){ const dist=e.pos?Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.
 function qVisit(){ qEachActive((o,p,i,title)=>{ if(o.type!=='visit'||p[i]>=1) return; const z=ZONES[o.zone]; if(z.map!==R.map) return; if(Math.hypot(z.x-P.pos.x,z.z-P.pos.z)<z.r){ p[i]=1; const line=`${title}: ${objLabel(o)} ✓`; (R.qlog=R.qlog||[]).push(line); msg('Task · '+line); sfxBeep(); } }); }
 function taskHud(){
   const lines=[]; qEachActive((o,p,i)=>{ if(p[i]>=o.n||o.type==='hand'||o.type==='craft') return; if(o.map&&o.map!==R.map) return; if(o.type==='visit'&&ZONES[o.zone].map!==R.map) return; lines.push(`<div>${esc(objLabel(o))} <b>${p[i]}/${o.n}</b></div>`); });
-  $('#taskHud').innerHTML=lines.length?'<span class="lbl">Tasks</span>'+lines.slice(0,4).join(''):'';
+  $('#taskHud').innerHTML=woHudLine()+(lines.length?'<span class="lbl">Tasks</span>'+lines.slice(0,4).join(''):'');
 }
 const qDone=q=>q.obj.every((o,i)=>(S.q.active[q.id]||{p:[]}).p[i]>=o.n);
 const dDone=d=>d.obj.every((o,i)=>d.p[i]>=o.n);
@@ -1319,7 +1339,7 @@ function applySeason(){
   const old=S, career=old.career; const final={n:old.season,worth:worthOf(old),raids:old.stats.raids,extracts:old.stats.extracts,kills:old.stats.kills}; career.seasons.push(final);
   S=newSave(); S.name=old.name; S.music=old.music; S.career=career; S.cos=old.cos; S.goals=old.goals; S.season=sn.n; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); saveGame(); BOARD.rows=null; renderTab();
   const h=NET.hall&&NET.hall.n===old.season?NET.hall:null; const champ=h&&h.top&&h.top[0];
-  notice(`Season ${sn.n} has begun`,`<p>The server wiped everyone's stash, cash, hideout and tasks. You start again with $4,000, a pistol and a sack. Your career totals, goals and titles, collection log, cosmetics, sealed caches and scrip carry over.</p>${champ?`<p>Season ${h.n} champion: <b>${esc(champ.name)}</b> at ${fmt$(champ.worth)}.</p>`:''}<p>You finished season ${final.n} worth <b>${fmt$(final.worth)}</b> after ${final.raids} raid${final.raids===1?'':'s'}.</p>`);
+  notice(`Season ${sn.n} has begun`,`<p>The server wiped everyone's stash, cash, hideout and tasks. You start again with $4,000, a pistol and a sack. The race for the way out starts again for everyone. Your career totals and escapes, goals and titles, collection log, cosmetics, sealed caches and scrip carry over.</p>${champ?`<p>Season ${h.n} champion: <b>${esc(champ.name)}</b> at ${fmt$(champ.worth)}.</p>`:''}<p>You finished season ${final.n} worth <b>${fmt$(final.worth)}</b> after ${final.raids} raid${final.raids===1?'':'s'}.</p>`);
 }
 function hofHtml(){
   const hall=BOARD.hall||[]; const c=S.career;
@@ -1406,12 +1426,12 @@ function goalNotice(before){ const now=GOALS.filter(goalReady); if(now.length>be
 const roman=n=>['','I','II','III','IV','V'][n]||String(n);
 function goalBadge(){ const b=$('#goalBadge'); if(!b||!S) return; const n=GOALS.filter(goalReady).length; b.hidden=!n; b.textContent=String(n); }
 // hooks the rest of the game calls
-function goalKill(e,head){ const before=GOALS.filter(goalReady).length; const g=ensureGoals(); g.c.kills=(g.c.kills||0)+1; if(head) g.c.heads=(g.c.heads||0)+1; if(e&&BOSSES.includes(e.kind)) g.bosses[e.kind]=1; goalNotice(before); }
+function goalKill(e,head){ const before=GOALS.filter(goalReady).length; const g=ensureGoals(); g.c.kills=(g.c.kills||0)+1; if(head) g.c.heads=(g.c.heads||0)+1; if(e&&BOSSES.includes(e.kind)){ g.bosses[e.kind]=1; woBoss(e); } goalNotice(before); }
 function goalsTick(dt){ if(!P||P.dead||R.ride||R.fly||(R.heli&&R.heli.phase==='in')||P.vy!==0) return; const v=Math.hypot(P.vx,P.vz); if(v>0.3&&v<8){ const g=ensureGoals(); g.c.dist=(g.c.dist||0)+v*dt; } }
 // on extraction: count it, and log everything you brought out
 function goalExtract(haul){
   const g=ensureGoals(); const before=GOALS.filter(goalReady).length;
-  g.c.extracts=(g.c.extracts||0)+1; g.maps[R.map]=1; if(!R.fired) g.c.ghost=(g.c.ghost||0)+1; if(R.cond&&R.cond.weather==='blizzard') g.c.storm=(g.c.storm||0)+1; g.c.haul=Math.max(g.c.haul||0,haul);
+  g.c.extracts=(g.c.extracts||0)+1; g.maps[R.map]=1; woMap(R.map); if(!R.fired) g.c.ghost=(g.c.ghost||0)+1; if(R.cond&&R.cond.weather==='blizzard') g.c.storm=(g.c.storm||0)+1; g.c.haul=Math.max(g.c.haul||0,haul);
   const fresh=[]; const walk=it=>{ if(!it) return; const d=ITEMS[it.id]; const mine=R.startUids&&R.startUids.has(it.uid); if(mine){ if(it.items) it.items.forEach(walk); return; } if(d&&!d.fixed&&it.id!=='cash'&&!g.found[it.id]){ g.found[it.id]=1; fresh.push(it.id); } if(d&&d.type==='key') g.keys[it.id]=1; if(it.items) it.items.forEach(walk); if(it.att) Object.values(it.att).forEach(walk); };
   for(const k in S.eq) walk(S.eq[k]);
   goalNotice(before); return fresh;
@@ -2434,8 +2454,9 @@ function renderTab(){
   else if(TAB==='friends') renderFriends(body);
   else if(TAB==='operator') renderOperator(body);
   else if(TAB==='rec') renderRec(body);
+  else if(TAB==='wayout') renderWayout(body);
   else renderDeploy(body);
-  tabTip(body); guestBar();
+  tabTip(body); guestBar(); woCheck(); woBar();
 }
 function getCont(key){
   if(key==='stash') return S.stash;
@@ -2969,7 +2990,7 @@ setInterval(()=>{ if(!R&&TAB==='deploy'&&(NET.lobbies.some(l=>l.state==='raid')|
 /* 42-leaderboard-maps: leaderboard, and the overview map drawn on each map card */
 /* ---------- leaderboard ---------- */
 const BOARD={rows:null,sort:'worth',at:0,err:null,loading:false};
-const BCOLS=[['worth','Net worth',v=>fmt$(v)],['extracts','Extracts'],['surv','Survival',v=>v+'%'],['kills','AI kills'],['pkills','Player kills'],['best','Best haul',v=>fmt$(v)],['raids','Raids']];
+const BCOLS=[['worth','Net worth',v=>fmt$(v)],['extracts','Extracts'],['surv','Survival',v=>v+'%'],['kills','AI kills'],['pkills','Player kills'],['best','Best haul',v=>fmt$(v)],['raids','Raids'],['wo','Way out',v=>v>=6?'Out':`${v+1}/6`]];
 async function loadBoard(){
   if(BOARD.loading) return; BOARD.loading=true;
   try{ const r=await fetch('api/leaderboard',{cache:'no-store'}); const j=await r.json(); BOARD.season=j.season; BOARD.hall=j.hall||[]; BOARD.rows=j.rows.map(x=>Object.assign(x,{surv:x.raids?Math.round(100*x.extracts/x.raids):0})); BOARD.err=null; }
@@ -2986,7 +3007,7 @@ function renderBoard(body){
    <div class="boardwrap"><table class="board"><thead><tr><th class="rk">#</th><th class="nm">Operator</th>${BCOLS.map(([k,l])=>`<th><button data-sort="${k}" aria-pressed="${BOARD.sort===k}">${l}${BOARD.sort===k?' ▾':''}</button></th>`).join('')}</tr></thead>
    <tbody>${rows.map((r,i)=>`<tr class="${r.name===ACC.name?'me':''}"><td class="rk">${i+1}</td><td class="nm">${esc(r.name)}</td>${BCOLS.map(([k,,f])=>`<td class="${BOARD.sort===k?'on':''}">${f?f(r[k]):r[k]}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${BCOLS.length+2}" class="nm muted" style="font-weight:400">Nobody with an account has finished a raid yet.</td></tr>`}</tbody></table></div>
    <div class="acts" style="margin-top:12px"><button class="btn ghost sm" id="boardRefresh">Refresh</button><span class="lbl" style="align-self:center">Updated ${ago<5?'just now':ago+' s ago'}</span></div>
-   <p class="muted" style="max-width:70ch;font-size:13px">Net worth is cash plus everything in your stash and loadout. Survival is extracts divided by raids. Player kills are counted by the server; everything else comes from each player's save. Every season the server wipes stashes, cash, hideouts and tasks, and the final standings go into the Hall of Fame below.</p>${hofHtml()}`;
+   <p class="muted" style="max-width:70ch;font-size:13px">Net worth is cash plus everything in your stash and loadout. Survival is extracts divided by raids. Player kills are counted by the server; everything else comes from each player's save. Every season the server wipes stashes, cash, hideouts and tasks, and the final standings go into the Hall of Fame below.</p>${woHallHtml()}${hofHtml()}`;
   body.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{ BOARD.sort=b.dataset.sort; renderTab(); });
   $('#boardRefresh').onclick=()=>{ BOARD.at=0; loadBoard(); };
 }
@@ -3337,6 +3358,7 @@ function tradeReqUI(){ renderInvites(); }
    them to register, with a plain warning not to reuse a real password: the game is served over plain HTTP, so the
    password crosses the network unencrypted. */
 const TAB_TIPS={
+  wayout:`<b>The way out.</b> The goal of the game. Six stages stand between you and a seat on the last flight out of Kolvik: fix the radio, kill a boss, extract from four maps, hold Last Light to wave 5, pay the pilot, then board the evac flight on Kaldfjord Reach. The banner on every tab shows where you are. Getting out puts you in the Hall of Escapees for the season.`,
   gear:`<b>Stash &amp; gear.</b> Drag items between your stash and your loadout (gun slots, armor, rig, pockets, backpack). Double-click (or double-tap) an item to move it in one go, and press <kbd>R</kbd> while dragging to rotate it. Click an item to see its stats and to sell it, load ammo, or fit attachments (you can also drag an optic, muzzle or magazine onto a gun). Whatever is in the <b>secure pouch</b> comes home even if you die. Drop loot on the sell strip, or use <i>Sell all loot</i>.`,
   trader:`<b>Trader.</b> Buy guns, ammo, armor, meds and ready-made kits from Quartermaster Ilse. The more you spend, the higher your loyalty and the better the gear she offers. She buys anything at 60% of its value: drop it on the sell strip on the Stash &amp; gear tab.`,
   tasks:`<b>Tasks.</b> Jobs from the people at the station. Take one, do what it asks in a raid (find something, kill something, extract from somewhere) and claim the reward here. Daily tasks change every day.`,
@@ -3995,6 +4017,7 @@ function applyMods(sps){
     const q=randomOpen(8); R.drop={t:rr(70,MAPS[R.map].time*0.5),x:q.x,z:q.z,cont,state:'pending'};
   }
   if(R.map==='skarsvik'){ const z=SK_EVAC[Math.floor(rand()*SK_EVAC.length)]; R.evac={t:MAPS.skarsvik.time*rr(0.45,0.6),x:z.x,z:z.z,name:z.name,dur:100,state:'pending'}; R.evacEx={name:'Helicopter evac',x:z.x,z:z.z,r:7,active:false,time:5,evac:true}; R.extracts.push(R.evacEx); }
+  woRaidSetup(); /* 79-wayout.js: the last flight on Kaldfjord */
 }
 function applyWeather(){
   const W=R.cond.W; R.sight=W.sight; R.slip=W.slip||1; R.hear=W.hear||1; R.windy=!!W.wind; // 48-year.js: slippery ground, how far sound carries, gusts
@@ -4465,8 +4488,8 @@ const GUNGEO={
  kestrel:{top:.04,oz:-.1,builtin:{kind:'prism',y:.085}},
  nordlys:{top:.054,oz:-.12,front:-.5,rear:-.02},
  jarlmg:{top:.057,oz:-.1,front:-.5,rear:-.02},
- bow:{top:.03,oz:-.3,front:-.36,rear:null},
- cbow:{top:.03,oz:-.3,front:-.36,rear:null},
+ bow:{top:.02,oz:-.42,front:-.43,rear:null,noSights:true},
+ cbow:{top:.02,oz:-.42,front:-.43,rear:null,noSights:true},
 };
 function buildGun(id,w,o={}){
   const g=new THREE.Group(); if(w===undefined) w=curW();
@@ -4489,10 +4512,8 @@ function buildGun(id,w,o={}){
   if(id==='kestrel'){ B(.055,.08,.5,0,0,-.12,olive); B(.024,.024,.3,0,.015,-.5,dark); pt.mag=B(.04,.12,.07,0,-.1,-.12,dark); B(.05,.08,.24,0,-.01,.22,olive); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(id==='jarlmg'){ B(.07,.09,.46,0,0,-.08,dark); B(.03,.03,.42,0,.015,-.5,steel); B(.05,.05,.26,0,.015,-.42,dark); pt.mag=B(.09,.09,.1,.06,-.06,-.12,olive); B(.05,.09,.22,0,-.02,.24,dark); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.34,0,.051,-.1,dark); B(.012,.12,.012,-.03,-.09,-.62,steel,.6); B(.012,.12,.012,.03,-.09,-.62,steel,.6); muz=-.72; }
   if(id==='nordlys'){ B(.058,.085,.54,0,0,-.12,snowM); B(.026,.026,.34,0,.015,-.55,dark); B(.032,.032,.1,0,.015,-.74,steel); pt.mag=B(.045,.14,.07,0,-.11,-.12,dark,.15); B(.055,.085,.26,0,-.01,.24,snowM); B(.035,.08,.04,0,-.07,.03,dark,.2); B(.06,.012,.3,0,.048,-.12,dark); muz=-.8; }
-  // bows: held upright in front, string toward you, the nocked arrow is the 'mag' so the reload animation nocks the next one (76-bows.js)
-  if(id==='bow'||id==='cbow'){ const lim=id==='cbow'?MC(0x3a4030):wood, cam=steel; B(.035,.16,.05,0,0,-.36,id==='cbow'?MC(0x2a2d30):MC(0x5a3a1e)); B(.026,.3,.035,0,.22,-.33,lim,-.25); B(.026,.3,.035,0,-.22,-.33,lim,.25);
-    if(id==='cbow'){ B(.03,.05,.05,0,.37,-.28,cam); B(.03,.05,.05,0,-.37,-.28,cam); B(.004,.7,.004,.012,0,-.3,MC(0x8a8a80)); }
-    B(.004,.72,.004,0,0,-.22,MB(0xd8d8d0)); pt.mag=B(.01,.01,.62,0,0,-.42,MC(0x6b4a2a)); const tip=new THREE.Mesh(new THREE.BoxGeometry(.018,.018,.05),steel); tip.position.set(0,0,-.32); pt.mag.add(tip); muz=-.75; }
+  // bows (76-bows.js): built from short segments so the limbs can bend and the string can come back into a V as you draw (bowPose)
+  if(id==='bow'||id==='cbow') muz=buildBow(g,id,pt,{wood,steel,dark});
   if(id==='tundra'){ B(.05,.06,.3,0,0,-.05,dark); B(.03,.03,.46,0,.012,-.42,steel); pt.pump=B(.05,.045,.16,0,-.04,-.38,wood); B(.045,.07,.22,0,-.02,.2,wood); B(.035,.08,.04,0,-.07,.03,dark,.2); muz=-.66; }
   if(!o.noHands) vmHands(g,pt,id,glove,o);
   if(att.muzzle){ B(.034,.034,.16,0,.012,muz-.06,dark); muz-=.14; }
@@ -4503,8 +4524,9 @@ function buildGun(id,w,o={}){
   else if(geo.builtin){ addOptic(g,B,geo.builtin.kind,geo.builtin.y,geo.oz); g.userData.sightY=geo.builtin.y; }
   else {
     const y=geo.top+.02, ph=.02;
-    B(.005,ph,.008,0,y-ph/2,geo.front,dark);
-    if(geo.rear!=null){ B(.008,ph,.012,-.011,y-ph/2,geo.rear,dark); B(.008,ph,.012,.011,y-ph/2,geo.rear,dark); B(.03,.006,.012,0,y-ph+.003,geo.rear,dark); }
+    if(!geo.noSights) B(.005,ph,.008,0,y-ph/2,geo.front,dark);
+    if(geo.noSights){}
+    else if(geo.rear!=null){ B(.008,ph,.012,-.011,y-ph/2,geo.rear,dark); B(.008,ph,.012,.011,y-ph/2,geo.rear,dark); B(.03,.006,.012,0,y-ph+.003,geo.rear,dark); }
     else { const bead=new THREE.Mesh(new THREE.BoxGeometry(.008,.008,.008),MB(0xe8e4d0)); bead.position.set(0,y-.004,geo.front); g.add(bead); }
     g.userData.sightY=y;
   }
@@ -4516,7 +4538,7 @@ function buildGun(id,w,o={}){
 }
 // grip and support hand spots on each gun (gun space: x right, y up, z toward you), and the forearms in your coat sleeve
 const VM_HANDS={ makar:{r:[0,-.075,.025],l:[-.04,-.092,.045]}, vintik:{r:[0,-.08,.035],l:[-.01,-.04,-.19]}, akr:{r:[0,-.085,.045],l:[-.005,-.045,-.33]}, kestrel:{r:[0,-.085,.045],l:[0,-.05,-.31]},
-  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]}, bow:{r:[0,0,-.2],l:[0,0,-.36]}, cbow:{r:[0,0,-.2],l:[0,0,-.36]} };
+  nordlys:{r:[0,-.085,.045],l:[0,-.05,-.34]}, jarlmg:{r:[0,-.09,.05],l:[-.01,-.065,-.36]}, tundra:{r:[0,-.07,.08],l:[0,-.075,-.38]}, nord:{r:[0,-.07,.1],l:[0,-.05,-.36]}, bow:{r:[0,0,-.2],l:[-.01,-.03,-.42]}, cbow:{r:[0,0,-.2],l:[-.01,-.03,-.42]} };
 function vmHands(g,pt,id,glove,o){
   const coat=(S&&S.cos)?cosMat(o.coat||S.cos.fit.coat):MC(0x4d5a48), cuff=MC(0x1e2224), H=VM_HANDS[id]||VM_HANDS.akr, Z=new THREE.Vector3(0,0,1);
   const hand=(at,dir,len)=>{ const h=new THREE.Group(); h.position.set(...at); g.add(h);
@@ -4524,7 +4546,7 @@ function vmHands(g,pt,id,glove,o){
     const d=new THREE.Vector3(...dir).normalize(), q=new THREE.Quaternion().setFromUnitVectors(Z,d);
     const c=new THREE.Mesh(new THREE.BoxGeometry(.078,.078,.04),cuff); c.position.copy(d).multiplyScalar(.07); c.quaternion.copy(q); h.add(c);
     const a=new THREE.Mesh(new THREE.BoxGeometry(.084,.084,len),coat); a.position.copy(d).multiplyScalar(.09+len/2); a.quaternion.copy(q); h.add(a); return h; };
-  pt.rh=hand(H.r,[.35,-.55,1],.42);
+  const bowk=id==='bow'||id==='cbow'; pt.rh=hand(H.r,bowk?[1,-.3,.45]:[.35,-.55,1],bowk?.5:.42);
   pt.lh=hand(H.l,id==='makar'?[-.45,-.65,1]:[-.5,-.5,1],id==='makar'?.3:.5);
   // a shell for the shotgun's hand to feed, hidden until it reloads
   if(id==='tundra'){ const sh=new THREE.Mesh(new THREE.BoxGeometry(.022,.022,.06),MC(0xb8402d)); sh.position.set(0,.03,-.03); sh.visible=false; pt.lh.add(sh); pt.shell=sh; }
@@ -4565,6 +4587,48 @@ function setHeldGun(rig,id){ if(!rig||!rig.gun) return; id=id&&ITEMS[id]&&ITEMS[
 const SPARKS=[]; let _sparkMat=null;
 function muzzleSpark(x,y,z,dist){ if(!scene) return; if(!_sparkMat) _sparkMat=new THREE.SpriteMaterial({color:0xffe0a0,fog:false,transparent:true,depthWrite:false});
   let s=SPARKS.find(q=>!q.parent); if(!s){ s=new THREE.Sprite(_sparkMat); SPARKS.push(s); } const k=Math.max(0.35,dist*0.012)*(OPTS.flash==='off'?0.6:1); s.scale.set(k,k,1); s.position.set(x,y,z); scene.add(s); setTimeout(()=>{ if(s.parent) s.parent.remove(s); },70); }
+
+/* ---- bows ----
+   Bow space inside the gun group: the bow stands upright in the y-z plane with its grip at z=BOW.z (in front of you),
+   the string on your side of it, and the arrow along -z at the arrow rest. The whole bow is canted a little (top to the
+   right) the way archers hold it, so you see the curve of the limbs rather than a thin edge.
+   Recurve: a riser with a grip and shelf, long limbs that curve back toward you and flip forward at the tips.
+   Compound: a long angular riser with a sight, short stiff limbs, a cam at each tip and the cables crossing.
+   bowPose(g,draw) bends the limbs, pulls the string into a V and slides the arrow back with your hand. */
+const BOW={z:-.42, cant:-.22, brace:.2, drawLen:.533}; /* drawLen: how far behind the grip the nock sits at full draw */
+function buildBow(g,id,pt,m){ const cb=id==='cbow'; const bg=new THREE.Group(); bg.position.set(-.01,0,BOW.z); bg.rotation.z=BOW.cant; g.add(bg);
+  const box=(w,h,d,x,y,z,mat)=>{ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); o.position.set(x,y,z); bg.add(o); return o; };
+  const seg=mat=>{ const o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mat); bg.add(o); return o; };
+  const riser=cb?MC(0x2a2d30):MC(0x5a3a1e), limbM=cb?MC(0x3a4030):m.wood, grip=MC(0x1e1a16), strM=MB(0xd8d4c8);
+  if(cb){ box(.03,.36,.05,0,0,.01,riser); box(.03,.1,.03,0,.13,-.04,riser); box(.03,.1,.03,0,-.13,-.04,riser); box(.034,.11,.055,0,-.01,.02,grip);
+    // sight housing with pins, and the arrow rest
+    box(.012,.07,.07,.045,.06,-.02,riser); box(.004,.004,.05,.045,.06,-.02,MB(0x3cf07a)); box(.004,.004,.05,.045,.045,-.02,MB(0xffd040)); box(.004,.004,.05,.045,.03,-.02,MB(0xff4a3a)); box(.03,.008,.03,-.025,.025,0,riser); }
+  else { box(.032,.24,.05,0,0,0,riser); box(.036,.1,.056,0,-.03,.004,grip); box(.02,.012,.035,-.022,.022,0,riser); }
+  const N=cb?3:6, limbs={u:[],l:[]}; for(let i=0;i<N;i++){ limbs.u.push(seg(limbM)); limbs.l.push(seg(limbM)); }
+  const cams=cb?[box(.025,.07,.07,0,0,0,m.steel),box(.025,.07,.07,0,0,0,m.steel)]:null;
+  const cables=cb?[seg(MC(0x111316)),seg(MC(0x111316))]:null;
+  const str=[seg(strM),seg(strM)];
+  // the nocked arrow: shaft, broadhead and fletching; it's the "mag", so reloading nocks a fresh one
+  const ar=new THREE.Group(); bg.add(ar); const sh=new THREE.Mesh(new THREE.BoxGeometry(.006,.006,.72),MC(0x6b4a2a)); sh.position.z=-.36; ar.add(sh);
+  const hd=new THREE.Mesh(new THREE.BoxGeometry(.02,.006,.05),m.steel); hd.position.z=-.74; ar.add(hd); const hd2=new THREE.Mesh(new THREE.BoxGeometry(.006,.02,.05),m.steel); hd2.position.z=-.74; ar.add(hd2);
+  for(const [x,y] of [[.012,0],[-.006,.01],[-.006,-.01]]){ const f=new THREE.Mesh(new THREE.BoxGeometry(x?0.002:0.014,x?0.014:0.002,.07),MC(0xc03a2a)); f.position.set(x*0.6,y*0.6,-.06); ar.add(f); }
+  pt.mag=ar; g.userData.bow={bg,cb,limbs,cams,cables,str,ar}; bowPose(g,0); return BOW.z-.8; }
+function segTo(o,a,b,t){ const dx=b[0]-a[0], dy=b[1]-a[1], dz=b[2]-a[2], L=Math.hypot(dx,dy,dz)||1e-4; o.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2); o.scale.set(t*(o.userData.wide||1),L,t); o.rotation.set(Math.atan2(dz,dy),0,0); if(dx) o.rotation.z=-Math.atan2(dx,Math.hypot(dy,dz)); }
+function bowPose(g,draw){ const B2=g&&g.userData.bow; if(!B2) return; draw=Math.max(0,Math.min(1,draw||0));
+  // limb shape from the grip out to the tip, for the upper limb (s=1) or the lower (s=-1)
+  const pts=s=>{ const P0=[]; const N=B2.limbs.u.length;
+    for(let i=0;i<=N;i++){ const t=i/N; let y,z;
+      if(B2.cb){ y=.15+.17*t*(1-.08*draw); z=-.03+(.05+.07*draw)*t; }
+      else { y=.11+.46*t*(1-.07*draw); z=.17*Math.pow(t,1.5)*(1+.75*draw)-.05*Math.pow(Math.max(0,(t-.78)/.22),2)*(1-.4*draw); }
+      P0.push([0,s*y,z]); } return P0; };
+  for(const [s,arr] of [[1,B2.limbs.u],[-1,B2.limbs.l]]){ const P0=pts(s); for(let i=0;i<arr.length;i++){ arr[i].userData.wide=B2.cb?1.6:2.4; segTo(arr[i],P0[i],P0[i+1],B2.cb?.03:.016); } }
+  const tu=pts(1).pop(), tl=pts(-1).pop();
+  let au=tu, al=tl; if(B2.cb){ B2.cams[0].position.set(0,tu[1],tu[2]); B2.cams[1].position.set(0,tl[1],tl[2]); B2.cams[0].rotation.x=B2.cams[1].rotation.x=-draw*2.4;
+    au=[0,tu[1]-.02,tu[2]+.03]; al=[0,tl[1]+.02,tl[2]+.03]; segTo(B2.cables[0],[.008,tu[1],tu[2]-.02],[.008,tl[1]*0.2,tl[2]-.01*draw],.004); segTo(B2.cables[1],[-.008,tl[1],tl[2]-.02],[-.008,tu[1]*0.2,tu[2]-.01*draw],.004); }
+  // the string: straight at brace, a V back to your hand at full draw
+  const nb=BOW.brace+(B2.cb?-.04:0), nz=nb+(BOW.drawLen-nb)*draw, nock=[-.012,.022,nz];
+  segTo(B2.str[0],au,nock,.0016); segTo(B2.str[1],al,nock,.0016);
+  B2.ar.position.set(-.012,.022,nz); B2.nock=nock; }
 
 /* 56-vm-anim: first-person weapon animation.
    vmAnimate(gun, state, input, dt, scene) poses the viewmodel every frame from what the player is doing. The gun group
@@ -5834,7 +5898,10 @@ function updatePlayer(dt){
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
         using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene);
-      if(d.bow){ vmGun.position.z+=(P.draw||0)*0.09; const am=vmGun.userData.pt&&vmGun.userData.pt.mag; if(am){ am.visible=w.mag>0||P.reloadT>0; am.position.z+=(P.draw||0)*0.12; } } } }
+      if(d.bow){ // bows ignore the gun animation: held out to the left at rest, drawn so the arrow sits just under your eye (76-bows.js)
+        const dr=P.draw||0, a=Math.max(dr,P.adsT*0.7), L=(u,v)=>u+(v-u)*a, bx=Math.sin(P.bob)*0.008*(1-a), by=Math.abs(Math.cos(P.bob))*0.008*(1-a), rl=P.reloadT>0?0.06:0;
+        vmGun.position.set(L(-0.09,0.042)+bx,L(-0.2,-0.108)+by-rl,L(-0.32,-0.145)+(P.sprint?0.04:0)); vmGun.rotation.set(L(-0.22,0.085)+P.kick*0.03-rl,L(1.15,0.05),0); if(vmGun.userData.bow) vmGun.userData.bow.bg.rotation.z=L(-0.42,-0.2); /* full draw: the arrow runs from your jaw to the rest and points at the crosshair */
+        bowPose(vmGun,dr); const B2=vmGun.userData.bow, pt=vmGun.userData.pt; if(pt&&pt.mag) pt.mag.visible=w.mag>0||P.reloadT>0; if(B2&&pt&&pt.rh&&B2.nock&&P.reloadT<=0){ _bowV.set(...B2.nock).applyEuler(B2.bg.rotation).add(B2.bg.position); const dd=P.draw||0; _bowV.x+=0.045*dd; _bowV.y-=0.05*dd; _bowV.z+=0.07*dd; pt.rh.position.lerp(_bowV,dd>0.02?1:0.35); /* the drawing hand sits at your jaw, just out of view */ } } } }
   if(R&&R.spec) specCam(dt);
   if(R&&!P.dead) pouchSaveTick();
 }
@@ -7607,6 +7674,7 @@ function grenadesTick(dt){ nadeTick(dt); smokeTick(dt); blindTick(dt); sigTick()
    arrow flies), let go to loose. Holding full draw slowly tires you. Arrows are real projectiles: they drop, take
    time to arrive and stick in whatever they hit. One arrow at a time: the next is nocked automatically from your rig,
    pockets or pack. Online, other players see your arrows fly (arrow) and barely hear the string. */
+const _bowV=new THREE.Vector3();
 function bowTick(w,dt,can){ const d=ITEMS[w.id]; P.draw=P.draw||0;
   const drawing=P.trigger&&can&&!P.down&&w.mag>0&&P.reloadT<=0&&!P.using&&!P.sprint&&!R.cutting;
   if(drawing){ if(P.draw===0) sfxNoise(0.25,400,0.04); P.draw=Math.min(1,P.draw+dt/d.draw); if(P.draw>=1) P.stam=Math.max(0,P.stam-dt*5); }
@@ -7840,11 +7908,106 @@ function tdDeathTick(dt){ if(R.deadT>0){ R.deadT-=dt; if(R.deadT<=0){ R.respawnT
     P.pos.set(Math.cos(a)*4.5,0,Math.sin(a)*4.5); resolve(P.pos,0.4); P.y=groundAt(P.pos.x,P.pos.z,3); S.eq=JSON.parse(JSON.stringify(R.tdKit)); P.slot=S.eq.primary?'primary':S.eq.secondary?'secondary':'fists'; vmUid=null; syncVM(); R.deadT=0; R.cause=null; R.hits=[]; if(!R.noLock) lockPointer(); msg('Back at the mast.'); } }
 // the end: your own gear back, paid by waves, kills and the result
 function tdFinish(kind){ R.over=true; if(document.pointerLockElement) document.exitPointerLock(); if(NET.on) netLeave(); const T=R.td||{waveDone:0};
-  if(R.realEq) S.eq=R.realEq; S.inRaid=false; const cm=(R.D&&R.D.cash)||1; const kills=R.kills; const pay=Math.round((T.waveDone*500*cm+kills*60+(T.win?5000*cm:0))/10)*10; S.cash+=pay; S.stats.holdBest=Math.max(S.stats.holdBest||0,T.waveDone);
+  if(R.realEq) S.eq=R.realEq; S.inRaid=false; const cm=(R.D&&R.D.cash)||1; const kills=R.kills; const pay=Math.round((T.waveDone*500*cm+kills*60+(T.win?5000*cm:0))/10)*10; S.cash+=pay; S.stats.holdBest=Math.max(S.stats.holdBest||0,T.waveDone); woHold(T.waveDone);
   const time=R.t, win=!!T.win; saveGame(); accFlush(); raidTeardown(); document.body.classList.remove('tdmode');
   const r=$('#result'); r.hidden=false; r.innerHTML=`<div class="card"><span class="lbl">Last Light · ${fmtTime(time)}</span><h2 class="${win?'ok':'bad'}">${win?'The mast holds':'The mast is down'}</h2><p class="muted" style="margin:0">Your own gear was never at risk and is back in your loadout.</p>
     <dl class="stats"><dt>Waves held</dt><dd>${T.waveDone} / ${LL.waves}</dd><dt>Your kills</dt><dd>${kills}</dd><dt>Paid</dt><dd class="cash">+${fmt$(pay)}</dd><dt>Best ever</dt><dd>${S.stats.holdBest} waves</dd><dt>Balance</dt><dd class="cash">${fmt$(S.cash)}</dd></dl>
     <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`; $('#backBtn').onclick=goHub; }
+
+/* 79-wayout: The Way Out, the goal everyone is working toward
+   Kolvik Station is cut off. Every season each player works through six stages to get a seat on the last flight
+   out: fix the station radio, prove you can kill a boss, learn the ground (extract from four different maps), hold
+   the relay mast in Last Light, pay the pilot, then survive Kaldfjord Reach long enough to board the evac flight at
+   the old airstrip. Getting out pays well, gives the "Escapee" title and the Evac parka, counts in your career, and
+   puts your name in the server's Hall of Escapees for the season. Progress lives in S.wo, so a season wipe starts
+   everyone's race again; your escape count (S.career.escapes) carries over. You can go back in for another run.
+   The stage you're on is worked out from what you've done (woStage), so stages 2 to 4 count from the start of the
+   season even if you do them out of order; the radio and the fare are things you hand over on the Way Out tab. */
+const WO={radio:[['radio',1],['battery',2],['wire',3]], maps:4, hold:5, fare:150000, evacAt:300, evacDur:480, evac:{x:-420,z:-300,name:'Old airstrip'}};
+const WO_STAGES=[
+ {id:'radio',name:'Call for help',text:'The station radio is dead. Bring the parts home and the operator can raise the mainland.',rw:{cash:5000}},
+ {id:'boss',name:'Prove yourself',text:'The pilot won\'t risk a flight for a nobody. Kill one of the bosses: the station chief, the Warden, Foreman Rask, Jarl Hrafn, Relay Chief Dahl or Harbormaster Vinter.',rw:{caches:1}},
+ {id:'maps',name:'Learn the ground',text:`Scout the region for a landing site. Extract from ${WO.maps} different maps this season.`,rw:{cash:10000}},
+ {id:'hold',name:'Hold the mast',text:`The flight needs the relay mast up to find you. Hold Last Light through wave ${WO.hold}, solo or with friends.`,rw:{caches:2}},
+ {id:'fare',name:'Buy a seat',text:'Seats on the last flight are not free. Pay the pilot.',rw:{}},
+ {id:'evac',name:'The last flight',text:`Go into Kaldfjord Reach. About five minutes in, your evac flight lands at the ${WO.evac.name} and waits eight minutes. Get on it alive.`,rw:{}},
+];
+const WO_REWARD={cash:50000,caches:5,cos:'c_evac',title:'Escapee'};
+COS.push({id:'c_evac',slot:'coat',name:'Evac parka',rar:4,p:'redline',c:['#e8641a','#1a1d20','#f2e3c8'],glow:1,ex:'wayout'}); COSM.c_evac=COS[COS.length-1];
+TITLES.push('Escapee','Frequent flyer');
+
+function ensureWo(){ if(!S.wo) S.wo={run:1,radio:0,paid:0,boss:0,maps:{},hold:0,out:0,seen:0,st:0}; const w=S.wo; w.maps=w.maps||{}; return w; }
+const woFare=()=>WO.fare*Math.pow(1.5,(ensureWo().run||1)-1);
+// what the radio still needs, from your stash
+const woRadioHave=()=>WO.radio.map(([id,n])=>[id,n,stashQty(id)]);
+function woStage(){ const w=ensureWo(); if(w.out) return 6;
+  if(!w.radio) return 0; if(!w.boss) return 1; if(Object.keys(w.maps).length<WO.maps) return 2; if((w.hold||0)<WO.hold) return 3; if(!w.paid) return 4; return 5; }
+function woProgress(i){ const w=ensureWo();
+  switch(WO_STAGES[i].id){
+    case 'radio': if(w.radio) return 'Parts handed over. The mainland knows you are here.'; return woRadioHave().map(([id,n,h])=>`${ITEMS[id].name} ${Math.min(h,n)}/${n}`).join(' · ');
+    case 'boss': return w.boss?`Killed: ${esc(EK_NAMES[w.boss]||w.boss)}`:'No boss killed yet this season';
+    case 'maps': return `${Math.min(WO.maps,Object.keys(w.maps).length)}/${WO.maps} maps: ${Object.keys(w.maps).map(m=>MAPS[m]?MAPS[m].name:m).join(', ')||'none yet'}`;
+    case 'hold': return `Best this season: wave ${w.hold||0} (need ${WO.hold})`;
+    case 'fare': if(w.paid) return `Paid ${fmt$(w.paid)}`; return `${fmt$(woFare())} · you have ${fmt$(S.cash)}`;
+    case 'evac': return 'Kaldfjord Reach · Old airstrip';
+  } return ''; }
+// hooks the rest of the game calls
+function woBoss(e){ if(!S||!e||!BOSSES.includes(e.kind)) return; const w=ensureWo(); if(w.out||w.boss) return; w.boss=e.kind; if(R&&woStage()>=1) msg('The way out · boss down. The pilot will hear about this.'); }
+function woMap(map){ if(!S) return; const w=ensureWo(); if(w.out||w.maps[map]) return; w.maps[map]=1; if(R) msg(`The way out · ${Object.keys(w.maps).length}/${WO.maps} maps extracted from`); }
+function woHold(waves){ if(!S) return; const w=ensureWo(); if(w.out) return; w.hold=Math.max(w.hold||0,waves); }
+// in the hideout: grant stage rewards for anything finished since you last looked
+function woCheck(){ if(!S) return; const w=ensureWo(), st=woStage(); w.st=st; if(st<=(w.seen||0)||st>=6){ w.seen=Math.max(w.seen||0,st); return; }
+  const done=[]; for(let i=w.seen||0;i<st&&i<5;i++){ const rw=WO_STAGES[i].rw; S.cash+=rw.cash||0; if(rw.caches){ ensureCos(); S.cos.caches+=rw.caches; } done.push(i); }
+  w.seen=st; saveGame(); if(!done.length) return;
+  const next=WO_STAGES[st]; sfxExtracted();
+  notice('The way out',`<p>${done.map(i=>`<b>Stage ${i+1} · ${esc(WO_STAGES[i].name)}</b> done${WO_STAGES[i].rw.cash?`: +${fmt$(WO_STAGES[i].rw.cash)}`:WO_STAGES[i].rw.caches?`: +${WO_STAGES[i].rw.caches} sealed cache${WO_STAGES[i].rw.caches>1?'s':''}`:''}`).join('<br>')}</p>${next?`<p>Next: <b>${esc(next.name)}</b>. ${esc(next.text)}</p>`:''}`); }
+function woHandRadio(){ const w=ensureWo(); if(w.radio) return; if(woRadioHave().some(([id,n,h])=>h<n)){ toast('You need all the radio parts in your stash.'); return; }
+  for(const [id,n] of WO.radio) takeFromStash(id,n); w.radio=1; saveGame(); woCheck(); renderTab(); }
+function woPay(){ const w=ensureWo(); if(woStage()!==4) return; const f=woFare(); if(S.cash<f){ toast(`The pilot wants ${fmt$(f)}.`); return; } S.cash-=f; w.paid=f; saveGame(); woCheck(); renderTab(); }
+function woAgain(){ const w=ensureWo(); if(!w.out) return; const run=(w.run||1)+1; S.wo={run,radio:0,paid:0,boss:0,maps:{},hold:0,out:0,seen:0,st:0,prev:w.out}; saveGame(); renderTab(); }
+
+/* ---- in the raid: the evac flight on Kaldfjord ---- */
+function woRaidSetup(){ if(!S||R.map!=='kaldfjord'||R.dm||R.td||woStage()!==5) return; const v=WO.evac;
+  // no rand() here: the rest of the raid's seeded rolls must stay in step with everyone else's game
+  R.evac={t:WO.evacAt,x:v.x,z:v.z,name:v.name,dur:WO.evacDur,state:'pending',wo:true}; R.evacEx={name:'Evac flight',x:v.x,z:v.z,r:9,active:false,time:8,evac:true,wo:true}; R.extracts.push(R.evacEx); R.woEvac=true; }
+const woEscaping=(kind,detail)=>kind==='extract'&&R&&R.woEvac&&R.evacEx&&detail===R.evacEx.name;
+function woEscape(){ const w=ensureWo(); if(w.out) return null; w.out=Date.now(); w.raids=S.stats.raids; w.st=6; w.seen=6;
+  S.career.escapes=(S.career.escapes||0)+1; S.cash+=WO_REWARD.cash; ensureCos(); S.cos.caches+=WO_REWARD.caches; grantCos(WO_REWARD.cos);
+  const g=ensureGoals(); const ti=S.career.escapes>=3?'Frequent flyer':WO_REWARD.title; for(const t of [WO_REWARD.title,ti]) if(!g.titles.includes(t)) g.titles.push(t); g.title=ti;
+  try{ if(NET.ws&&NET.ws.readyState===1) wsend({t:'escaped',n:S.career.escapes}); }catch(e){}
+  return {n:S.career.escapes,raids:w.raids}; }
+function woResultHtml(r){ return `<div class="woout"><span class="lbl">The way out</span><h3>You got out of Kolvik</h3><p>The flight climbs out over the fjord with you on it. ${r.n>1?`That's escape number ${r.n} for your career.`:'Your first escape.'} It took ${r.raids} raid${r.raids===1?'':'s'} this season.</p><p class="cash">+${fmt$(WO_REWARD.cash)} · ${WO_REWARD.caches} sealed caches · ${esc(COSM[WO_REWARD.cos].name)} · title “${esc(ensureGoals().title)}”</p></div>`; }
+// the line on the raid HUD
+function woHudLine(){ if(!S||!R||R.dm) return ''; const st=woStage(), w=ensureWo(); let t='';
+  if(st===1&&!R.td) t='Kill a boss'; else if(st===2&&!w.maps[R.map]&&!R.td) t=`Extract here: a new map (${Object.keys(w.maps).length}/${WO.maps})`; else if(st===3&&R.td) t=`Hold through wave ${WO.hold}`;
+  else if(st===5&&R.woEvac) t=R.evac&&R.evac.state==='landed'?'Board the evac flight at the Old airstrip':R.evac&&R.evac.state==='gone'?'The flight left without you':'Evac flight lands at the Old airstrip';
+  else if(st===5) t='Go to Kaldfjord Reach for the last flight';
+  return t?`<div class="wohud"><span class="lbl">The way out · ${st+1}/6</span>${esc(t)}</div>`:''; }
+
+/* ---- the hideout: the banner on every tab and the Way Out tab ---- */
+function woBar(){ const b=$('#woBar'); if(!b) return; if(!S||TAB==='wayout'){ b.hidden=true; return; } const st=woStage(); b.hidden=false;
+  b.innerHTML=st>=6?`<span class="lbl">The way out</span><b>You got out this season.</b><span class="muted">Go back in for another run any time.</span><button class="btn ghost sm" id="woGo">Open</button>`
+    :`<span class="lbl">The way out · stage ${st+1} of 6</span><b>${esc(WO_STAGES[st].name)}</b><span class="muted">${woProgress(st)}</span><span class="wosteps">${WO_STAGES.map((s,i)=>`<i class="${i<st?'on':i===st?'cur':''}"></i>`).join('')}</span><button class="btn ghost sm" id="woGo">Open</button>`;
+  $('#woGo').onclick=()=>setTab('wayout'); }
+function renderWayout(body){ const w=ensureWo(), st=woStage();
+  const esc_=(BOARD.rows||[]).filter(r=>r.out).sort((a,b)=>a.out-b.out);
+  if(NET.avail&&!BOARD.rows&&!BOARD.loading) loadBoard();
+  const card=(s,i)=>{ const state=i<st?'done':i===st?'cur':'lock';
+    let act=''; if(i===st&&s.id==='radio'){ const ok=woRadioHave().every(([id,n,h])=>h>=n); act=`<button class="btn sm" id="woRadio" ${ok?'':'disabled'}>Hand over the parts</button>`; }
+    if(i===st&&s.id==='fare') act=`<button class="btn sm" id="woPay" ${S.cash>=woFare()?'':'disabled'}>Pay ${fmt$(woFare())}</button>`;
+    if(i===st&&s.id==='evac') act=`<button class="btn sm" id="woDeploy">Go to Deploy</button>`;
+    const rw=s.rw.cash?fmt$(s.rw.cash):s.rw.caches?`${s.rw.caches} sealed cache${s.rw.caches>1?'s':''}`:'';
+    return `<li class="wostage ${state}"><span class="wonum">${i<st?'✓':i+1}</span><div><h3>${esc(s.name)}</h3><p class="muted">${esc(s.text)}</p>${state!=='lock'||s.id==='boss'||s.id==='maps'||s.id==='hold'?`<p class="wopg">${woProgress(i)}</p>`:''}${rw&&i>=st?`<p class="lbl">Reward ${rw}</p>`:''}${act?`<div class="acts">${act}</div>`:''}</div></li>`; };
+  body.innerHTML=`<div class="colhead" style="margin-bottom:6px"><h2 class="h2">The way out</h2><span class="lbl">Run ${w.run||1}${S.career.escapes?` · ${S.career.escapes} escape${S.career.escapes===1?'':'s'} in your career`:''}</span></div>
+   <p class="muted" style="margin:0 0 16px;max-width:72ch">Kolvik Station is cut off, and everyone here wants the same thing: a seat on the last flight out. Work through the six stages, then get to the evac flight on Kaldfjord Reach alive. Stages two to four count from the start of the season in any order. A new season wipes everyone's progress, and the race starts again.</p>
+   ${st>=6?`<div class="woout"><span class="lbl">Season ${S.season||1}</span><h3>You got out</h3><p>${new Date(w.out).toLocaleDateString()} after ${w.raids||'?'} raid${w.raids===1?'':'s'}. Your name is in the Hall of Escapees for this season.</p><div class="acts"><button class="btn sm" id="woAgain">Go back in (run ${(w.run||1)+1}: the fare goes up)</button></div></div>`:''}
+   <ol class="wopath">${WO_STAGES.map(card).join('')}</ol>
+   <p class="lbl" style="margin-top:18px">Getting out pays ${fmt$(WO_REWARD.cash)}, ${WO_REWARD.caches} sealed caches, the ${esc(COSM[WO_REWARD.cos].name)} and the title “${WO_REWARD.title}”.</p>
+   ${NET.avail?`<h3 class="tsec">Hall of Escapees · this season</h3>${esc_.length?`<ol class="woesc">${esc_.map((r,i)=>`<li class="${r.name===ACC.name?'me':''}"><b>${esc(r.name)}</b><span class="muted">${new Date(r.out).toLocaleDateString()} · ${r.woRaids||'?'} raid${r.woRaids===1?'':'s'}${r.esc>1?` · ${r.esc} career escapes`:''}</span></li>`).join('')}</ol>`:'<p class="muted">Nobody has got out yet this season. Be the first.</p>'}`:''}`;
+  const on=(id,f)=>{ const b=$('#'+id); if(b) b.onclick=f; };
+  on('woRadio',woHandRadio); on('woPay',woPay); on('woAgain',woAgain); on('woDeploy',()=>setTab('deploy')); }
+function woHallHtml(){ const e=(BOARD.rows||[]).filter(r=>r.out).sort((a,b)=>a.out-b.out); return `<h3 class="tsec">Hall of Escapees · this season</h3>${e.length?`<ol class="woesc">${e.map(r=>`<li class="${r.name===ACC.name?'me':''}"><b>${esc(r.name)}</b><span class="muted">${new Date(r.out).toLocaleDateString()} · ${r.woRaids||'?'} raid${r.woRaids===1?'':'s'}</span></li>`).join('')}</ol>`:'<p class="muted">Nobody has got out yet this season. See the Way Out tab.</p>'}`; }
+function woNet(m){ BOARD.rows=null; const t=`${m.name} got out of Kolvik on the last flight${m.n>1?` (escape #${m.n})`:''}.`; if(R) raidNote(t); else toast(t); }
 
 /* 80-hud: HUD, raid inventory, end of raid */
 /* ---- HUD ---- */
@@ -7958,17 +8121,17 @@ function endRaidInner(kind,detail){
   S.cash+=deposited; const gained=kind==='extract'?carriedValue()+deposited-R.startValue:deposited-R.startValue;
   if(kind==='extract') S.stats.best=Math.max(S.stats.best||0,gained);
   if(kind==='extract'){ const haul=value+deposited; qBump(o=>o.type==='extract'&&(!o.map||o.map===R.map)&&(!o.noFire||!R.fired)&&(!o.weather||o.weather===R.cond.weather)&&(!o.minHaul||haul>=o.minHaul)?1:0); }
-  const fresh=kind==='extract'?goalExtract(value+deposited):[];
+  const fresh=kind==='extract'?goalExtract(value+deposited):[]; const woOut=woEscaping(kind,detail)?woEscape():null;
   const qlog=R.qlog||[];
   S.inRaid=false; saveGame(); accFlush();
   raidTeardown();
-  const title=kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
+  const title=woOut?['ok','Escaped']:kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
   const sub=kind==='extract'?`Out through ${detail}.`:kind==='kia'?`${detail}.`:(detail||'The raid timer ran out.')+'.';
   const r=$('#result'); r.hidden=false;
   r.innerHTML=`<div class="card"><span class="lbl">${mapName} · ${fmtTime(time)} in raid</span><h2 class="${title[0]}">${title[1]}</h2><p class="muted" style="margin:0">${esc(sub)} ${kind==='extract'?'Everything you carried is yours. Sell what you don\'t need.':'Your gear is gone. The secure pouch made it back.'}</p>
    ${killedBy?`<p class="killedby"><span class="lbl">Killed by</span> ${esc(killedBy)}</p>`:''}
    <dl class="stats"><dt>Kills</dt><dd>${kills}</dd><dt>Cash deposited</dt><dd class="cash">${fmt$(deposited)}</dd><dt>${kind==='extract'?'Gear brought home':'Gear lost'}</dt><dd>${fmt$(kind==='extract'?value:startV)}</dd><dt>Net change</dt><dd class="cash" style="color:${gained>=0?'var(--cash)':'var(--bad)'}">${gained>=0?'+':'−'}${fmt$(Math.abs(gained))}</dd><dt>Balance</dt><dd class="cash" id="resBal">${fmt$(S.cash)}</dd>${bossRw?`<dt>Jarl's bounty</dt><dd class="cash">+${fmt$(bossRw.cash)} <span class="muted" style="font-size:12px">and ${bossRw.caches} sealed caches</span></dd>`:''}${cacheIn+cacheBonus.length?`<dt>Sealed caches</dt><dd style="color:var(--warn)">+${cacheIn+cacheBonus.length} <span class="muted" style="font-size:12px">${[cacheIn?`${cacheIn} carried out`:'',...cacheBonus].filter(Boolean).join(' · ')}</span></dd>`:''}</dl>${qlog.length?`<div class="qlog"><span class="lbl">Task progress</span>${qlog.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''}<div class="haulbox" id="haulBox" hidden></div>
-   ${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
+   ${woOut?woResultHtml(woOut):''}${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
   renderHaul($('#haulBox')); stinger(kind==='extract'?'extract':'down');
   $('#backBtn').onclick=goHub;
@@ -8102,6 +8265,7 @@ function netHubMsg(m){
     case 'world': WORLD=m.world||{}; if(!R) applyWorld(WORLD); return true;
     case 'sys': toast(m.text); return true;
     case 'chat': onChat(m); return true;
+    case 'escaped': woNet(m); return true;
     case 'season': NET.season=m.season; NET.hall=m.hall; BOARD.rows=null; if(!R&&$('#result').hidden) applySeason(); else if(R) raidNote(`Season ${m.season.n} has begun. Your progress resets when you get back.`); return true;
     case 'friends': NET.friends=m.friends||[]; NET.fin=m.incoming||[]; NET.fout=m.outgoing||[]; socialBadge(); if(!R&&TAB==='friends') renderFriendList(); return true;
     case 'dm': onDM(m); return true;

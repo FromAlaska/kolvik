@@ -3,6 +3,7 @@
    arrow flies), let go to loose. Holding full draw slowly tires you. Arrows are real projectiles: they drop, take
    time to arrive and stick in whatever they hit. One arrow at a time: the next is nocked automatically from your rig,
    pockets or pack. Online, other players see your arrows fly (arrow) and barely hear the string. */
+const _bowV=new THREE.Vector3();
 function bowTick(w,dt,can){ const d=ITEMS[w.id]; P.draw=P.draw||0;
   const drawing=P.trigger&&can&&!P.down&&w.mag>0&&P.reloadT<=0&&!P.using&&!P.sprint&&!R.cutting;
   if(drawing){ if(P.draw===0) sfxNoise(0.25,400,0.04); P.draw=Math.min(1,P.draw+dt/d.draw); if(P.draw>=1) P.stam=Math.max(0,P.stam-dt*5); }

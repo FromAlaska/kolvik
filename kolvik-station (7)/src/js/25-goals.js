@@ -54,12 +54,12 @@ function goalNotice(before){ const now=GOALS.filter(goalReady); if(now.length>be
 const roman=n=>['','I','II','III','IV','V'][n]||String(n);
 function goalBadge(){ const b=$('#goalBadge'); if(!b||!S) return; const n=GOALS.filter(goalReady).length; b.hidden=!n; b.textContent=String(n); }
 // hooks the rest of the game calls
-function goalKill(e,head){ const before=GOALS.filter(goalReady).length; const g=ensureGoals(); g.c.kills=(g.c.kills||0)+1; if(head) g.c.heads=(g.c.heads||0)+1; if(e&&BOSSES.includes(e.kind)) g.bosses[e.kind]=1; goalNotice(before); }
+function goalKill(e,head){ const before=GOALS.filter(goalReady).length; const g=ensureGoals(); g.c.kills=(g.c.kills||0)+1; if(head) g.c.heads=(g.c.heads||0)+1; if(e&&BOSSES.includes(e.kind)){ g.bosses[e.kind]=1; woBoss(e); } goalNotice(before); }
 function goalsTick(dt){ if(!P||P.dead||R.ride||R.fly||(R.heli&&R.heli.phase==='in')||P.vy!==0) return; const v=Math.hypot(P.vx,P.vz); if(v>0.3&&v<8){ const g=ensureGoals(); g.c.dist=(g.c.dist||0)+v*dt; } }
 // on extraction: count it, and log everything you brought out
 function goalExtract(haul){
   const g=ensureGoals(); const before=GOALS.filter(goalReady).length;
-  g.c.extracts=(g.c.extracts||0)+1; g.maps[R.map]=1; if(!R.fired) g.c.ghost=(g.c.ghost||0)+1; if(R.cond&&R.cond.weather==='blizzard') g.c.storm=(g.c.storm||0)+1; g.c.haul=Math.max(g.c.haul||0,haul);
+  g.c.extracts=(g.c.extracts||0)+1; g.maps[R.map]=1; woMap(R.map); if(!R.fired) g.c.ghost=(g.c.ghost||0)+1; if(R.cond&&R.cond.weather==='blizzard') g.c.storm=(g.c.storm||0)+1; g.c.haul=Math.max(g.c.haul||0,haul);
   const fresh=[]; const walk=it=>{ if(!it) return; const d=ITEMS[it.id]; const mine=R.startUids&&R.startUids.has(it.uid); if(mine){ if(it.items) it.items.forEach(walk); return; } if(d&&!d.fixed&&it.id!=='cash'&&!g.found[it.id]){ g.found[it.id]=1; fresh.push(it.id); } if(d&&d.type==='key') g.keys[it.id]=1; if(it.items) it.items.forEach(walk); if(it.att) Object.values(it.att).forEach(walk); };
   for(const k in S.eq) walk(S.eq[k]);
   goalNotice(before); return fresh;

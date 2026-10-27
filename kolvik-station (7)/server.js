@@ -95,7 +95,11 @@ function readBody(req) { return new Promise((res, rej) => { let b = ''; req.on('
 function json(res, code, o) { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(o)); }
 function authed(req) { const t = (req.headers.authorization || '').replace(/^Bearer /, ''); return tokens.get(t) || null; }
 const attempts = new Map(); // ip -> [count, resetAt]
-function throttled(req) { const ip = req.socket.remoteAddress; const a = attempts.get(ip) || [0, Date.now() + 60000]; if (Date.now() > a[1]) { a[0] = 0; a[1] = Date.now() + 60000; } a[0]++; attempts.set(ip, a); return a[0] > 20; }
+// behind a proxy or Cloudflare Tunnel every request comes from the proxy, so with TRUST_PROXY=1 the real player's
+// address is taken from the header the proxy adds (otherwise one player's failed logins would lock out everyone)
+const TRUST_PROXY = /^(1|true|yes)$/i.test(process.env.TRUST_PROXY || '');
+function clientIp(req) { if (TRUST_PROXY) { const h = req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(); if (h) return h; } return req.socket.remoteAddress; }
+function throttled(req) { const ip = clientIp(req); const a = attempts.get(ip) || [0, Date.now() + 60000]; if (Date.now() > a[1]) { a[0] = 0; a[1] = Date.now() + 60000; } a[0]++; attempts.set(ip, a); return a[0] > 20; }
 
 /* ---------------- leaderboard: save stats plus server-counted player kills ---------------- */
 let pvp = db.kv('pvp', {});
@@ -141,7 +145,8 @@ function leaderboard() {
   for (const name of Object.keys(users)) {
     const s = readSave(name); if (s && s.season != null && s.season !== season.n) continue; const st = (s && s.stats) || {}; const pv = pvp[name] || {};
     if (!(st.raids > 0) && !pv.kills) continue;
-    rows.push({ name, worth: Math.round(st.worth || (s && s.cash) || 0), raids: st.raids || 0, extracts: st.extracts || 0, deaths: st.deaths || 0, kills: st.kills || 0, best: Math.round(st.best || 0), pkills: pv.kills || 0, pdeaths: pv.deaths || 0 });
+    rows.push({ name, worth: Math.round(st.worth || (s && s.cash) || 0), raids: st.raids || 0, extracts: st.extracts || 0, deaths: st.deaths || 0, kills: st.kills || 0, best: Math.round(st.best || 0), pkills: pv.kills || 0, pdeaths: pv.deaths || 0,
+      wo: s && s.wo ? (s.wo.out ? 6 : Math.max(0, Math.min(5, +s.wo.st || 0))) : 0, out: s && s.wo && s.wo.out ? +s.wo.out : 0, woRaids: s && s.wo && s.wo.raids || 0, esc: s && s.career && s.career.escapes || 0 });
   }
   board = rows; boardAt = Date.now(); return rows;
 }
@@ -172,7 +177,7 @@ async function api(req, res, u) {
     return json(res, 200, { token: usr.token, name, save: readSave(name) });
   }
   if (u === '/api/clienterror' && req.method === 'POST') {
-    const ip = req.socket.remoteAddress; const r = errRate.get(ip) || [0, Date.now() + 60000]; if (Date.now() > r[1]) { r[0] = 0; r[1] = Date.now() + 60000; } r[0]++; errRate.set(ip, r); if (r[0] > 12) return json(res, 429, { error: 'Slow down.' });
+    const ip = clientIp(req); const r = errRate.get(ip) || [0, Date.now() + 60000]; if (Date.now() > r[1]) { r[0] = 0; r[1] = Date.now() + 60000; } r[0]++; errRate.set(ip, r); if (r[0] > 12) return json(res, 429, { error: 'Slow down.' });
     const b = await readBody(req); const e = { t: Date.now(), name: cleanName(b.name) || '?', account: authed(req), msg: cleanText(b.msg), where: cleanText(b.where).slice(0, 60), stack: String(b.stack || '').slice(0, 800), ua: cleanText(b.ua).slice(0, 120) };
     clientErrors.push(e); if (clientErrors.length > 200) clientErrors.shift(); console.log(`client error from ${e.name} (${e.where}): ${e.msg}`); return json(res, 200, { ok: true });
   }
@@ -541,6 +546,10 @@ wss.on('connection', ws => {
         const players = ids.map(id => ({ id, name: mg.names[id] }));
         for (const id of ids) send(conns.get(id), { t: 'mgstart', id: mg.id, game, seed: mg.seed, in: 4000, players });
         return;
+      }
+      case 'escaped': { // The Way Out: someone boarded the last flight; tell everyone (79-wayout.js)
+        if (p.escT && Date.now() - p.escT < 300000) return; p.escT = Date.now(); board = null;
+        sendAll({ t: 'escaped', name: p.name, n: Math.max(1, Math.min(999, Math.round(+m.n || 1))) }); console.log(`${p.name} escaped`); return;
       }
       case 'mgscore': {
         const sq = p.squad, mg = sq && sq.mg; if (!mg || mg.id !== m.id || !mg.players.includes(p.id)) return;

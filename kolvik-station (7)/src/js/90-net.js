@@ -38,6 +38,7 @@ function netHubMsg(m){
     case 'world': WORLD=m.world||{}; if(!R) applyWorld(WORLD); return true;
     case 'sys': toast(m.text); return true;
     case 'chat': onChat(m); return true;
+    case 'escaped': woNet(m); return true;
     case 'season': NET.season=m.season; NET.hall=m.hall; BOARD.rows=null; if(!R&&$('#result').hidden) applySeason(); else if(R) raidNote(`Season ${m.season.n} has begun. Your progress resets when you get back.`); return true;
     case 'friends': NET.friends=m.friends||[]; NET.fin=m.incoming||[]; NET.fout=m.outgoing||[]; socialBadge(); if(!R&&TAB==='friends') renderFriendList(); return true;
     case 'dm': onDM(m); return true;
