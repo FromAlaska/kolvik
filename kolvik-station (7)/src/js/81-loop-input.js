@@ -4,11 +4,12 @@ let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop); const dt=Math.min(0.1,(now-last)/1000)*(DBG.scale||1); last=now;
   if(!R||!scene) return;
+  if(P&&P.dead&&!R.over) deathTick(dt); if(!R||!scene) return; // runs even when paused (66-recap.js)
   if(!R.paused&&!R.over){
     R.t+=dt; const tl0=R.timeLeft;
     // online, the server's clock decides when the raid ends, so follow real time even if the frame rate drops
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
-    for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left: get to an extract or lose everything you carry`); sfxBeep(); setTimeout(sfxBeep,180); }
+    for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
     updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; doorsTick(dt); dropsTick(); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);

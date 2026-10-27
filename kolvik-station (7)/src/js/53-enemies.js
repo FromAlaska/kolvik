@@ -149,9 +149,16 @@ function logErr(msg,stack){ const e={t:Date.now(),msg:String(msg).slice(0,300),s
 addEventListener('error',ev=>logErr(ev.message||'error',ev.error&&ev.error.stack||`${ev.filename||''}:${ev.lineno||''}`));
 addEventListener('unhandledrejection',ev=>logErr('Unhandled promise: '+(ev.reason&&ev.reason.message||ev.reason),ev.reason&&ev.reason.stack));
 // an admin on the server can send you cash, caches, scrip or items; they land in your save right away
-function applyGrant(m){ ensureCos(); const got=[]; if(m.cash){ S.cash+=m.cash|0; got.push(fmt$(m.cash)); } if(m.caches){ S.cos.caches+=m.caches|0; got.push(`${m.caches} sealed caches`); } if(m.scrip){ S.cos.scrip+=m.scrip|0; got.push(`${m.scrip} scrip`); }
-  for(const [id,n] of (Array.isArray(m.items)?m.items.slice(0,20):[])){ if(!ITEMS[id]) continue; const d=ITEMS[id]; const it=mk(id,d.stack?{n:Math.max(1,Math.min(d.stack,n|0||d.stack))}:{}); if(place(S.stash,it)) got.push(d.name); }
-  saveGame(); if(!R) renderTab(); toast(`An admin sent you ${got.join(', ')||'nothing'}.`); }
+function applyGrant(m,quiet){ ensureCos(); const got=[], lost=[]; const cash=m.cash|0;
+  if(cash>0){ S.cash+=cash; got.push(fmt$(cash)); } else if(cash<0){ const take=Math.min(S.cash,-cash); S.cash-=take; lost.push(fmt$(take)); }
+  if(m.caches){ S.cos.caches+=m.caches|0; got.push(`${m.caches} sealed caches`); } if(m.scrip){ S.cos.scrip+=m.scrip|0; got.push(`${m.scrip} scrip`); }
+  for(const [id,n] of (Array.isArray(m.items)?m.items.slice(0,20):[])){ if(!ITEMS[id]) continue; const d=ITEMS[id]; const it=mk(id,d.stack?{n:Math.max(1,Math.min(d.stack,n|0||d.stack))}:{}); if(place(S.stash,it)) got.push(d.name); else lost.push(`${d.name} (no room in your stash)`); }
+  if(quiet) return {got,lost};
+  // mid-raid, save the way the raid does (your gear stays at risk); in the hideout, a normal save
+  if(R) raidSave(); else { saveGame(); renderTab(); }
+  const say=[got.length?`An admin sent you ${got.join(', ')}.`:'', lost.length?(cash<0?`An admin took ${lost.join(', ')}.`:`Not delivered: ${lost.join(', ')}.`):''].filter(Boolean).join(' ')||'An admin sent you nothing.'; if(R) msg(say); else toast(say); }
+// gifts sent while you were offline wait in your save until you next sign in
+function takeGrants(){ if(!S||!Array.isArray(S.grants)||!S.grants.length) return; const got=[]; for(const g of S.grants){ const r=applyGrant(g,true); got.push(...r.got); } delete S.grants; saveGame(); if(got.length) setTimeout(()=>toast(`While you were away an admin sent you ${got.join(', ')}.`),400); }
 function forceCond(mapId,f){ const c=conditions(mapId), mc=MAP_COND[mapId]; const weather=WEATHER[f.weather]?f.weather:c.weather, mod=RMODS[f.mod]?f.mod:c.mod; const hot=mod==='hotzone'?((mc.hot||[])[0]||null):null; return {slot:c.slot,weather,mod,hot,W:WEATHER[weather],label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)}; }
 async function loadDebug(){ if(DBG.open) return true; if(!ACC.token) return false; try{ const r=await fetch('debug.js',{headers:{authorization:'Bearer '+ACC.token},cache:'no-store'}); if(!r.ok) return false; const sc=document.createElement('script'); sc.textContent=await r.text(); document.body.appendChild(sc); return !!DBG.open; }catch(e){ return false; } }
 async function openDebug(){ if(!NET.admin) return; if(await loadDebug()) DBG.open(); else toast('Could not load the debug tools.'); }

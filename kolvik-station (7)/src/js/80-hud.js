@@ -66,11 +66,32 @@ function renderRaidInv(){
 function revealTick(dt){ const t=R.lootTarget; if(!t) return; const next=t.cont.items.filter(i=>i.hid).sort((a,b)=>a.y-b.y||a.x-b.x)[0]; if(!next) return; R.revealT-=dt; if(R.revealT<=0){ delete next.hid; R.revealT=0.35+ITEMS[next.id].rar*0.18; if(drag) R.dirty=true; else renderRaidInv(); } }
 
 /* ---- end raid ---- */
-function endRaid(kind,detail){
-  if(!R||R.over) return; R.over=true; if(document.pointerLockElement) document.exitPointerLock();
+// endRaid never leaves you stuck: if anything in the bookkeeping fails, the raid is torn down anyway and you get home
+function endRaid(kind,detail){ if(!R||R.over) return; try{ endRaidInner(kind,detail); }catch(err){ console.error('endRaid',err); try{ logErr('endRaid: '+err.message,err.stack); }catch(e){} endRaidRescue(kind,detail); } }
+function endRaidRescue(kind,detail){
+  if(R&&R.dm&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
+  try{ if(kind!=='extract'&&R&&!R.gearGone){ SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; } S.inRaid=false; saveGame(); }catch(e){}
+  try{ if(NET.on) netLeave(); }catch(e){} try{ raidMusicStop(0.5); dronesStop(); windStop(); }catch(e){} try{ disposeScene(); }catch(e){}
+  R=null; P=null; try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){}
+  for(const id of ['raid','rinv','pause','brief','deathcard','spec','gpsmap','minimap','gpsline','scope','tvhud']){ const el=$('#'+id); if(el) el.hidden=true; }
+  $('#deathfade').style.opacity=0; document.body.classList.remove('inraid','spectating','tvmode');
+  const r=$('#result'); r.hidden=false; r.innerHTML=`<div class="card"><h2 class="${kind==='extract'?'ok':'bad'}">${kind==='extract'?'Extracted':kind==='kia'?'Killed in action':'Missing in action'}</h2><p class="muted" style="margin:0">${esc(detail||'')}</p><div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
+  $('#backBtn').onclick=goHub;
+}
+// everything that closes a raid's scene and HUD (normal raids and deathmatches)
+function raidTeardown(){
+  raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
+  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
+  document.body.classList.remove('inraid');
+  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode');
+}
+function endRaidInner(kind,detail){
+  if(R.dm) return dmFinish(kind);
+  R.over=true; if(document.pointerLockElement) document.exitPointerLock();
   try{ gaRaidEnd(kind); }catch(err){ console.warn('adaptive AI',err); } // score the enemies' behaviour genes (57-ai.js)
   if(NET.on){ if(kind==='extract') nsend({t:'msg',text:`${S.name||'Nomad'} extracted through ${detail}`}); netLeave(); }
   const kills=R.kills, time=R.t, mapName=MAPS[R.map].name, startV=R.startValue;
+  let killedBy=''; if(kind==='kia') try{ killedBy=killerLine(R.recap&&R.recap.K&&R.recap.K.name?R.recap.K:killerInfo()); }catch(e){}
   for(const s of [...SLOTS,'pockets','pouch']){ const it=S.eq[s]; if(it&&it.items) for(const x of it.items) delete x.hid; }
   S.stats.raids++; S.stats.kills+=kills; S.career.raids++; S.career.kills+=kills; if(kind==='extract') S.career.extracts++;
   let deposited=0;
@@ -82,24 +103,33 @@ function endRaid(kind,detail){
     if(S.career.extracts%10===0) cacheBonus.push(`extraction #${S.career.extracts}`);
     S.cos.caches+=cacheIn+cacheBonus.length; }
   const bossRw=kind==='extract'?R.bossReward:null; if(bossRw){ S.cash+=bossRw.cash; S.cos.caches+=bossRw.caches; }
-  if(kind!=='extract'){ if(kind==='kia') S.stats.deaths++; SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; collectCash(); }
+  if(kind!=='extract'){ if(kind==='kia') S.stats.deaths++; SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; collectCash(); R.gearGone=true; }
   S.cash+=deposited; const gained=kind==='extract'?carriedValue()+deposited-R.startValue:deposited-R.startValue;
   if(kind==='extract') S.stats.best=Math.max(S.stats.best||0,gained);
   if(kind==='extract'){ const haul=value+deposited; qBump(o=>o.type==='extract'&&(!o.map||o.map===R.map)&&(!o.noFire||!R.fired)&&(!o.weather||o.weather===R.cond.weather)&&(!o.minHaul||haul>=o.minHaul)?1:0); }
   const fresh=kind==='extract'?goalExtract(value+deposited):[];
   const qlog=R.qlog||[];
   S.inRaid=false; saveGame(); accFlush();
-  raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
-  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
-  document.body.classList.remove('inraid');
+  raidTeardown();
   const title=kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
   const sub=kind==='extract'?`Out through ${detail}.`:kind==='kia'?`${detail}.`:(detail||'The raid timer ran out.')+'.';
   const r=$('#result'); r.hidden=false;
   r.innerHTML=`<div class="card"><span class="lbl">${mapName} · ${fmtTime(time)} in raid</span><h2 class="${title[0]}">${title[1]}</h2><p class="muted" style="margin:0">${esc(sub)} ${kind==='extract'?'Everything you carried is yours. Sell what you don\'t need.':'Your gear is gone. The secure pouch made it back.'}</p>
+   ${killedBy?`<p class="killedby"><span class="lbl">Killed by</span> ${esc(killedBy)}</p>`:''}
    <dl class="stats"><dt>Kills</dt><dd>${kills}</dd><dt>Cash deposited</dt><dd class="cash">${fmt$(deposited)}</dd><dt>${kind==='extract'?'Gear brought home':'Gear lost'}</dt><dd>${fmt$(kind==='extract'?value:startV)}</dd><dt>Net change</dt><dd class="cash" style="color:${gained>=0?'var(--cash)':'var(--bad)'}">${gained>=0?'+':'−'}${fmt$(Math.abs(gained))}</dd><dt>Balance</dt><dd class="cash" id="resBal">${fmt$(S.cash)}</dd>${bossRw?`<dt>Jarl's bounty</dt><dd class="cash">+${fmt$(bossRw.cash)} <span class="muted" style="font-size:12px">and ${bossRw.caches} sealed caches</span></dd>`:''}${cacheIn+cacheBonus.length?`<dt>Sealed caches</dt><dd style="color:var(--warn)">+${cacheIn+cacheBonus.length} <span class="muted" style="font-size:12px">${[cacheIn?`${cacheIn} carried out`:'',...cacheBonus].filter(Boolean).join(' · ')}</span></dd>`:''}</dl>${qlog.length?`<div class="qlog"><span class="lbl">Task progress</span>${qlog.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''}<div class="haulbox" id="haulBox" hidden></div>
    ${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
   renderHaul($('#haulBox')); stinger(kind==='extract'?'extract':'down');
-  $('#backBtn').onclick=()=>{ r.hidden=true; $('#hub').hidden=false; setTab(NET.lobby?'deploy':'gear'); renderInvites(); applySeason(); if(S.music) musicStart(); };
+  $('#backBtn').onclick=goHub;
 }
+// back to the hideout from the results screen; if something in the hideout fails to draw, still show it
+function goHub(){ $('#result').hidden=true; $('#raid').hidden=true; $('#hub').hidden=false; document.body.classList.remove('inraid','spectating','tvmode');
+  try{ setTab(NET.lobby?'deploy':'gear'); }catch(e){ console.error(e); try{ logErr('goHub: '+e.message,e.stack); }catch(e2){} try{ setTab('gear'); }catch(e3){} }
+  try{ renderInvites(); applySeason(); if(S.music) musicStart(); }catch(e){ console.error(e); } }
+// never leave a blank screen: no raid running and nothing showing (or an empty results screen) for two seconds brings the hideout back
+let blankN=0; setInterval(()=>{ if(window.KOLVIK_WORKSHOP||!S) return; const res=$('#result');
+  const blank=!R&&$('#hub').hidden&&(res.hidden||!res.children.length)&&!document.querySelector('#mg:not([hidden]), #trade:not([hidden])');
+  const stuck=R&&R.over; // a raid that was ended but never torn down (frozen or black)
+  blankN=blank||stuck?blankN+1:0; if(blankN>=2){ blankN=0; try{ logErr(stuck?'raid stuck after ending: forced back to the hideout':'blank screen: brought the hideout back',''); }catch(e){}
+    if(stuck){ try{ disposeScene(); }catch(e){} R=null; P=null; $('#raid').hidden=true; $('#deathcard').hidden=true; if(document.pointerLockElement) document.exitPointerLock(); } goHub(); } },1000);
 function disposeScene(){ if(!scene) return; const keep=new Set(Object.values(MATS)); scene.traverse(o=>{ if(o.geometry&&o.geometry!==FXGEO) o.geometry.dispose(); if(o.material) for(const m of [].concat(o.material)) if(!keep.has(m)) m.dispose(); }); scene=null; }

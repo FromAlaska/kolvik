@@ -42,7 +42,7 @@ const DAILY_POOL=[
 ];
 const DAILY_TITLES={kill:'Contract',extract:'Courier run',hand:'Supply request',loot:'Scavenging',visit:'Recon'};
 const EK_NAMES={scav:'scav',raider:'raider',guard:"chief's guard",chief:'Station Chief Halvorsen',vguard:'vault guard',warden:'Vault Warden Brekke',foreman:'Mine Foreman Rask',mguard:'mine guard',jarl:'Jarl Hrafn',harbor:'Harbormaster Vinter',relay:'Relay Chief Dahl',huskarl:'huskarl'};
-function normSave(){ ensureCos(); ensureGoals(); if(S.hide&&S.hide.armory==null) S.hide.armory=0; if(!S.crafted) S.crafted={}; if(!S.q) S.q={active:{},done:[],daily:null}; if(!S.career) S.career={raids:S.stats?S.stats.raids:0,extracts:S.stats?S.stats.extracts:0,kills:S.stats?S.stats.kills:0,seasons:[]}; ensureDailies(); if(S.q.daily) for(const d of S.q.daily.list) if(d.reward.caches==null) d.reward.caches=1; }
+function normSave(){ ensureCos(); ensureGoals(); if(!TRADE.on) tradeRestore(); if(S.hide&&S.hide.armory==null) S.hide.armory=0; if(!S.crafted) S.crafted={}; if(!S.q) S.q={active:{},done:[],daily:null}; if(!S.career) S.career={raids:S.stats?S.stats.raids:0,extracts:S.stats?S.stats.extracts:0,kills:S.stats?S.stats.kills:0,seasons:[]}; ensureDailies(); if(S.q.daily) for(const d of S.q.daily.list) if(d.reward.caches==null) d.reward.caches=1; }
 const dayKey=()=>Math.floor(Date.now()/864e5);
 function ensureDailies(){
   const day=dayKey(); if(S.q.daily&&S.q.daily.day===day) return;

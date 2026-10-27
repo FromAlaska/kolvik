@@ -72,7 +72,7 @@ main#tabbody{flex:1; padding-block:20px 48px}
 .item .ic{position:absolute; left:2px; right:2px; top:12px; bottom:2px; background:center/contain no-repeat; image-rendering:pixelated; opacity:.95; pointer-events:none}
 .item .nm{position:relative; z-index:1} .item .bd{z-index:1}
 .atts{display:flex; flex-direction:column; gap:4px; border-top:1px solid var(--line); padding-top:8px}
-.attrow{display:grid; grid-template-columns:52px 1fr auto; gap:8px; align-items:center; font-size:13px}
+.attrow{display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; font-size:13px} .attrow > .lbl{width:52px} .attrow .attname{flex:1; min-width:90px} .attrow .attnone{font-size:12px}
 .online{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:24px; align-items:start}
 @media (max-width:900px){ .online{grid-template-columns:minmax(0,1fr)} }
 .lobbies,.members{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px}
@@ -246,6 +246,62 @@ table.board{border-collapse:collapse; min-width:760px; width:100%; font-variant-
 .goal .pip{width:14px; height:6px; background:var(--line); display:inline-block} .goal .pip.on{background:var(--warn)}
 .coll .ci .hic{background-position:center; background-repeat:no-repeat}
 
+/* ---------- rec room ---------- */
+.recbroke{margin:0 0 12px; padding:10px 12px; border-left:3px solid var(--cash); background:var(--panel); max-width:72ch}
+.recparty{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between; background:var(--panel2); border:1px solid var(--line); padding:12px 14px; margin-bottom:14px}
+.recparty .acts{display:flex; flex-wrap:wrap; gap:6px}
+.recgames .task h3{font-family:var(--display); font-size:26px; letter-spacing:.03em}
+.recgames .task .acts{margin-top:auto}
+#mg{position:fixed; z-index:90}
+.mgbox{background:var(--panel); border:1px solid var(--line); width:min(860px,100%); padding:18px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box}
+.mghead{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap}
+.mghead h2{font-family:var(--display); font-size:38px; line-height:.95; letter-spacing:.03em}
+.mghud{display:flex; gap:18px}
+.mghud span{display:flex; flex-direction:column; align-items:flex-end}
+.mghud b{font-family:var(--mono); font-size:26px; line-height:1; font-variant-numeric:tabular-nums}
+.mgmain{display:flex; gap:12px; align-items:stretch}
+.mgcv{position:relative; flex:1; min-width:0}
+.mgcv canvas{display:block; width:100%; aspect-ratio:320/200; image-rendering:pixelated; touch-action:none; cursor:crosshair; background:#000; border:1px solid var(--line)}
+.mgcount{position:absolute; inset:0; display:grid; place-items:center; font-family:var(--display); font-size:96px; color:var(--signal); text-shadow:0 2px 0 #000; pointer-events:none}
+.mgparty{list-style:none; margin:0; padding:0; width:180px; display:flex; flex-direction:column; gap:4px; font-family:var(--mono); font-size:13px}
+.mgparty li{display:flex; gap:8px; align-items:baseline; background:var(--panel2); padding:6px 8px}
+.mgparty li.me{outline:1px solid var(--signal)}
+.mgparty .pl{color:var(--dim)} .mgparty .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap} .mgparty small{color:var(--ok)}
+.mghow{margin:0; font-size:14px}
+#mgActs{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+.mgres{flex:1; min-width:220px} .mgres p{margin:0} .mgres .cash{color:var(--cash); font-family:var(--mono); font-size:22px}
+@media (max-width:640px){ .mgmain{flex-direction:column} .mgparty{width:auto} .mghead h2{font-size:30px} .mgbox{padding:12px} }
+
+/* ---------- trading ---------- */
+#trade{position:fixed; z-index:88}
+.tradebox{background:var(--panel); border:1px solid var(--line); width:min(980px,100%); padding:18px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box; max-height:calc(100dvh - 32px)}
+.tradecols{display:grid; grid-template-columns:1fr 1fr; gap:14px; min-height:0; overflow:auto}
+.tcol{background:var(--panel2); border:1px solid var(--line); padding:12px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.tcol h3{font-family:var(--display); font-size:24px; letter-spacing:.03em; display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.tcash{display:flex; align-items:center; gap:8px; margin:0; font-family:var(--mono)}
+.tcash input{width:120px; background:var(--ice); border:1px solid var(--line); color:var(--frost); font:14px var(--mono); padding:5px 7px}
+.tlist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px}
+.tlist li{display:flex; align-items:center; gap:8px; background:var(--panel); padding:4px 6px; font-size:14px}
+.tlist .hic{width:26px; height:26px; flex:none; background-size:contain; background-repeat:no-repeat; background-position:center; image-rendering:pixelated}
+.tlist .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap} .tlist .v{font-family:var(--mono); font-size:12px; color:var(--cash)}
+.tstash{border-top:1px solid var(--line); padding-top:8px; display:flex; flex-direction:column; gap:6px}
+.tstash .tlist{max-height:260px; overflow:auto}
+.tstash input{background:var(--ice); border:1px solid var(--line); color:var(--frost); font:13px var(--mono); padding:4px 6px; width:140px}
+.tok{margin:0; color:var(--ok); font-weight:700} .tbad{margin:0; color:var(--bad)}
+.tradebox > .acts{display:flex; gap:8px; justify-content:flex-end}
+@media (max-width:720px){ .tradecols{grid-template-columns:1fr} .tradebox{padding:12px} }
+
+/* ---------- tips and the guest bar ---------- */
+.tabtip{display:flex; align-items:flex-start; gap:12px; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--signal); padding:10px 12px; margin:0 0 14px}
+.tabtip p{margin:0; flex:1; font-size:14px; line-height:1.5; max-width:110ch} .tabtip .lbl{padding-top:3px}
+kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line); border-bottom-width:2px; padding:0 4px; background:var(--ice); white-space:nowrap}
+#guestBar{display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; background:#2a2310; border-bottom:1px solid #5e4518; padding-block:10px}
+#guestBar p{margin:0; flex:1 1 420px; font-size:14px} #guestBar .pw{color:var(--warn)} #guestBar .acts{display:flex; gap:8px}
+.pwwarn{margin:2px 0 0; font-size:13px; line-height:1.45; color:var(--warn)}
+@media (max-width:640px){ .tabtip{flex-wrap:wrap} .tabtip .lbl{width:100%} }
+
+.btn.warnbtn{color:var(--bad); border-color:rgba(226,87,74,.5)}
+
 /* ---------- raid ---------- */
 #raid{position:fixed; inset:0; background:#000; z-index:50}
 #cv{position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; display:block; cursor:crosshair}
@@ -305,6 +361,16 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 #reticle{position:absolute; left:50%; top:50%; width:0; height:0}
 #reticle svg{position:absolute; left:0; top:0; transform:translate(-50%,-50%); overflow:visible; filter:drop-shadow(0 0 2px rgba(255,70,40,.75))}
 #deathfade{position:absolute; inset:0; background:#300; opacity:0; transition:opacity 1.2s}
+#deathcard{position:absolute; right:max(16px, env(safe-area-inset-right,0px)); top:50%; transform:translateY(-50%); z-index:55; pointer-events:auto; width:min(420px, calc(100% - 32px)); max-height:calc(100% - 32px); overflow:auto; animation:dcIn .45s ease-out}
+#deathcard .card{background:rgba(11,18,21,.9); gap:10px; padding:18px; box-sizing:border-box; width:100%; max-width:none}
+#deathcard h2{font-size:36px; color:var(--bad)}
+#deathcard .killed{margin:0; font-size:15px; line-height:1.4}
+#deathcard .killed b{font-family:var(--display); font-size:22px; letter-spacing:.03em; color:#fff}
+#deathcard .hitlog{grid-template-columns:auto 1fr; font-size:13px}
+#deathcard .pouchkept{margin:0; font-size:13px; line-height:1.45}
+#deathcard .acts{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap}
+@keyframes dcIn{from{opacity:0; transform:translate(12px,-50%)}}
+@media (max-width:640px){ #deathcard{left:16px; right:16px; width:auto; top:auto; bottom:max(16px, env(safe-area-inset-bottom,0px)); transform:none; max-height:62%} @keyframes dcIn{from{opacity:0}} }
 .overlay{position:absolute; inset:0; z-index:60; display:grid; place-items:center; background:rgba(5,9,11,.78); padding:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) max(16px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow:auto}
 .card{background:var(--panel); border:1px solid var(--line); padding:22px; max-width:560px; width:100%; display:flex; flex-direction:column; gap:14px}
 .card h2{font-family:var(--display); font-weight:800; font-size:44px; line-height:.95; letter-spacing:.03em}
@@ -318,6 +384,7 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 .searching{font-family:var(--mono); font-size:12px; color:var(--warn)}
 /* result */
 #result{position:fixed; inset:0; z-index:80; background:var(--ice); display:grid; place-items:center; overflow:auto; padding:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) max(16px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px))}
+#result .killedby{margin:0; font-size:15px; line-height:1.4} #result .killedby .lbl{margin-right:6px}
 #result .card h2.ok{color:var(--ok)} #result .card h2.bad{color:var(--bad)} #result .card h2.mia{color:var(--warn)}
 @media (prefers-reduced-motion: reduce){ .fig .bl{animation:none} #toast{transition:none} }
 /* operator: cosmetics + sealed caches */
@@ -339,7 +406,7 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 .diffbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:0 0 14px; padding:10px 12px; background:var(--panel); border:1px solid var(--line)}
 .diffbar .seg button[data-diff="hard"][aria-checked="true"]{background:#c98a2a} .diffbar .seg button[data-diff="brutal"][aria-checked="true"]{background:var(--bad); color:#1a0503}
 .diffbar small{color:var(--dim); font-size:13px; flex:1 1 260px}
-.tag.d-hard{background:#3a2c10; color:#e8b04a} .tag.d-brutal{background:#3a1410; color:#ff8a7a}
+.tag.d-easy{background:#14302a; color:#7cc9a4} .tag.d-hard{background:#3a2c10; color:#e8b04a} .tag.d-brutal{background:#3a1410; color:#ff8a7a}
 #airhud{position:absolute; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); display:flex; gap:18px; align-items:flex-end; font-family:var(--mono); text-shadow:0 1px 0 #000, 0 0 6px rgba(0,0,0,.8); pointer-events:none}
 #aimdot{position:absolute; width:14px; height:14px; margin:-7px 0 0 -7px; border:2px solid rgba(120,220,255,.9); transform:rotate(45deg); box-shadow:0 0 3px #000; pointer-events:none}
 #cv.thermal{filter:grayscale(1) invert(1) contrast(1.35) brightness(0.95)}
@@ -405,6 +472,19 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
 .gps-leg div{display:flex; align-items:center; gap:8px} .gps-leg i{width:12px; height:12px; border-radius:50%; flex:none}
 .gps-leg p{margin:4px 0 0; font-size:12.5px} #gpsInfo p{color:#ffb070; font-family:var(--mono)}
 @media (max-width:760px){ .gps-body{flex-direction:column} .gps-leg{width:auto; max-height:30vh} #minimap{width:120px; height:120px; bottom:calc(100px + env(safe-area-inset-bottom,0px))} #gpsline{bottom:calc(226px + env(safe-area-inset-bottom,0px))} }
+
+/* deathmatch */
+#dmhud{position:absolute; left:50%; top:calc(34px + env(safe-area-inset-top,0px)); transform:translateX(-50%); display:flex; gap:8px; align-items:baseline; background:rgba(11,18,21,.72); border:1px solid var(--line); padding:5px 12px; font-family:var(--mono); font-size:15px; white-space:nowrap; pointer-events:none}
+#dmhud i{color:var(--dim); font-style:normal} #dmhud small{color:var(--dim); font-size:11px; margin-left:6px}
+.side1{color:#7fb6e8} .side2{color:#ff8a6a}
+.dmboard{display:flex; gap:12px; flex-wrap:wrap}
+.dmboard table{border-collapse:collapse; font-family:var(--mono); font-size:13px; flex:1; min-width:160px}
+.dmboard caption{text-align:left; font-size:15px; padding-bottom:4px}
+.dmboard th{color:var(--dim); font-weight:400; text-align:left; font-size:11px; padding:2px 6px} .dmboard td{padding:3px 6px; border-top:1px solid var(--line)} .dmboard td+td,.dmboard th+th{text-align:right; width:34px}
+.dmboard tr.me td{color:var(--signal)} .dmboard tr.gone td{opacity:.5}
+.dmresp{margin:0; font-family:var(--mono)} .dmresp b{font-size:24px; color:var(--signal)}
+#deathcard h2.ok{color:var(--ok)}
+body.dmmode #taskHud{display:none}
 </style>
 
 <div id="hub">
@@ -417,6 +497,7 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
       <button class="musicbtn" id="accBtn" hidden>Sign in</button>
       <button class="musicbtn" id="dbgBtn" hidden title="Debug tools (F9)">Debug</button>
       <button class="musicbtn" id="optBtn">Settings</button>
+      <button class="musicbtn" id="tipsBtn" title="Show the tips on every tab again">Tips</button>
       <button class="musicbtn" id="musicBtn" aria-pressed="false">♪ Music off</button>
       <button class="musicbtn" id="nextBtn" hidden aria-label="Next track">Next ›</button>
       <div class="bal"><span class="lbl">Cash</span><b id="cashv">$0</b></div>
@@ -429,10 +510,12 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
     <button role="tab" data-tab="goals" aria-selected="false">Goals<span class="badge" id="goalBadge" hidden></span></button>
     <button role="tab" data-tab="hideout" aria-selected="false">Hideout</button>
     <button role="tab" data-tab="operator" aria-selected="false">Operator<span class="badge" id="cacheBadge" hidden></span></button>
+    <button role="tab" data-tab="rec" aria-selected="false">Rec room</button>
     <button role="tab" data-tab="deploy" aria-selected="false">Deploy<span class="badge" id="chatBadge" hidden></span></button>
     <button role="tab" data-tab="friends" aria-selected="false" id="friendsTab" hidden>Friends<span class="badge" id="socialBadge" hidden></span></button>
     <button role="tab" data-tab="board" aria-selected="false" id="boardTab" hidden>Leaderboard</button>
   </nav>
+  <div id="guestBar" class="gut" hidden></div>
   <main id="tabbody" class="gut"></main>
 </div>
 
@@ -441,7 +524,7 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
   <div id="hud">
     <div id="compass"></div><div id="timer"></div><div id="exlist"></div><div id="log"></div>
     <div id="scope" hidden></div><div id="prismRing" hidden></div><div id="reticle" hidden></div>
-    <div id="mates"></div><div id="hitdirs"></div><div id="bossbar" hidden></div><div id="racehud" hidden></div><div id="airhud" hidden></div><div id="tvhud" hidden></div><div id="aimdot" hidden></div><div id="cross"></div><div id="hitm"></div><div id="prompt"></div><div id="center"></div>
+    <div id="mates"></div><div id="hitdirs"></div><div id="bossbar" hidden></div><div id="dmhud" hidden></div><div id="racehud" hidden></div><div id="airhud" hidden></div><div id="tvhud" hidden></div><div id="aimdot" hidden></div><div id="cross"></div><div id="hitm"></div><div id="prompt"></div><div id="center"></div>
     <div id="bodyhud"><div class="fig" id="fig"></div><div class="vit" id="vit"></div></div>
     <div id="weph"></div>
     <div id="taskHud"></div>
@@ -450,6 +533,7 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
     <form id="rchatForm" hidden autocomplete="off"><span id="rchatCh">ALL</span><input id="rchatIn" maxlength="200" aria-label="Raid chat" placeholder="Enter sends · Tab switches channel · @name messages a friend · Esc cancels"></form>
     <div id="vign"></div><div id="cold"></div><div id="deathfade"></div>
     <div id="spec" hidden></div>
+    <div id="deathcard" hidden></div>
   </div>
   <div id="rinv" hidden></div>
   <div class="overlay" id="brief" hidden></div>
@@ -720,13 +804,17 @@ function iconFor(id){
 /* 12-difficulty: DIFF table and diffExtras */
 /* ================= DIFFICULTY (per raid: solo from the Deploy tab, online from the lobby leader) ================= */
 const DIFF={
- normal:{name:'Normal',acc:1,react:1,hp:1,count:1,loot:1,cash:1,bp:0,desc:'The usual fight and the usual loot.'},
- hard:{name:'Hardened',acc:1.12,react:0.8,hp:1.25,count:1.3,loot:1.45,cash:1.5,bp:0.2,desc:'About 30% more enemies with a quarter more health, quicker reactions and better aim. About 45% more loot and 50% more cash.'},
- brutal:{name:'Brutal',acc:1.25,react:0.62,hp:1.5,count:1.6,loot:2,cash:2.2,bp:0.4,desc:'60% more enemies with half again the health, near-instant reactions and armor-piercing rounds everywhere. Double the loot, more than double the cash.'},
+ easy:{name:'Recruit',acc:0.55,react:1.6,hp:0.85,dmg:0.7,count:0.75,loot:0.85,cash:0.85,bp:0,desc:'A quarter fewer enemies, slower to react, worse shots, and they hit softer. A little less loot.'},
+ normal:{name:'Normal',acc:0.75,react:1.25,hp:1,dmg:0.85,count:1,loot:1,cash:1,bp:0,desc:'The usual fight and the usual loot.'},
+ hard:{name:'Hardened',acc:1,react:0.9,hp:1.2,dmg:1,count:1.3,loot:1.45,cash:1.5,bp:0.2,desc:'About 30% more enemies with a fifth more health, quicker reactions, better aim and full damage. About 45% more loot and 50% more cash.'},
+ brutal:{name:'Brutal',acc:1.15,react:0.7,hp:1.45,dmg:1.1,count:1.6,loot:2,cash:2.2,bp:0.4,desc:'60% more enemies with nearly half again the health, fast reactions and armor-piercing rounds everywhere. Double the loot, more than double the cash.'},
 };
 const diffTag=k=>k&&k!=='normal'&&DIFF[k]?`<span class="tag d-${k}">${DIFF[k].name}</span>`:'';
 // extra enemies for harder raids: a copy near some of the map's own spawns (inside the seeded build, so everyone gets the same)
-function diffExtras(){ const D=R.D; if(D.count<=1) return; for(const e of R.enemies.slice()){ if(e.k.boss||['chief','warden','foreman','relay'].includes(e.kind)) continue; if(rand()>=D.count-1) continue; const a=rand()*6.28, n0=R.enemies.length; spawnEnemy(clamp(e.pos.x+Math.cos(a)*3,-R.bound,R.bound),clamp(e.pos.z+Math.sin(a)*3,-R.bound,R.bound),e.kind); const ne=R.enemies[n0]; if(ne){ resolve(ne.pos,0.4); ne.home={x:ne.pos.x,z:ne.pos.z}; ne.nx=ne.pos.x; ne.nz=ne.pos.z; } } }
+function diffExtras(){ const D=R.D;
+  // easier raids thin the ordinary enemies out (bosses and their guards stay)
+  if(D.count<1){ const keep=[]; for(const e of R.enemies){ if(e.k.boss||e.k.home||rand()<D.count) keep.push(e); else scene.remove(e.g); } keep.forEach((e,i)=>e.idx=i); R.enemies=keep; return; }
+  if(D.count<=1) return; for(const e of R.enemies.slice()){ if(e.k.boss||['chief','warden','foreman','relay'].includes(e.kind)) continue; if(rand()>=D.count-1) continue; const a=rand()*6.28, n0=R.enemies.length; spawnEnemy(clamp(e.pos.x+Math.cos(a)*3,-R.bound,R.bound),clamp(e.pos.z+Math.sin(a)*3,-R.bound,R.bound),e.kind); const ne=R.enemies[n0]; if(ne){ resolve(ne.pos,0.4); ne.home={x:ne.pos.x,z:ne.pos.z}; ne.nx=ne.pos.x; ne.nz=ne.pos.z; } } }
 
 /* 20-cosmetics: outfits, weapon skins, patterns, sealed caches, operator preview */
 /* ================= COSMETICS (outfits, weapon skins, sealed caches) ================= */
@@ -1096,7 +1184,7 @@ const DAILY_POOL=[
 ];
 const DAILY_TITLES={kill:'Contract',extract:'Courier run',hand:'Supply request',loot:'Scavenging',visit:'Recon'};
 const EK_NAMES={scav:'scav',raider:'raider',guard:"chief's guard",chief:'Station Chief Halvorsen',vguard:'vault guard',warden:'Vault Warden Brekke',foreman:'Mine Foreman Rask',mguard:'mine guard',jarl:'Jarl Hrafn',harbor:'Harbormaster Vinter',relay:'Relay Chief Dahl',huskarl:'huskarl'};
-function normSave(){ ensureCos(); ensureGoals(); if(S.hide&&S.hide.armory==null) S.hide.armory=0; if(!S.crafted) S.crafted={}; if(!S.q) S.q={active:{},done:[],daily:null}; if(!S.career) S.career={raids:S.stats?S.stats.raids:0,extracts:S.stats?S.stats.extracts:0,kills:S.stats?S.stats.kills:0,seasons:[]}; ensureDailies(); if(S.q.daily) for(const d of S.q.daily.list) if(d.reward.caches==null) d.reward.caches=1; }
+function normSave(){ ensureCos(); ensureGoals(); if(!TRADE.on) tradeRestore(); if(S.hide&&S.hide.armory==null) S.hide.armory=0; if(!S.crafted) S.crafted={}; if(!S.q) S.q={active:{},done:[],daily:null}; if(!S.career) S.career={raids:S.stats?S.stats.raids:0,extracts:S.stats?S.stats.extracts:0,kills:S.stats?S.stats.kills:0,seasons:[]}; ensureDailies(); if(S.q.daily) for(const d of S.q.daily.list) if(d.reward.caches==null) d.reward.caches=1; }
 const dayKey=()=>Math.floor(Date.now()/864e5);
 function ensureDailies(){
   const day=dayKey(); if(S.q.daily&&S.q.daily.day===day) return;
@@ -1208,7 +1296,8 @@ function newSave(){
   return s;
 }
 function worthOf(o){ let v=o.cash; for(const it of o.stash.items) v+=deepValue(it); for(const k in o.eq) if(o.eq[k]) v+=deepValue(o.eq[k]); return Math.round(v); }
-function saveGame(obj=S){ try{ obj.stats.worth=worthOf(obj); }catch(e){} try{ localStorage.setItem(KEY, JSON.stringify(obj)); }catch(e){} accPush(obj); }
+function saveGame(obj=S){ if(R&&R.dm&&R.realEq&&obj===S) obj=Object.assign({},S,{eq:R.realEq}); // deathmatch kit never reaches the save
+  try{ obj.stats.worth=worthOf(obj); }catch(e){} try{ localStorage.setItem(KEY, JSON.stringify(obj)); }catch(e){} accPush(obj); }
 function loadGame(){ try{ const t=localStorage.getItem(KEY); if(t){ const o=JSON.parse(t); if(o&&o.v===2) return o; } }catch(e){} return null; }
 
 /* 25-goals: long-term goals, the collection log and titles (the Goals tab)
@@ -1228,6 +1317,7 @@ const GOALS=[
  {id:'collector',name:'Collector',stat:'valuables',unit:'different valuables brought home',tiers:[[10,{cash:3000}],[25,{caches:2}],[0,{cos:'w_starfall',title:'Curator'}]],of:()=>COLLECT.loot().length},
  {id:'haul',name:'Big haul',stat:'haul',unit:'best single haul',money:true,tiers:[[25000,{cash:2500}],[75000,{caches:1}],[200000,{caches:3,title:'Tycoon'}]]},
  {id:'drones',name:'Drone hunter',stat:'drones',unit:'drones shot down',tiers:[[1,{cash:2000}],[10,{caches:1,items:[['jammer']]}],[40,{caches:2,title:'Swatter'}]]},
+ {id:'roadkill',name:'Road warrior',stat:'roadkill',unit:'enemies run down',tiers:[[1,{cash:1500}],[10,{caches:1}],[40,{caches:2,title:'Road warrior'}]]},
  {id:'searched',name:'Rummager',stat:'searched',unit:'containers and bodies searched',tiers:[[50,{cash:1000}],[300,{caches:1}],[1500,{scrip:150,title:'Scrounger'}]]},
  {id:'ghost',name:'Ghost',stat:'ghost',unit:'extracts without firing a shot',tiers:[[1,{cash:1500}],[10,{caches:1}],[30,{cos:'m_ghost',title:'Ghost'}]]},
  {id:'storm',name:'Storm walker',stat:'storm',unit:'extracts in a blizzard',tiers:[[1,{cash:2000}],[5,{caches:1}],[15,{title:'Stormborn',caches:1}]]},
@@ -2293,7 +2383,9 @@ function renderTab(){
   else if(TAB==='goals') renderGoals(body);
   else if(TAB==='friends') renderFriends(body);
   else if(TAB==='operator') renderOperator(body);
+  else if(TAB==='rec') renderRec(body);
   else renderDeploy(body);
+  tabTip(body); guestBar();
 }
 function getCont(key){
   if(key==='stash') return S.stash;
@@ -2394,21 +2486,29 @@ function renderInfo(el){
       if(it.mag>0) btn('Unload',()=>{ const a=mk(it.ammo,{n:it.mag}); it.mag=0; if(!place(S.stash,a)) toast('Stash is full.'); afterChange(); },'btn ghost sm');
     }
     if(it.items && it.items.length && loc && loc.key==='stash') btn('Empty into stash',()=>{ const left=[]; for(const s of it.items.slice()){ if(!place(S.stash,s)) left.push(s); } it.items.length=0; it.items.push(...left); if(left.length) toast('Some items did not fit.'); afterChange(); },'btn ghost sm');
-    if(d.type==='weapon' && loc){
-      const box=document.createElement('div'); box.className='atts';
-      for(const sl of ['optic','muzzle','mag']){
-        const row=document.createElement('div'); row.className='attrow'; const cur=it.att&&it.att[sl];
-        const opts=S.stash.items.filter(a=>ITEMS[a.id].type==='att'&&ITEMS[a.id].aslot===sl&&ITEMS[a.id].fits.includes(it.id));
-        row.innerHTML=`<span class="lbl">${sl}</span><span class="attname">${cur?esc(ITEMS[cur.id].name):'<span class="muted">none</span>'}</span>`;
-        const b=document.createElement('button'); b.className='btn ghost sm';
-        if(cur){ b.textContent='Detach'; b.onclick=()=>{ if(!place(S.stash,cur)){ toast('Stash is full.'); return; } it.att[sl]=null; fixMag(it); afterChange(); }; }
-        else { b.textContent=opts.length?`Attach ${ITEMS[opts[0].id].short}`:'None in stash'; b.disabled=!opts.length; b.onclick=()=>{ const a=opts[0]; removeAt({key:'stash'},a); if(!it.att) it.att={}; it.att[sl]=a; afterChange(); }; }
-        row.appendChild(b); box.appendChild(row);
-      }
-      el.appendChild(box);
-    }
   }
+  if(d.type==='weapon' && loc && !(R&&loc.key==='loot'&&R.lootTarget&&R.lootTarget.mate)) el.appendChild(attBox(it));
 }
+/* attachments: fit, swap or take off optics, muzzles and magazines, in the hideout (from your stash) and in a raid
+   (from anything you carry or the container you have open). Dragging an attachment onto a gun does the same. */
+function attachSources(){ if(!R) return [{key:'stash'}]; const L=['eq:pockets','eq:rig','eq:pack','eq:pouch'].filter(k=>getCont(k)).map(key=>({key})); if(R.lootTarget) L.push({key:'loot'}); return L; }
+const stowAtt=a=>R?addToPlayer(a):place(S.stash,a);
+function attachTo(w,a,src){ const ad=ITEMS[a.id], wd=ITEMS[w.id];
+  if(ad.type!=='att') return null; if(!ad.fits.includes(w.id)) return {msg:`${ad.name} doesn't fit the ${wd.name}.`};
+  const sl=ad.aslot, old=w.att&&w.att[sl]; const sc=getCont(src.key); const i=sc?sc.items.indexOf(a):-1; if(i<0) return null;
+  sc.items.splice(i,1); if(R&&src.key==='loot') netTake(a);
+  if(old&&!(place(sc,old)||stowAtt(old))){ sc.items.push(a); return {msg:`No room for the ${ITEMS[old.id].short} that's on it now.`}; }
+  if(!w.att) w.att={optic:null,muzzle:null,mag:null}; w.att[sl]=a; fixMag(w); sfxTone(1400,0.03,0.05,'square'); return {ok:true,msg:`${ad.short} fitted to the ${wd.short}${old?`, ${ITEMS[old.id].short} put away`:''}.`}; }
+function detachFrom(w,sl){ const cur=w.att&&w.att[sl]; if(!cur) return; if(!stowAtt(cur)){ toast(R?'No room in your pockets, rig or pack.':'Stash is full.'); return; } w.att[sl]=null; fixMag(w); sfxTone(900,0.03,0.05,'square'); afterChange(); }
+function attBox(it){ const box=document.createElement('div'); box.className='atts'; const srcs=attachSources();
+  for(const sl of ['optic','muzzle','mag']){ const row=document.createElement('div'); row.className='attrow'; const cur=it.att&&it.att[sl];
+    const opts=[], seen=new Set(); for(const s of srcs){ const c=getCont(s.key); if(!c) continue; for(const a of c.items){ const ad=ITEMS[a.id]; if(a.hid||ad.type!=='att'||ad.aslot!==sl||!ad.fits.includes(it.id)||seen.has(a.id)) continue; seen.add(a.id); opts.push([a,s]); } }
+    row.innerHTML=`<span class="lbl">${sl}</span><span class="attname">${cur?esc(ITEMS[cur.id].name):'<span class="muted">none</span>'}</span>`;
+    if(cur){ const b=document.createElement('button'); b.className='btn ghost sm'; b.textContent='Take off'; b.onclick=()=>detachFrom(it,sl); row.appendChild(b); }
+    for(const [a,s] of opts.slice(0,3)){ const b=document.createElement('button'); b.className='btn ghost sm'; b.textContent=`${cur?'Swap to':'Fit'} ${ITEMS[a.id].short}`; b.onclick=()=>{ const r=attachTo(it,a,s); if(r&&r.msg) toast(r.msg); afterChange(); }; row.appendChild(b); }
+    if(!cur&&!opts.length){ const n=document.createElement('span'); n.className='muted attnone'; n.textContent=R?'none carried':'none in stash'; row.appendChild(n); }
+    box.appendChild(row); }
+  return box; }
 function afterChange(){ if(!R) saveGame(); refreshInv(); }
 function refreshInv(){ if(R){ if(R.invOpen) renderRaidInv(); } else renderTab(); }
 
@@ -2486,6 +2586,9 @@ function tryDrop(x,y){
   const t=document.elementFromPoint(x,y); if(!t) return null;
   const it=drag.it, d=ITEMS[it.id], src=drag.src;
   const gEl=t.closest('[data-grid]'), sEl=t.closest('[data-slot]'), sell=t.closest('[data-sell]'), disc=t.closest('[data-discard]');
+  if(d.type==='att'&&src.key){ let w=null; if(sEl&&(sEl.dataset.slot==='primary'||sEl.dataset.slot==='secondary')) w=S.eq[sEl.dataset.slot];
+    else if(gEl){ const cont=getCont(gEl.dataset.grid); if(cont){ const c=cellPx(), rect=gEl.getBoundingClientRect(); const o=itemAt(cont,Math.floor((x-rect.left-1)/c),Math.floor((y-rect.top-1)/c)); if(o&&o!==it&&ITEMS[o.id].type==='weapon') w=o; } }
+    if(w) return attachTo(w,it,src); }
   if(gEl){
     const key=gEl.dataset.grid, cont=getCont(key); if(!cont) return null; const c=cellPx(); const rect=gEl.getBoundingClientRect();
     if(gridOwner(key)===it) return {msg:"A container can't go inside itself."};
@@ -2738,24 +2841,28 @@ function renderLobbyArea(){
   if(!NET.connected){ el.innerHTML=`<div class="colhead"><h2 class="h2">Online raids</h2></div><p class="muted" style="margin:0">Connecting to the server…</p>`; return; }
   const l=NET.lobby;
   if(l){
-    const me=l.members.find(m=>m.id===NET.id)||{}; const owner=l.owner===NET.id; const nReady=l.members.filter(m=>m.ready).length; const allReady=nReady===l.members.length; const sides=new Set(l.members.map(m=>m.squad?'s'+m.squad:m.id)).size; const pvpShort=!!MAPS[l.map].pvp&&sides<2;
+    const me=l.members.find(m=>m.id===NET.id)||{}; const owner=l.owner===NET.id; const nReady=l.members.filter(m=>m.ready).length; const allReady=nReady===l.members.length; const sides=new Set(l.members.map(m=>m.squad?'s'+m.squad:m.id)).size; const dm=!!DM_INFO[l.mode]; const teams=!!MAPS[l.map].teams||l.mode==='tdm'; const pvpShort=dm?l.members.length<2:(!!MAPS[l.map].pvp&&sides<2);
     const fee=MAPS[l.map].fee||0; const broke=S.cash<fee; const waiting=l.state==='waiting';
     el.innerHTML=`<div class="colhead"><h2 class="h2">${esc(l.name)}</h2><span class="lbl">${waiting?(allReady?'Everyone is ready':`${nReady} of ${l.members.length} ready`):`In raid · ${fmtTime(lobbyTL(l))} left`}</span></div>
-     <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyMap">Map</label><select id="lobbyMap">${Object.entries(MAPS).map(([k,m])=>`<option value="${k}" ${k===l.map?'selected':''}>${m.name}${m.fee?' · '+fmt$(m.fee)+' entry':''}</option>`).join('')}</select>`:`<span class="lbl">Map</span><b>${esc(MAPS[l.map].name)}</b>${fee?`<span class="cash">${fmt$(fee)} entry each</span>`:''}`}</div>
-     <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyDiff">Difficulty</label><select id="lobbyDiff">${Object.entries(DIFF).map(([k,d])=>`<option value="${k}" ${k===(l.diff||'normal')?'selected':''}>${d.name}</option>`).join('')}</select>`:`<span class="lbl">Difficulty</span><b>${esc((DIFF[l.diff]||DIFF.normal).name)}</b>`}</div>
+     <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyMode">Mode</label><select id="lobbyMode">${[['raid','Extraction raid'],['tdm','Team deathmatch'],['ffa','Free for all']].map(([k,n])=>`<option value="${k}" ${k===(l.mode||'raid')?'selected':''}>${n}</option>`).join('')}</select>`:`<span class="lbl">Mode</span><b>${dm?esc(DM_INFO[l.mode].name):'Extraction raid'}</b>`}</div>
+     ${dm?`<p class="muted" style="margin:0;font-size:13px">${esc(DM_INFO[l.mode].how)} No AI, 10 minutes, respawns, the same kit for everyone. Your own gear stays home. $${DM_PAY.kill} a kill, $${DM_PAY.win.toLocaleString()} for the win.</p>`:''}
+     <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyMap">Map</label><select id="lobbyMap">${Object.entries(MAPS).filter(([k])=>!dm||DM_MAPS.includes(k)).map(([k,m])=>`<option value="${k}" ${k===l.map?'selected':''}>${m.name}${m.fee?' · '+fmt$(m.fee)+' entry':''}</option>`).join('')}</select>`:`<span class="lbl">Map</span><b>${esc(MAPS[l.map].name)}</b>${fee?`<span class="cash">${fmt$(fee)} entry each</span>`:''}`}</div>
+     ${dm?'':`<div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyDiff">Difficulty</label><select id="lobbyDiff">${Object.entries(DIFF).map(([k,d])=>`<option value="${k}" ${k===(l.diff||'normal')?'selected':''}>${d.name}</option>`).join('')}</select>`:`<span class="lbl">Difficulty</span><b>${esc((DIFF[l.diff]||DIFF.normal).name)}</b>`}</div>`}
      ${MAPS[l.map].coop?'<p class="muted" style="margin:0;font-size:13px">Co-op: everyone in this raid is on the same side.</p>':''}
-     ${MAPS[l.map].teams?`<div class="lobbymap"><span class="lbl">Teams</span><b>${SIDE_NAMES[1]} ${l.members.filter(m=>m.side===1).length} · ${SIDE_NAMES[2]} ${l.members.filter(m=>m.side===2).length}</b>${waiting?`<button class="btn sm ghost" id="lSide">Switch to ${SIDE_NAMES[me.side===1?2:1]}</button>`:''}</div>${owner&&waiting?`<div class="lobbymap"><label class="lbl" for="lobbyAir">AI planes</label><select id="lobbyAir">${[['0','None'],['1','Two per side'],['2','Four per side']].map(([k,n])=>`<option value="${k}" ${String(l.air??1)===k?'selected':''}>${n}</option>`).join('')}</select></div>`:`<div class="lobbymap"><span class="lbl">AI planes</span><b>${['None','Two per side','Four per side'][l.air??1]}</b></div>`}`:''}
-     <ul class="members">${l.members.map(m=>`<li class="${(waiting?m.ready:m.inRaid)?'rdy':''}"><span class="pip"></span><span class="mn">${esc(m.name)} ${m.id===l.owner?'<span class="tag">leader</span>':''}${m.guest?' <span class="tag">guest</span>':''}${m.id===NET.id?' <span class="tag">you</span>':''}${m.squad&&NET.squad&&m.squad===NET.squad.id&&m.id!==NET.id?' <span class="tag sq">squad</span>':''}${MAPS[l.map].teams&&m.side?` <span class="tag ${m.side===1?'sq':''}">${SIDE_NAMES[m.side]}</span>`:''}</span><span class="st">${waiting?(m.ready?'Ready':'Not ready'):(m.inRaid?'In raid':'At hideout')}</span></li>`).join('')}</ul>
+     ${teams?`<div class="lobbymap"><span class="lbl">Teams</span><b>${SIDE_NAMES[1]} ${l.members.filter(m=>m.side===1).length} · ${SIDE_NAMES[2]} ${l.members.filter(m=>m.side===2).length}</b>${waiting?`<button class="btn sm ghost" id="lSide">Switch to ${SIDE_NAMES[me.side===1?2:1]}</button>`:''}</div>${!MAPS[l.map].teams?'':owner&&waiting?`<div class="lobbymap"><label class="lbl" for="lobbyAir">AI planes</label><select id="lobbyAir">${[['0','None'],['1','Two per side'],['2','Four per side']].map(([k,n])=>`<option value="${k}" ${String(l.air??1)===k?'selected':''}>${n}</option>`).join('')}</select></div>`:`<div class="lobbymap"><span class="lbl">AI planes</span><b>${['None','Two per side','Four per side'][l.air??1]}</b></div>`}`:''}
+     <ul class="members">${l.members.map(m=>`<li class="${(waiting?m.ready:m.inRaid)?'rdy':''}"><span class="pip"></span><span class="mn">${esc(m.name)} ${m.id===l.owner?'<span class="tag">leader</span>':''}${m.guest?' <span class="tag">guest</span>':''}${m.id===NET.id?' <span class="tag">you</span>':''}${m.squad&&NET.squad&&m.squad===NET.squad.id&&m.id!==NET.id?' <span class="tag sq">squad</span>':''}${teams&&m.side?` <span class="tag ${m.side===1?'sq':''}">${SIDE_NAMES[m.side]}</span>`:''}</span><span class="st">${waiting?(m.ready?'Ready':'Not ready'):(m.inRaid?'In raid':'At hideout')}${owner&&m.id!==NET.id&&!m.inRaid?` <button class="btn ghost sm warnbtn" data-lkick="${m.id}">Kick</button>`:''}</span></li>`).join('')}</ul>
      ${waiting&&broke?`<p class="warnline" style="margin:0">You need ${fmt$(fee)} for the entry fee before you can ready up.</p>`:''}
      ${!waiting?'<p class="muted" style="margin:0;font-size:13px">The lobby reopens when the last player is out of the raid.</p>':''}
-     <div class="acts">${waiting?`<button class="btn ${me.ready?'ghost':''}" id="lReady" ${broke&&!me.ready?'disabled':''}>${me.ready?'Not ready':'Ready up'}</button>${owner?`<button class="btn" id="lStart" ${allReady&&!pvpShort?'':'disabled'}>Start raid</button>`:''}`:''}<button class="btn ghost" id="lLeave">Leave lobby</button></div>
-     ${waiting&&pvpShort?`<p class="warnline" style="margin:0">${esc(MAPS[l.map].name)} is PvP only: it needs at least two players who aren't in the same squad.</p>`:''}
+     <div class="acts">${waiting?`<button class="btn ${me.ready?'ghost':''}" id="lReady" ${broke&&!me.ready?'disabled':''}>${me.ready?'Not ready':'Ready up'}</button>${owner?`<button class="btn" id="lStart" ${allReady&&!pvpShort?'':'disabled'}>${dm?'Start match':'Start raid'}</button>`:''}`:''}<button class="btn ghost" id="lLeave">Leave lobby</button></div>
+     ${waiting&&pvpShort?`<p class="warnline" style="margin:0">${dm?`${esc(DM_INFO[l.mode].name)} needs at least two players.`:`${esc(MAPS[l.map].name)} is PvP only: it needs at least two players who aren't in the same squad.`}</p>`:''}
      ${owner&&waiting&&!allReady?'<p class="muted" style="margin:0;font-size:13px">Start unlocks when every member is ready, you included.</p>':''}
      ${!owner&&waiting&&allReady?'<p class="muted" style="margin:0;font-size:13px">Waiting for the leader to start.</p>':''}`;
     const rd=$('#lReady'); if(rd) rd.onclick=()=>wsend({t:'lready',ready:!me.ready});
     const st=$('#lStart'); if(st) st.onclick=()=>{ st.disabled=true; wsend({t:'lstart'}); };
     $('#lLeave').onclick=()=>wsend({t:'lleave'});
+    el.querySelectorAll('[data-lkick]').forEach(b=>b.onclick=()=>{ if(!b.dataset.sure){ b.dataset.sure='1'; b.textContent='Kick?'; return; } wsend({t:'lkick',id:b.dataset.lkick}); });
     const mp=$('#lobbyMap'); if(mp) mp.onchange=e=>wsend({t:'lmap',map:e.target.value});
+    const md=$('#lobbyMode'); if(md) md.onchange=e=>wsend({t:'lmode',mode:e.target.value});
     const dfs=$('#lobbyDiff'); if(dfs) dfs.onchange=e=>wsend({t:'ldiff',diff:e.target.value});
     const sd=$('#lSide'); if(sd) sd.onclick=()=>wsend({t:'lside'});
     const ar=$('#lobbyAir'); if(ar) ar.onchange=e=>wsend({t:'lair',air:+e.target.value});
@@ -2764,7 +2871,7 @@ function renderLobbyArea(){
   const list=NET.lobbies; const fol=isFollower();
   el.innerHTML=`<div class="colhead"><h2 class="h2">Online raids</h2><button class="btn sm" id="lCreate" ${fol?'disabled':''}>Host a lobby</button></div>
    ${fol?`<p class="warnline" style="margin:0">You're in ${esc(squadLeaderName())}'s squad. They pick the lobby and you follow.</p>`:NET.squad?'<p class="muted" style="margin:0;font-size:13px">You lead a squad. Hosting or joining brings everyone at the hideout with you.</p>':''}
-   ${list.length?`<ul class="lobbies">${list.map(x=>{ const tl=lobbyTL(x); return `<li class="${x.state}"><div class="ln"><b>${esc(x.name)}</b><small>${esc(MAPS[x.map]?MAPS[x.map].name:x.map)} ${diffTag(x.diff)} · ${x.players}/${x.max} players · ${x.state==='raid'?`in raid, ${fmtTime(tl)} left`:'waiting for players'}</small></div>${x.state==='waiting'?`<button class="btn sm" data-lj="${x.id}" ${x.players>=x.max||fol?'disabled':''}>Join</button>`:`<button class="btn ghost sm" data-ljr="${x.id}" ${tl<90||x.players>=x.max||fol?'disabled':''}>Join raid</button>`}</li>`; }).join('')}</ul>`:'<p class="muted" style="margin:0">No lobbies are open. Host one and it shows up here for everyone on the server.</p>'}
+   ${list.length?`<ul class="lobbies">${list.map(x=>{ const tl=lobbyTL(x); return `<li class="${x.state}"><div class="ln"><b>${esc(x.name)}</b><small>${DM_INFO[x.mode]?`<span class="tag d-hard">${DM_INFO[x.mode].short}</span> `:''}${esc(MAPS[x.map]?MAPS[x.map].name:x.map)} ${DM_INFO[x.mode]?'':diffTag(x.diff)} · ${x.players}/${x.max} players · ${x.state==='raid'?`in raid, ${fmtTime(tl)} left`:'waiting for players'}</small></div>${x.state==='waiting'?`<button class="btn sm" data-lj="${x.id}" ${x.players>=x.max||fol?'disabled':''}>Join</button>`:`<button class="btn ghost sm" data-ljr="${x.id}" ${tl<90||x.players>=x.max||fol?'disabled':''}>Join raid</button>`}</li>`; }).join('')}</ul>`:'<p class="muted" style="margin:0">No lobbies are open. Host one and it shows up here for everyone on the server.</p>'}
    <p class="muted" style="margin:0;font-size:13px">Everyone in an online raid is hostile, lobby mates included, except on the co-op boss map. Pick your friends carefully.</p>`;
   $('#lCreate').onclick=()=>wsend({t:'lcreate',map:'kolvik',diff:OPTS.diff||'normal'});
   el.querySelectorAll('[data-lj]').forEach(b=>b.onclick=()=>wsend({t:'ljoin',id:b.dataset.lj}));
@@ -2886,6 +2993,394 @@ function drawMapCard(cv,map){
   } else { const r=mulberry32(7); g.fillStyle='rgba(223,233,236,.06)'; for(let i=0;i<14;i++){ g.fillRect(r()*W,r()*H,30+r()*90,20+r()*70); }
     const grd=g.createRadialGradient(W/2,H/2,20,W/2,H/2,W/1.2); grd.addColorStop(0,'rgba(200,214,220,.05)'); grd.addColorStop(1,'rgba(200,214,220,.35)'); g.fillStyle=grd; g.fillRect(0,0,W,H);
     g.fillStyle='#dfe9ec'; g.font='800 46px "Big Shoulders Stencil Display", Impact, sans-serif'; g.textAlign='center'; g.fillText('LAYOUT UNKNOWN',W/2,H/2+8); g.font='600 13px "JetBrains Mono", monospace'; g.fillStyle='#7f949b'; g.fillText('generated when you deploy',W/2,H/2+34); g.textAlign='left'; }
+}
+
+/* 43-recroom: the Rec room — quick party games in the hideout that pay a little cash
+   Four short games (ice fishing, catching supply drops, repeating a radio code, a quick-draw duel). Each pays up to
+   $2,500 depending on the score, doubled for anyone worth under $20,000 so a broke player can always buy a kit again.
+   Earnings above $20,000 a day pay only 10%. A squad leader can start a party round: everyone in the squad who's in the
+   hideout plays the same game at the same moment with the same seed (same fish, same drops, same code), sees the
+   others' scores live, and the top two get a bonus, Mario Party style. Scores are relayed by the server (mgparty,
+   mgscore, mgend in server.js). */
+const REC={pay:2500, cap:20000, broke:20000, W:320, H:200};
+const MG_GAMES=[
+  {id:'fish', name:'Ice hole', secs:30, par:18, unit:'points', how:'Hook the fish when the float goes right under. A twitch is only a nibble: strike then and you scare it off. Grayling 1 · pike 2 · king salmon 5.', keys:'Click, tap or Space'},
+  {id:'drop', name:'Supply drop', secs:30, par:40, unit:'points', how:'Catch the crates (+1) and cash bundles (+3) on your sled. Ice chunks cost 2 points and freeze you for a moment.', keys:'Mouse, touch, or A/D and the arrow keys'},
+  {id:'freq', name:'Frequency', secs:60, par:9, unit:'tones', how:'Listen to the radio code, then key it back. One more tone every round. One mistake ends it.', keys:'Click the pads, or keys 1 to 4'},
+  {id:'draw', name:'Quick draw', secs:25, par:3200, unit:'points', how:'Five rounds. When the flare goes up, fire. Fire early and the round scores nothing.', keys:'Click, tap or Space'},
+];
+const MGMAP=Object.fromEntries(MG_GAMES.map(g=>[g.id,g]));
+function recState(){ S.rec=S.rec||{day:0,earned:0,best:{},plays:0,wins:0}; if(S.rec.day!==dayKey()){ S.rec.day=dayKey(); S.rec.earned=0; } return S.rec; }
+const recToday=()=>{ const e=recState().earned; return e>=REC.cap?`daily ${fmt$(REC.cap)} reached: 10% from here until tomorrow`:`${fmt$(e)} of ${fmt$(REC.cap)}`; };
+const isBroke=()=>{ try{ return worthOf(S)<REC.broke; }catch(e){ return false; } };
+function mgRng(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+// what a finished game pays: score against par, the placing bonus in a party, the broke bonus, the daily limit
+function recPayout(g,score,place,n){
+  const st=recState(), notes=[]; let base=REC.pay*Math.min(1.3,Math.max(0,score/g.par));
+  if(n>1&&score>0&&place<=2){ const b=place===1?0.5:0.2; base*=1+b; notes.push(`${place===1?'1st':'2nd'} place +${b*100}%`); }
+  if(isBroke()){ base*=2; notes.push('scav bonus ×2 (you\'re worth under $20,000)'); }
+  base=Math.round(base/10)*10; const left=Math.max(0,REC.cap-st.earned);
+  let pay=Math.min(base,left)+Math.round(Math.max(0,base-left)*0.1/10)*10; if(base>left) notes.push('over today\'s $20,000: 10%');
+  return {pay,notes};
+}
+
+/* ---------------- the games ---------------- */
+// each takes a seeded random source and returns {score, done, step(dt,inp), draw(ctx,t)}; inp = {x, taps:[], keys}
+const MGF={
+  fish(rng){
+    const T=[{n:'Grayling',p:1,win:0.72,c:'#9fb4bf',s:12},{n:'Pike',p:2,win:0.56,c:'#7f9a5a',s:16},{n:'King salmon',p:5,win:0.42,c:'#d8a0a0',s:20}];
+    const g={score:0,done:false,ph:'wait',t:0,dip:0,rip:[],fish:null,msg:'',msgT:0};
+    const next=()=>{ const r=rng(); g.fish=r<0.13?T[2]:r<0.42?T[1]:T[0]; g.ph='wait'; g.t=0.9+rng()*2.4; g.nib=[]; const k=Math.floor(rng()*3); for(let i=0;i<k;i++) g.nib.push(0.3+rng()*(g.t-0.5)); };
+    next();
+    const say=(m,c)=>{ g.msg=m; g.msgC=c; g.msgT=1.1; };
+    g.step=(dt,inp)=>{ g.msgT-=dt; g.t-=dt; for(const r of g.rip) r.r+=dt*26; g.rip=g.rip.filter(r=>r.r<40);
+      const tap=inp.taps.length>0;
+      if(g.ph==='wait'){ const el=g.t; g.dip=0; // nibbles are timed against the remaining wait: a short twitch, not a bite
+        for(const n of g.nib){ if(el<n&&el>n-0.22){ g.dip=2.5*Math.sin((n-el)/0.22*Math.PI); if(g.nibR!==n){ g.nibR=n; g.rip.push({r:4}); sfxTone(220,0.04,0.03,'sine'); } } }
+        if(tap){ g.ph='scared'; g.t=1.0; say('Too early: scared it off','bad'); sfxNoise(0.15,900,0.12); return; }
+        if(g.t<=0){ g.ph='bite'; g.t=g.fish.win; g.rip.push({r:3},{r:9}); sfxNoise(0.18,700,0.18); } return; }
+      if(g.ph==='bite'){ g.dip=10; if(tap){ g.score+=g.fish.p; g.ph='reel'; g.t=0.9; say(`${g.fish.n} +${g.fish.p}`,'ok'); sfxTone(523,0.08,0.08,'triangle'); setTimeout(()=>sfxTone(784,0.12,0.08,'triangle'),80); return; }
+        if(g.t<=0){ g.ph='miss'; g.t=0.7; say('It got away','dim'); } return; }
+      g.dip*=0.85; if(g.t<=0) next(); };
+    g.draw=(c,t)=>{ const W=REC.W,H=REC.H; c.fillStyle='#dfe9ec'; c.fillRect(0,0,W,H); c.fillStyle='#c6d4da'; for(let i=0;i<14;i++){ c.fillRect((i*53)%W,(i*37)%H,22,2); }
+      const cx=W/2, cy=H*0.58; c.fillStyle='#9fb2ba'; c.beginPath(); c.ellipse(cx,cy+3,66,25,0,0,7); c.fill(); c.fillStyle='#123040'; c.beginPath(); c.ellipse(cx,cy,62,22,0,0,7); c.fill();
+      c.strokeStyle='rgba(160,210,230,.35)'; c.lineWidth=1; for(let i=0;i<3;i++){ const y=cy-8+i*7+Math.sin(t*1.5+i)*1.5; c.beginPath(); c.moveTo(cx-40+i*6,y); c.lineTo(cx+30-i*8,y); c.stroke(); }
+      c.save(); c.beginPath(); c.ellipse(cx,cy,62,22,0,0,7); c.clip(); c.strokeStyle='rgba(200,235,245,.6)'; for(const r of g.rip){ c.globalAlpha=Math.max(0,1-r.r/40); c.beginPath(); c.ellipse(cx,cy,r.r,r.r*0.35,0,0,7); c.stroke(); } c.globalAlpha=1;
+      if(g.ph==='reel'){ const k=1-g.t/0.9, f=g.fish; const fy=cy+6-k*60; c.restore(); c.save(); c.translate(cx,fy); c.rotate(Math.sin(t*20)*0.3); c.fillStyle=f.c; c.beginPath(); c.ellipse(0,0,f.s,f.s*0.38,0,0,7); c.fill(); c.beginPath(); c.moveTo(f.s-2,0); c.lineTo(f.s+8,-6); c.lineTo(f.s+8,6); c.fill(); c.fillStyle='#111'; c.fillRect(-f.s+5,-2,2,2); c.restore(); c.save(); }
+      c.restore();
+      const by=cy-6+g.dip+Math.sin(t*2)*0.6; c.strokeStyle='#33424a'; c.beginPath(); c.moveTo(cx+90,0); c.quadraticCurveTo(cx+30,by-60,cx,by-5); c.stroke();
+      if(g.ph!=='reel'){ c.save(); c.beginPath(); c.rect(0,0,W,cy+(g.dip>6?-2:4)); c.clip(); c.fillStyle='#e2574a'; c.fillRect(cx-3,by-6,6,6); c.fillStyle='#f4f4f0'; c.fillRect(cx-3,by,6,5); c.fillStyle='#222'; c.fillRect(cx-0.5,by-9,1,3); c.restore(); }
+      if(g.msgT>0){ mgText(c,g.msg,W/2,34,14,g.msgC); } };
+    return g;
+  },
+  drop(rng){
+    const g={score:0,done:false,x:REC.W/2,stun:0,obj:[],next:0.4,el:0,pop:[]};
+    g.step=(dt,inp)=>{ g.el+=dt; g.stun-=dt; const sp=250;
+      if(g.stun<=0){ let dir=(inp.keys.ArrowRight||inp.keys.KeyD?1:0)-(inp.keys.ArrowLeft||inp.keys.KeyA?1:0);
+        if(dir) g.x+=dir*sp*dt; else if(inp.x!=null){ const d=inp.x-g.x; g.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt); } }
+      g.x=Math.max(18,Math.min(REC.W-18,g.x));
+      g.next-=dt; if(g.next<=0){ const r=rng(); const k=r<0.6?'crate':r<0.76?'cash':'ice'; const vy=k==='cash'?120+rng()*35:k==='ice'?95+rng()*40:68+rng()*40+g.el*1.2;
+        g.obj.push({k,x:12+rng()*(REC.W-24),y:-14,vy,sw:rng()*6}); g.next=Math.max(0.28,0.62-g.el*0.011)*(0.7+rng()*0.6); }
+      for(const o of g.obj){ o.y+=o.vy*dt; const half=o.k==='cash'?5:7;
+        if(!o.gone&&o.y+half>=170&&o.y-half<=182&&Math.abs(o.x-g.x)<17+half){ o.gone=true;
+          if(o.k==='ice'){ g.score=Math.max(0,g.score-2); g.stun=0.6; g.pop.push({x:o.x,y:160,t:0.8,s:'−2',c:'#e2574a'}); sfxNoise(0.2,1600,0.14,'bandpass'); }
+          else { const p=o.k==='cash'?3:1; g.score+=p; g.pop.push({x:o.x,y:160,t:0.8,s:'+'+p,c:o.k==='cash'?'#9fd27a':'#dfe9ec'}); sfxTone(o.k==='cash'?880:560,0.06,0.06,'square'); } } }
+      g.obj=g.obj.filter(o=>!o.gone&&o.y<REC.H+20); for(const p of g.pop){ p.t-=dt; p.y-=dt*30; } g.pop=g.pop.filter(p=>p.t>0); };
+    g.draw=(c,t)=>{ const W=REC.W,H=REC.H; const gr=c.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#0b1215'); gr.addColorStop(1,'#1d2c33'); c.fillStyle=gr; c.fillRect(0,0,W,H);
+      c.fillStyle='#c9d6db'; for(let i=0;i<30;i++){ const sx=(i*67+t*8*(1+i%3))%W, sy=(i*41+t*22*(1+i%2))%H; c.fillRect(sx,sy,1,1); }
+      c.fillStyle='#dfe9ec'; c.fillRect(0,184,W,16);
+      for(const o of g.obj){ const sway=Math.sin(t*3+o.sw)*2;
+        if(o.k==='crate'){ c.strokeStyle='#9aa8ae'; c.beginPath(); c.moveTo(o.x-6+sway,o.y-16); c.lineTo(o.x-5,o.y-6); c.moveTo(o.x+6+sway,o.y-16); c.lineTo(o.x+5,o.y-6); c.stroke(); c.fillStyle='#e8e2d4'; c.beginPath(); c.ellipse(o.x+sway,o.y-17,10,5,0,Math.PI,0); c.fill(); c.fillStyle='#7a5a34'; c.fillRect(o.x-6,o.y-6,12,12); c.fillStyle='#5c4224'; c.fillRect(o.x-6,o.y-1,12,2); }
+        else if(o.k==='cash'){ c.fillStyle='#9fd27a'; c.fillRect(o.x-6,o.y-3,12,7); c.fillStyle='#4f7a37'; c.fillRect(o.x-1,o.y-3,2,7); }
+        else { c.fillStyle='#bfe3f2'; c.beginPath(); c.moveTo(o.x-7,o.y-5); c.lineTo(o.x+2,o.y-8); c.lineTo(o.x+8,o.y+1); c.lineTo(o.x+1,o.y+8); c.lineTo(o.x-8,o.y+3); c.fill(); c.fillStyle='#ffffff'; c.fillRect(o.x-3,o.y-4,3,2); } }
+      const sx=g.x, fl=g.stun>0&&Math.floor(t*16)%2; c.fillStyle=fl?'#bfe3f2':'#ff6b1a'; c.fillRect(sx-17,172,34,9); c.fillStyle='#2a1a10'; c.fillRect(sx-19,181,40,3); c.fillStyle=fl?'#bfe3f2':'#c54f12'; c.fillRect(sx-12,166,18,6);
+      for(const p of g.pop){ c.globalAlpha=Math.min(1,p.t*2); mgText(c,p.s,p.x,p.y,11,p.c); } c.globalAlpha=1; };
+    return g;
+  },
+  freq(rng){
+    const PAD=[{c:'#ff6b1a',f:330},{c:'#7cc9a4',f:415},{c:'#6fb3e0',f:494},{c:'#e8c55a',f:659}];
+    const g={score:0,done:false,seq:[],ph:'show',i:0,t:0.8,lit:-1,litT:0,msg:'',msgT:0};
+    const add=()=>{ g.seq.push(Math.floor(rng()*4)); g.ph='show'; g.i=0; g.t=0.7; };
+    const flash=(k,d)=>{ g.lit=k; g.litT=d; sfxTone(PAD[k].f,Math.min(0.3,d),0.08,'triangle'); };
+    const padAt=(x,y)=>{ for(let k=0;k<4;k++){ const px=34+k*66; if(x>=px&&x<=px+56&&y>=62&&y<=150) return k; } return -1; };
+    add();
+    g.step=(dt,inp)=>{ g.litT-=dt; if(g.litT<=0) g.lit=-1; g.msgT-=dt; g.t-=dt; const stepD=Math.max(0.24,0.52-g.seq.length*0.025);
+      if(g.ph==='show'){ if(g.t<=0){ if(g.i<g.seq.length){ flash(g.seq[g.i],stepD*0.75); g.i++; g.t=stepD; } else { g.ph='input'; g.i=0; g.t=4; } } return; }
+      if(g.ph==='input'){ let k=-1; for(const tp of inp.taps){ if(tp.key){ const m=/^(Digit|Numpad)([1-4])$/.exec(tp.key); if(m) k=+m[2]-1; } else if(tp.x!=null) k=padAt(tp.x,tp.y); if(k>=0) break; }
+        if(k>=0){ flash(k,0.18); if(k===g.seq[g.i]){ g.i++; g.t=4; if(g.i>=g.seq.length){ g.score=g.seq.length; g.msg=`${g.score} tone${g.score>1?'s':''}`; g.msgC='ok'; g.msgT=0.8; g.ph='gap'; g.t=0.9; } }
+          else { g.ph='fail'; g.msg='Wrong tone'; g.msgC='bad'; g.msgT=2; sfxTone(110,0.4,0.1,'sawtooth'); g.t=1.2; } }
+        else if(g.t<=0){ g.ph='fail'; g.msg='Too slow'; g.msgC='bad'; g.msgT=2; sfxTone(110,0.4,0.1,'sawtooth'); g.t=1.2; } return; }
+      if(g.ph==='gap'&&g.t<=0) add();
+      if(g.ph==='fail'&&g.t<=0) g.done=true; };
+    g.draw=(c,t)=>{ const W=REC.W,H=REC.H; c.fillStyle='#121c21'; c.fillRect(0,0,W,H); c.fillStyle='#18252b'; c.fillRect(20,50,W-40,112);
+      for(let k=0;k<4;k++){ const px=34+k*66, on=g.lit===k; c.fillStyle=on?PAD[k].c:'#26363e'; c.fillRect(px,62,56,88); c.fillStyle=on?'#fff':PAD[k].c; c.fillRect(px+22,70,12,6); mgText(c,String(k+1),px+28,140,12,on?'#121c21':'#7f949b'); }
+      mgText(c,g.ph==='show'?'Listen':g.ph==='input'?'Your turn':'',W/2,30,13,g.ph==='input'?'#ff6b1a':'#7f949b');
+      for(let i=0;i<g.seq.length;i++){ c.fillStyle=i<(g.ph==='input'?g.i:g.ph==='show'?g.i:g.seq.length)?'#dfe9ec':'#26363e'; c.fillRect(W/2-g.seq.length*4+i*8,176,5,5); }
+      if(g.msgT>0) mgText(c,g.msg,W/2,192,11,g.msgC); };
+    return g;
+  },
+  draw(rng){
+    const g={score:0,done:false,round:0,ph:'ready',t:0,ms:[],msg:'',flare:0};
+    const start=()=>{ g.ph='ready'; g.t=1.3+rng()*2.4; g.react=0; };
+    start();
+    g.step=(dt,inp)=>{ g.t-=dt; g.flare=Math.max(0,g.flare-dt); const tap=inp.taps.length>0;
+      if(g.ph==='ready'){ if(tap){ g.ms.push(null); g.ph='res'; g.t=1.1; g.msg='Too soon!'; g.msgC='bad'; sfxTone(150,0.25,0.08,'sawtooth'); return; }
+        if(g.t<=0){ g.ph='go'; g.react=0; g.flare=1; sfxNoise(0.3,2400,0.14,'bandpass'); } return; }
+      if(g.ph==='go'){ g.react+=dt; if(tap){ const ms=Math.round(g.react*1000); g.ms.push(ms); g.score+=Math.max(0,1000-ms); g.ph='res'; g.t=1.1; g.msg=`${ms} ms`; g.msgC=ms<300?'ok':''; sfxNoise(0.08,3000,0.2,'highpass'); return; }
+        if(g.react>1.2){ g.ms.push(null); g.ph='res'; g.t=1.1; g.msg='Missed it'; g.msgC='bad'; } return; }
+      if(g.ph==='res'&&g.t<=0){ g.round++; if(g.round>=5) g.done=true; else start(); } };
+    g.draw=(c,t)=>{ const W=REC.W,H=REC.H; const go=g.ph==='go'; c.fillStyle=go?'#2a0f0a':'#0b1215'; c.fillRect(0,0,W,H);
+      c.fillStyle='#dfe9ec'; c.fillRect(0,150,W,50); c.fillStyle='#26363e'; c.fillRect(40,118,6,32); c.fillRect(W-46,118,6,32); c.fillStyle='#7f949b'; c.fillRect(34,110,18,10); c.fillRect(W-52,110,18,10);
+      if(go||g.flare>0){ const fy=40+(1-Math.min(1,g.react*3))*30; c.fillStyle='#ff6b1a'; c.beginPath(); c.arc(W/2,fy,go?7:4,0,7); c.fill(); c.globalAlpha=0.25; c.beginPath(); c.arc(W/2,fy,22,0,7); c.fill(); c.globalAlpha=1; }
+      mgText(c,go?'FIRE!':g.ph==='ready'?'Wait for it…':g.msg,W/2,go?100:96,go?26:16,go?'#ff6b1a':g.ph==='res'?g.msgC:'#7f949b');
+      for(let i=0;i<5;i++){ const v=g.ms[i]; c.fillStyle=v===undefined?'#26363e':v===null?'#e2574a':'#7cc9a4'; c.fillRect(W/2-44+i*18,176,12,6); } };
+    return g;
+  },
+};
+let MGFONT=null;
+function mgText(c,s,x,y,size,col){ MGFONT=MGFONT||(getComputedStyle(document.documentElement).getPropertyValue('--mono').trim()||'monospace'); c.font=`700 ${size}px ${MGFONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=col==='ok'?'#7cc9a4':col==='bad'?'#e2574a':col==='dim'?'#7f949b':(col||'#dfe9ec'); c.fillText(s,x,y); }
+
+/* ---------------- running a game ---------------- */
+const MG={on:false};
+function mgOpen(id,party){
+  if(R) return; mgAbort(true); ensureAudio(); const G=MGMAP[id]; if(!G) return;
+  const seed=party?party.seed:(Math.random()*2**31)|0;
+  Object.assign(MG,{on:true,G,party:party||null,game:MGF[id](mgRng(seed)),t:-(party?party.wait:3),left:G.secs,last:performance.now(),inp:{x:null,taps:[],keys:{}},sent:-1,sendT:0,finished:false,result:null});
+  let el=$('#mg'); if(!el){ el=document.createElement('div'); el.id='mg'; el.className='overlay'; document.body.appendChild(el); }
+  el.hidden=false;
+  el.innerHTML=`<div class="mgbox"><div class="mghead"><div><span class="lbl">${party?'Party round · '+party.players.length+' players':'Rec room'}</span><h2>${esc(G.name)}</h2></div><div class="mghud"><span><small class="lbl">Time</small><b id="mgTime">${G.secs}</b></span><span><small class="lbl">Score</small><b id="mgScore">0</b></span></div></div>
+    <div class="mgmain"><div class="mgcv"><canvas id="mgCv" width="${REC.W}" height="${REC.H}"></canvas><div class="mgcount" id="mgCount"></div></div>${party?'<ol class="mgparty" id="mgParty"></ol>':''}</div>
+    <p class="muted mghow">${esc(G.how)} <span class="lbl">${esc(G.keys)}</span></p>
+    <div class="acts" id="mgActs"><button class="btn ghost" id="mgQuit">${party?'Leave (keeps your score so far)':'Quit'}</button></div></div>`;
+  const cv=$('#mgCv'); const pos=e=>{ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*REC.W, y:(e.clientY-r.top)/r.height*REC.H}; };
+  cv.onpointermove=e=>{ MG.inp.x=pos(e).x; }; cv.onpointerdown=e=>{ e.preventDefault(); const p=pos(e); MG.inp.x=p.x; if(MG.t>=0) MG.inp.taps.push(p); try{ cv.setPointerCapture(e.pointerId); }catch(er){} };
+  $('#mgQuit').onclick=()=>mgQuit(); mgPartyList(); requestAnimationFrame(mgLoop);
+}
+function mgLoop(now){ if(!MG.on) return; requestAnimationFrame(mgLoop); const dt=Math.min(0.05,(now-MG.last)/1000); MG.last=now; const cv=$('#mgCv'); if(!cv) return; const c=cv.getContext('2d');
+  MG.t+=dt; const cd=$('#mgCount');
+  if(MG.t<0){ cd.textContent=Math.ceil(-MG.t); cd.hidden=false; MG.inp.taps=[]; MG.game.draw(c,now/1000); return; }
+  if(!cd.hidden){ cd.hidden=true; sfxTone(880,0.1,0.07,'square'); }
+  if(!MG.finished){ MG.left=MG.G.secs-MG.t; MG.game.step(dt,MG.inp); MG.inp.taps=[];
+    $('#mgTime').textContent=Math.max(0,Math.ceil(MG.left)); $('#mgScore').textContent=MG.game.score;
+    if(MG.party){ MG.sendT-=dt; if(MG.sendT<=0&&MG.sent!==MG.game.score){ MG.sendT=0.4; MG.sent=MG.game.score; wsend({t:'mgscore',id:MG.party.id,score:MG.game.score}); MG.party.scores[NET.id]=MG.game.score; mgPartyList(); } }
+    if(MG.left<=0||MG.game.done) mgFinish(); }
+  MG.game.draw(c,now/1000); if(MG.finished){ c.fillStyle='rgba(11,18,21,.55)'; c.fillRect(0,0,REC.W,REC.H); mgText(c,MG.left<=0?'Time':MG.G.id==='freq'?'Signal lost':'Done',REC.W/2,REC.H/2,22,'#dfe9ec'); }
+}
+function mgFinish(){ if(MG.finished) return; MG.finished=true; const sc=MG.game.score; sfxTone(392,0.12,0.08,'square'); setTimeout(()=>sfxTone(523,0.18,0.08,'square'),120);
+  if(MG.party){ MG.party.scores[NET.id]=sc; MG.party.final[NET.id]=true; wsend({t:'mgscore',id:MG.party.id,score:sc,final:true}); mgPartyList(); if(MG.party.rank) mgResults(); else $('#mgActs').innerHTML='<span class="muted">Waiting for the others to finish…</span>'; }
+  else mgResults(); }
+// pays out once the placing is known (straight away solo; when the server sends the final ranking in a party)
+function mgResults(){ if(MG.result) return; const G=MG.G, sc=MG.game.score, st=recState(); let place=1, n=1;
+  if(MG.party&&MG.party.rank){ n=MG.party.rank.length; place=1+MG.party.rank.filter(r=>r.id!==NET.id&&r.score>sc).length; } // ties share the placing
+  const {pay,notes}=recPayout(G,sc,place,n); const best=(st.best[G.id]||0); const nb=sc>best;
+  st.best[G.id]=Math.max(best,sc); st.plays++; if(n>1&&place===1) st.wins++; st.earned+=pay; S.cash+=pay; saveGame(); renderHeader(); MG.result={pay};
+  const sl=$('#mgActs'); sl.innerHTML=`<div class="mgres"><p><b class="cash">+${fmt$(pay)}</b> · ${sc} ${esc(G.unit)}${nb?' · <span class="tag ok">new best</span>':''}${n>1?` · <b>${place===1?'1st':place===2?'2nd':place===3?'3rd':place+'th'}</b> of ${n}`:''}</p>${notes.length?`<p class="muted">${notes.map(esc).join(' · ')}</p>`:''}<p class="muted">Today: ${recToday()}</p></div>
+    ${MG.party?'':`<button class="btn" id="mgAgain">Play again</button>`}<button class="btn ghost" id="mgClose">Close</button>`;
+  if($('#mgAgain')) $('#mgAgain').onclick=()=>mgOpen(G.id); $('#mgClose').onclick=()=>mgAbort(); sfxExtracted&&sfxExtracted(); if(TAB==='rec'&&!R) renderTab(); }
+function mgQuit(){ if(MG.party&&!MG.finished){ MG.finished=true; MG.party.final[NET.id]=true; wsend({t:'mgscore',id:MG.party.id,score:MG.game.score,final:true}); if(MG.party.rank) return mgResults(); $('#mgActs').innerHTML='<span class="muted">Waiting for the others to finish…</span>'; return; } mgAbort(); }
+function mgAbort(silent){ if(!MG.on) return; if(MG.party&&!MG.finished) wsend({t:'mgscore',id:MG.party.id,score:MG.game.score,final:true}); MG.on=false; const el=$('#mg'); if(el){ el.hidden=true; el.innerHTML=''; } if(!silent&&TAB==='rec'&&!R) renderTab(); }
+function mgPartyList(){ const el=$('#mgParty'); if(!el||!MG.party) return; const P2=MG.party; const rows=P2.players.map(p=>({...p,score:P2.scores[p.id]||0,fin:!!P2.final[p.id]})).sort((a,b)=>b.score-a.score);
+  el.innerHTML=rows.map((r,i)=>`<li class="${r.id===NET.id?'me':''}"><span class="pl">${i+1}</span><span class="nm">${esc(r.name)}</span><b>${r.score}</b>${r.fin?'<small>done</small>':''}</li>`).join(''); }
+// keyboard while a game is open
+addEventListener('keydown',e=>{ if(!MG.on) return; const tg=e.target; if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA')) return;
+  if(e.code==='Escape'){ e.preventDefault(); if(MG.result||!MG.party) mgAbort(); return; }
+  if(['Space','ArrowLeft','ArrowRight','KeyA','KeyD','Digit1','Digit2','Digit3','Digit4','Numpad1','Numpad2','Numpad3','Numpad4'].includes(e.code)){ e.preventDefault(); if(!e.repeat&&MG.t>=0&&!/Arrow|KeyA|KeyD/.test(e.code)) MG.inp.taps.push({key:e.code}); MG.inp.keys[e.code]=true; } },true);
+addEventListener('keyup',e=>{ if(MG.on) MG.inp.keys[e.code]=false; });
+// party messages from the server
+function mgNet(m){
+  if(m.t==='mgstart'){ if(R) return true; mgOpen(m.game,{id:m.id,seed:m.seed,wait:Math.max(1,(m.in||3000)/1000),players:m.players||[],scores:{},final:{},rank:null}); return true; }
+  if(!MG.on||!MG.party||m.id!==MG.party.id) return true;
+  if(m.t==='mgscore'){ MG.party.scores[m.pid]=m.score; if(m.final) MG.party.final[m.pid]=true; mgPartyList(); return true; }
+  if(m.t==='mgend'){ MG.party.rank=m.rank||[]; for(const r of MG.party.rank){ MG.party.scores[r.id]=r.score; MG.party.final[r.id]=true; } mgPartyList(); if(MG.finished) mgResults(); else { mgFinish(); } return true; }
+  return true;
+}
+
+/* ---------------- the tab ---------------- */
+function renderRec(body){
+  const st=recState(), sq=NET.squad, lead=sq&&sq.leader===NET.id, broke=isBroke();
+  const others=sq?sq.members.filter(m=>m.id!==NET.id&&m.state!=='raid'&&m.state!=='gone').length:0;
+  body.innerHTML=`<div class="colhead" style="margin-bottom:6px"><h2 class="h2">Rec room</h2><span class="lbl">Today ${recToday()}</span></div>
+   <p class="muted" style="margin:0 0 12px;max-width:72ch">Short games in the station's rec room. Each one pays up to ${fmt$(REC.pay)} depending on your score. Past ${fmt$(REC.cap)} in a day they pay only 10%.</p>
+   ${broke?`<p class="recbroke"><b>Scav bonus:</b> you're worth under ${fmt$(REC.broke)}, so every game pays double until you're back on your feet.</p>`:''}
+   <div class="recparty">${sq?(lead?`<div><b>Party round</b><span class="muted"> · everyone in your squad who's at the hideout plays the same game at once${others?` (${others} ${others>1?'others':'other'} ready)`:', but nobody else is free right now'}. 1st place +50%, 2nd +20%.</span></div><div class="acts"><button class="btn sm" data-party="random" ${others?'':'disabled'}>Random game</button>${MG_GAMES.map(g=>`<button class="btn ghost sm" data-party="${g.id}" ${others?'':'disabled'}>${esc(g.name)}</button>`).join('')}</div>`
+      :`<div><b>Party round</b><span class="muted"> · ${esc(squadLeaderName())} starts them. You'll be pulled in automatically when they do.</span></div>`)
+      :`<div><b>Party rounds</b><span class="muted"> · ${NET.connected&&ACC.name?'form a squad on the Friends tab and the leader can start a game you all play at once, with a bonus for 1st and 2nd.':'sign in and form a squad with friends to play together.'}</span></div>`}</div>
+   <div class="tasks recgames">${MG_GAMES.map(g=>`<article class="task rec-${g.id}"><h3>${esc(g.name)}</h3><p class="muted">${esc(g.how)}</p><div class="rw"><span class="lbl">${g.secs} s · ${esc(g.keys)}</span></div><div class="rw"><span class="lbl">Your best</span> ${st.best[g.id]!=null?`${st.best[g.id]} ${esc(g.unit)}`:'not played yet'}</div><div class="acts"><button class="btn sm" data-play="${g.id}">Play</button></div></article>`).join('')}</div>`;
+  body.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>mgOpen(b.dataset.play));
+  body.querySelectorAll('[data-party]').forEach(b=>b.onclick=()=>{ const id=b.dataset.party==='random'?MG_GAMES[Math.floor(Math.random()*MG_GAMES.length)].id:b.dataset.party; wsend({t:'mgparty',game:id}); });
+}
+
+/* 44-trade: trading with friends
+   From the Friends tab, ask an online friend who's at the hideout to trade. Each of you puts up cash and items from
+   your stash; the other side sees it live. When both press Ready on the same deal, it goes through: you get theirs,
+   they get yours. Any change to either offer un-readies both of you, so nobody can swap something out at the last
+   second. What you put up is held in escrow in your save (out of your stash and cash) until the trade completes or is
+   cancelled, then it's either gone to them or back with you, even if the page closes. The server only relays the
+   deal (trreq, tracc, troffer, trok, trdone, trend in server.js). */
+const TRADE={on:false, id:null, with:null, theirs:{cash:0,items:[]}, okMe:false, okThem:false, ver:0, q:''};
+const tradeEsc=()=>S.trade||(S.trade={cash:0,items:[]});
+// put an escrowed offer back where it came from (a cancelled trade, or one left hanging when the page closed)
+function tradeRestore(){ if(!S||!S.trade) return; const e=S.trade; S.cash+=e.cash||0; const left=[];
+  for(const it of (e.items||[])) if(!ITEMS[it.id]||!place(S.stash,it)) left.push(it);
+  if(left.length){ e.cash=0; e.items=left; toast(`No room in your stash for ${left.length} traded item${left.length>1?'s':''}: they're kept aside until you make space.`); } else S.trade=null; }
+// make a received item safe to keep: known ids only (inside containers and attachments too), sane stack sizes, fresh ids
+function cleanTraded(o,depth=0){ if(!o||typeof o!=='object'||!ITEMS[o.id]||depth>3) return null; const d=ITEMS[o.id]; const it=JSON.parse(JSON.stringify(o)); it.uid=uid(); delete it.hid;
+  if(d.stack) it.n=Math.max(1,Math.min(d.stack,Math.floor(+it.n||1))); else delete it.n;
+  if(d.dur!=null&&it.dur!=null) it.dur=Math.max(0,Math.min(d.dur,+it.dur||0)); if(d.hp!=null&&it.hp!=null) it.hp=Math.max(0,Math.min(d.hp,+it.hp||0));
+  if(it.ammo&&!ITEMS[it.ammo]) it.ammo=mk(o.id).ammo;
+  if(it.att) for(const k in it.att) it.att[k]=it.att[k]?cleanTraded(it.att[k],depth+1):null;
+  if(d.grid) it.items=(Array.isArray(it.items)?it.items:[]).map(x=>cleanTraded(x,depth+1)).filter(Boolean); else delete it.items;
+  it.x=0; it.y=0; it.r=it.r?1:0; return it; }
+// would their items fit in my stash?
+function tradeFits(items){ const c={w:S.stash.w,h:S.stash.h,items:JSON.parse(JSON.stringify(S.stash.items))}; for(const x of items){ const it=cleanTraded(x); if(!it||!place(c,it)) return false; } return true; }
+const offerValue=o=>(o.cash||0)+(o.items||[]).reduce((s,x)=>{ try{ return s+deepValue(x); }catch(e){ return s; } },0);
+
+function tradeAsk(name){ wsend({t:'trreq',name}); }
+function tradeSendOffer(){ const e=tradeEsc(); saveGame(); wsend({t:'troffer',id:TRADE.id,cash:e.cash,items:e.items}); }
+function tradeNet(m){
+  if(m.t==='trreq'){ NET.trq=(NET.trq||[]).filter(r=>r.from!==m.from); NET.trq.push({from:m.from,at:Date.now()}); tradeReqUI(); sfxTone(660,0.08,0.08,'sine'); setTimeout(()=>sfxTone(990,0.1,0.08,'sine'),90); if(!R) toast(`${m.from} wants to trade.`); return true; }
+  if(m.t==='trade'){ if(R){ wsend({t:'trcancel'}); return true; } const fresh=!TRADE.on||TRADE.id!==m.id; Object.assign(TRADE,{on:true,id:m.id,with:m.with,theirs:m.theirs||{cash:0,items:[]},okMe:m.okMe,okThem:m.okThem,ver:m.ver}); if(fresh) TRADE.q=''; NET.trq=(NET.trq||[]).filter(r=>r.from!==m.with); tradeReqUI(); tradeUI(); return true; }
+  if(m.t==='trdone'){ tradeComplete(m); return true; }
+  if(m.t==='trend'){ if(TRADE.on&&TRADE.id===m.id){ TRADE.on=false; tradeRestore(); saveGame(); tradeUI(); if(!R) renderTab(); toast(m.reason||'Trade cancelled.'); } return true; }
+  return false;
+}
+function tradeComplete(m){
+  const got=(m.get&&m.get.items||[]).map(x=>cleanTraded(x)).filter(Boolean), cash=Math.max(0,Math.floor(+(m.get&&m.get.cash)||0));
+  S.trade=null; S.cash+=cash; let sold=0; for(const it of got) if(!place(S.stash,it)){ sold+=Math.round(deepValue(it)*0.5); }
+  if(sold) S.cash+=sold; S.stats.trades=(S.stats.trades||0)+1; saveGame(); TRADE.on=false; tradeUI(); if(!R) renderTab();
+  const parts=[]; if(cash) parts.push(fmt$(cash)); if(got.length) parts.push(`${got.length} item${got.length>1?'s':''}`);
+  toast(`Trade with ${m.with} done: you got ${parts.join(' and ')||'nothing'}.${sold?` No room for some of it, so it was sold for ${fmt$(sold)}.`:''}`); sfxExtracted(); }
+
+/* ---------------- the trade window ---------------- */
+function tradeUI(){
+  let el=$('#trade'); if(!TRADE.on){ if(el){ el.hidden=true; el.innerHTML=''; } return; }
+  if(!el){ el=document.createElement('div'); el.id='trade'; el.className='overlay'; document.body.appendChild(el); }
+  el.hidden=false; const e=tradeEsc(), th=TRADE.theirs, fits=tradeFits(th.items||[]);
+  const row=(it,act,attr)=>`<li><span class="hic" style="background-image:url(${iconFor(it.id)})"></span><span class="nm">${esc(ITEMS[it.id].name)}${ITEMS[it.id].stack&&it.n>1?` ×${it.n}`:''}${it.items&&it.items.length?` <small>+${it.items.length} inside</small>`:''}</span><span class="v">${fmt$(Math.round(deepValue(it)))}</span>${act?`<button class="btn ghost sm" ${attr}="${it.uid}">${act}</button>`:''}</li>`;
+  const q=TRADE.q.toLowerCase(); const stash=S.stash.items.filter(it=>!q||ITEMS[it.id].name.toLowerCase().includes(q));
+  el.innerHTML=`<div class="tradebox"><div class="colhead"><h2 class="h2">Trade with ${esc(TRADE.with)}</h2><span class="lbl">Changing anything un-readies you both</span></div>
+   <div class="tradecols">
+    <section class="tcol"><h3>You give <span class="lbl">${fmt$(Math.round(offerValue(e)))}</span></h3>
+      <label class="tcash"><span class="lbl">Cash</span><input id="trCash" type="number" min="0" step="100" value="${e.cash||0}"> <small class="muted">of ${fmt$(S.cash+(e.cash||0))}</small></label>
+      <ul class="tlist">${e.items.map(it=>row(it,'Take back','data-trback')).join('')||'<li class="muted">Nothing yet. Add items from your stash below.</li>'}</ul>
+      <div class="tstash"><div class="colhead"><span class="lbl">Your stash · click to offer</span><input id="trQ" placeholder="Search" value="${esc(TRADE.q)}"></div><ul class="tlist">${stash.map(it=>row(it,'Offer','data-tradd')).join('')||'<li class="muted">Nothing here. Equipped gear has to go back in your stash before you can trade it.</li>'}</ul></div>
+      ${TRADE.okMe?'<p class="tok">You\'re ready</p>':''}</section>
+    <section class="tcol"><h3>${esc(TRADE.with)} gives <span class="lbl">${fmt$(Math.round(offerValue(th)))}</span></h3>
+      <p class="tcash">${fmt$(th.cash||0)} cash</p>
+      <ul class="tlist">${(th.items||[]).filter(x=>ITEMS[x.id]).map(it=>row(it)).join('')||'<li class="muted">No items.</li>'}</ul>
+      ${TRADE.okThem?`<p class="tok">${esc(TRADE.with)} is ready</p>`:`<p class="muted">Waiting for ${esc(TRADE.with)} to press Ready.</p>`}
+      ${fits?'':'<p class="tbad">Not enough room in your stash for their items. Sell or move something first.</p>'}</section>
+   </div>
+   <div class="acts"><button class="btn ghost" id="trCancel">Cancel trade</button><button class="btn ${TRADE.okMe?'ghost':''}" id="trOk" ${fits?'':'disabled'}>${TRADE.okMe?'Not ready':'Ready'}</button></div></div>`;
+  const cin=$('#trCash'); cin.onchange=()=>{ const want=Math.max(0,Math.min(S.cash+(e.cash||0),Math.floor(+cin.value||0))); S.cash+=(e.cash||0)-want; e.cash=want; renderHeader(); tradeSendOffer(); };
+  el.querySelectorAll('[data-tradd]').forEach(b=>b.onclick=()=>{ const i=S.stash.items.findIndex(x=>x.uid===b.dataset.tradd); if(i<0) return; if(e.items.length>=30){ toast('30 items per trade at most.'); return; } e.items.push(S.stash.items.splice(i,1)[0]); tradeSendOffer(); });
+  el.querySelectorAll('[data-trback]').forEach(b=>b.onclick=()=>{ const i=e.items.findIndex(x=>x.uid===b.dataset.trback); if(i<0) return; const it=e.items[i]; if(!place(S.stash,it)){ toast('No room in your stash for that.'); return; } e.items.splice(i,1); tradeSendOffer(); });
+  const qi=$('#trQ'); qi.oninput=()=>{ TRADE.q=qi.value; const pos=qi.selectionStart; tradeUI(); const q2=$('#trQ'); q2.focus(); q2.setSelectionRange(pos,pos); };
+  $('#trCancel').onclick=()=>wsend({t:'trcancel'});
+  $('#trOk').onclick=()=>wsend({t:'trok',id:TRADE.id,ver:TRADE.ver,ok:!TRADE.okMe});
+}
+// incoming requests show with the squad invites in the corner (renderInvites in 90-net.js)
+function tradeReqUI(){ renderInvites(); }
+
+/* 45-tips: how to use the main screen, and a reminder for guests to register
+   Every hideout tab opens with a short tip strip saying what the tab is for and how to work it. "Got it" hides that
+   tab's tip; the Tips button in the header brings them all back. Guests (not signed in, on a server) see a bar asking
+   them to register, with a plain warning not to reuse a real password: the game is served over plain HTTP, so the
+   password crosses the network unencrypted. */
+const TAB_TIPS={
+  gear:`<b>Stash &amp; gear.</b> Drag items between your stash and your loadout (gun slots, armor, rig, pockets, backpack). Double-click (or double-tap) an item to move it in one go, and press <kbd>R</kbd> while dragging to rotate it. Click an item to see its stats and to sell it, load ammo, or fit attachments (you can also drag an optic, muzzle or magazine onto a gun). Whatever is in the <b>secure pouch</b> comes home even if you die. Drop loot on the sell strip, or use <i>Sell all loot</i>.`,
+  trader:`<b>Trader.</b> Buy guns, ammo, armor, meds and ready-made kits from Quartermaster Ilse. The more you spend, the higher your loyalty and the better the gear she offers. She buys anything at 60% of its value: drop it on the sell strip on the Stash &amp; gear tab.`,
+  tasks:`<b>Tasks.</b> Jobs from the people at the station. Take one, do what it asks in a raid (find something, kill something, extract from somewhere) and claim the reward here. Daily tasks change every day.`,
+  goals:`<b>Goals.</b> Long-term counters that tick up over every raid and survive season wipes. Claim each tier for cash, sealed caches, scrip, rare cosmetics and titles other players see. The collection log shows everything you've brought home.`,
+  hideout:`<b>Hideout.</b> Spend cash on upgrades: bigger stash racks, a diesel heater (you lose body heat slower in raids), a workbench and med station that craft ammo and medical gear, and the Armory for relic gear.`,
+  operator:`<b>Operator.</b> Open sealed caches (from raids, goals and tasks) for cosmetics, and spend scrip to make the exact piece you want. Dress your character and skin your guns here.`,
+  rec:`<b>Rec room.</b> Short games that pay cash. They pay double while you're worth under $20,000, so you can always afford a kit again. In a squad, the leader can start a party round for everyone.`,
+  deploy:`<b>Deploy.</b> Pick a map and difficulty and go in solo, or host or join a lobby to raid with other people. In a raid: <kbd>WASD</kbd> move, <kbd>Shift</kbd> sprint, <kbd>C</kbd> crouch, <kbd>Ctrl</kbd> sneak, right mouse aim, <kbd>R</kbd> reload, <kbd>1</kbd>–<kbd>3</kbd> weapons, <kbd>4</kbd>–<kbd>7</kbd> bandage, splint, heal, warm up, <kbd>E</kbd> search or use, <kbd>Tab</kbd> inventory, <kbd>M</kbd> map, <kbd>G</kbd> route to the nearest exit, <kbd>Esc</kbd> pause. Get to an extract before the timer runs out or you lose what you carry.`,
+  friends:`<b>Friends.</b> Add people by account name, message them, invite them to a squad (you deploy together, show up green and can't hurt each other) and <b>trade</b> cash and gear with them while you're both at the hideout.`,
+  board:`<b>Leaderboard.</b> Everyone on this server ranked by net worth, extracts, survival and kills this season, with past champions in the Hall of Fame. When a season ends, stash, cash, hideout and tasks are wiped; goals, cosmetics, titles and career totals carry over.`,
+};
+function tabTip(body){ if(!body||OPTS.tips==='off') return; const hid=OPTS.tipsHidden||[]; const tip=TAB_TIPS[TAB]; if(!tip||hid.includes(TAB)) return;
+  body.insertAdjacentHTML('afterbegin',`<div class="tabtip" role="note"><span class="lbl">Tip</span><p>${tip}</p><button class="btn ghost sm" id="tipOk">Got it</button></div>`);
+  $('#tipOk').onclick=()=>{ OPTS.tipsHidden=[...hid,TAB]; saveOpts(); const t=body.querySelector('.tabtip'); if(t) t.remove(); }; }
+function tipsReset(){ OPTS.tips='on'; OPTS.tipsHidden=[]; saveOpts(); renderTab(); toast('Tips are back on every tab.'); }
+
+// guests: register so your progress is kept, and use a password that's only for this game
+const insecure=()=>location.protocol==='http:'&&!/^(localhost|127\.|\[::1\])/.test(location.hostname);
+function pwWarning(){ return insecure()
+  ?`<b>Use a new password just for this game.</b> This server runs over plain HTTP, so your password is sent without encryption and anyone on the same network could read it. Never use one you use for email, banking, work or anything else.`
+  :`<b>Use a password just for this game,</b> not one you use for email, banking, work or anything else.`; }
+function guestBar(){ const el=$('#guestBar'); if(!el) return; let off=false; try{ off=sessionStorage.getItem('kolvik-guestbar')==='off'; }catch(e){}
+  if(ACC.name||!NET.avail||off){ el.hidden=true; return; } el.hidden=false;
+  el.innerHTML=`<p><b>You're playing as a guest.</b> Your progress only lives in this browser: clear it or switch devices and it's gone, and you can't add friends, squad up or trade. Register a free account to keep it on the server.</p><p class="pw">⚠ ${pwWarning()}</p><div class="acts"><button class="btn sm" id="gbReg">Register</button><button class="btn ghost sm" id="gbLater">Later</button></div>`;
+  $('#gbReg').onclick=()=>accModal(); $('#gbLater').onclick=()=>{ try{ sessionStorage.setItem('kolvik-guestbar','off'); }catch(e){} el.hidden=true; }; }
+
+/* 46-deathmatch: Team deathmatch and Free for all
+   Lobby modes next to the normal extraction raid. No AI, no extraction: everyone spawns with the same kit (your own
+   gear stays safe at the hideout and nothing you pick up comes home), dies, and respawns 4 seconds later at the spawn
+   point furthest from the enemy. First team to 40 kills (TDM) or first player to 20 (FFA) wins, or whoever leads when
+   the 10 minutes run out. The server keeps the score (dmscore / dmend in server.js). You're paid $250 a kill, $500
+   for playing a full match and $2,000 for winning. Only on the compact maps. */
+const DM_INFO={tdm:{name:'Team deathmatch',short:'TDM',limit:40,how:'Two teams. First team to 40 kills wins.'},ffa:{name:'Free for all',short:'FFA',limit:20,how:'Everyone against everyone, squads included. First to 20 kills wins.'}};
+const DM_MAPS=['ironfjord','kolvik','whiteout'];
+const DM_PAY={kill:250, played:500, win:2000, respawn:4};
+// the kit everyone gets: rifle with a red dot, pistol, class-4 helmet and plates, ammo and meds
+function dmKit(){ const w=mk('akr'); w.att.optic=mk('reddot'); w.mag=wstats(w).magSize; const p=mk('makar'); p.mag=wstats(p).magSize;
+  const rig=mk('chestrig'); for(const it of [mk('a545',{n:60}),mk('a545',{n:60}),mk('a918',{n:50}),mk('ifak'),mk('bandage'),mk('bandage'),mk('splint')]) place(contOf(rig),it);
+  const pk=mk('pockets'); place(contOf(pk),mk('bandage'));
+  return {primary:w,secondary:p,helmet:mk('bastion'),armor:mk('plate'),rig,pack:null,pockets:pk,pouch:mk('pouch')}; }
+// spawn points: the map's own insertion points plus open ground around the map; in TDM each team gets one half
+function dmFree(x,z){ for(const b of R.bld) if(x>b.x0-1.5&&x<b.x1+1.5&&z>b.z0-1.5&&z<b.z1+1.5) return false; for(const b of colsNear(x,z)) if(!b.terrain&&x>b.x0-1&&x<b.x1+1&&z>b.z0-1&&z<b.z1+1) return false; return true; }
+function dmSpawnPool(sps){ const L=sps.map(s=>({x:s.x,z:s.z,h:s.h})); const B=R.bound*0.85; let n=0;
+  for(let i=0;i<400&&n<24;i++){ const x=(Math.random()*2-1)*B, z=(Math.random()*2-1)*B; if(!dmFree(x,z)) continue; L.push({x,z,h:Math.atan2(x,z)}); n++; } return L; }
+function dmSide(pool,side){ if(!side) return pool; const s=pool.slice().sort((a,b)=>a.x-b.x); const half=Math.ceil(s.length/2); return side===1?s.slice(0,half):s.slice(s.length-half); }
+function dmEnemies(){ const out=[]; for(const id in NET.players){ const q=NET.players[id]; if(!q.st||q.st.dead||isMate(id)) continue; out.push(q.g?q.g.position:q.st); } return out; }
+function dmPickSpawn(){ const L=dmSide(R.dmPool,R.mode==='tdm'?(R.side||1):0); const foes=dmEnemies(); let best=L[0], bd=-1;
+  for(const s of L){ const d=foes.length?Math.min(...foes.map(f=>Math.hypot(f.x-s.x,f.z-s.z))):Math.random()*100; const sc=d+Math.random()*8; if(sc>bd){ bd=sc; best=s; } } return best; }
+
+// set up a raid as a deathmatch: called from startRaid once the map is built
+function dmSetup(mode,sps){ R.mode=mode; R.dm=true; document.body.classList.add('dmmode'); R.sides=mode==='tdm'; R.drain=0;
+  for(const e of R.enemies) scene.remove(e.g); R.enemies=[]; R.boss=null; for(const e of R.extracts) e.active=false;
+  R.dmPool=dmSpawnPool(sps); R.dmb=R.dmb||{mode,limit:DM_INFO[mode].limit,team:{1:0,2:0},rows:[]}; R.dmKills=0; }
+function dmStartSpawn(){ const s=dmPickSpawn(); return {x:s.x,z:s.z,h:s.h}; }
+function dmBrief(b){ const I=DM_INFO[R.mode]; const h=b.querySelector('h2'); if(h) h.textContent=I.name; const p=b.querySelector('p.muted'); if(p) p.textContent=`${I.how}${R.mode==='tdm'?` You're on ${SIDE_NAMES[R.side||1]}.`:''} Everyone gets the same kit: a rifle with a red dot, a pistol, plates and meds. Your own gear stays at the hideout and nothing you pick up comes home. You respawn ${DM_PAY.respawn} seconds after dying. $${DM_PAY.kill} a kill, $${DM_PAY.win.toLocaleString()} for the win.`; }
+
+/* ---------------- dying and coming back ---------------- */
+function dmDeathTick(dt){
+  if(R.deadT>0){ R.deadT-=dt; if(R.deadT<=0){ R.respawnT=DM_PAY.respawn; dmDeathCard(); } return; }
+  if(R.paused){ R.paused=false; $('#pause').hidden=true; }
+  if(R.dmOver) return; R.respawnT-=dt; const c=$('#dmCount'); if(c) c.textContent=Math.max(1,Math.ceil(R.respawnT));
+  try{ recapTick(dt); }catch(e){}
+  if(R.respawnT<=0) dmRespawn();
+}
+function dmDeathCard(){ let K={}; try{ K=killerInfo(); R.recap={K,t:R.t}; }catch(e){ R.recap={K:{},t:R.t}; } if(document.pointerLockElement) document.exitPointerLock();
+  const el=$('#deathcard'); el.hidden=false; $('#deathfade').style.opacity=0.3;
+  el.innerHTML=`<div class="card"><span class="lbl">${esc(DM_INFO[R.mode].name)}</span><h2 class="bad">Killed</h2><p class="killed">${K.name?`<b>${esc(K.name)}</b>${K.dist!=null?` · ${K.dist} m away`:''}${K.part?` · ${esc(PART_NAME[K.part]||K.part)}`:''}`:esc(R.cause||'')}</p>
+    <p class="dmresp">Back in <b id="dmCount">${DM_PAY.respawn}</b></p>${dmBoardHtml(true)}<div class="acts"><button class="btn ghost" id="dmLeave">Leave match</button></div></div>`;
+  $('#dmLeave').onclick=()=>{ recapClose(); endRaid('dm'); }; }
+function dmRespawn(){ recapClose(); $('#deathfade').style.opacity=0; const s=dmPickSpawn();
+  Object.assign(P,{dead:false,down:null,hp:{...MAXHP},bleed:{},frac:{},temp:100,stam:100,hurt:0,vx:0,vz:0,vy:0,reloadT:0,using:null,trigger:false,adsHeld:false,adsT:0,grace:3,sprint:false,crouch:false,sneak:false});
+  P.pos.set(s.x,0,s.z); resolve(P.pos,0.4); P.y=groundAt?groundAt(P.pos.x,P.pos.z,30):0; P.yaw=s.h!=null?s.h:Math.atan2(s.x,s.z); P.pitch=0;
+  S.eq=dmKit(); P.slot='primary'; vmUid=null; syncVM(); R.hits=[]; R.lastHitBy=null; R.recap=null; R.cause=null; R.deadT=0;
+  if(!R.noLock) lockPointer(); msg('Back in. 3 seconds before anyone can hurt you.'); }
+
+/* ---------------- score ---------------- */
+function dmBoardRows(){ const b=R&&R.dmb; if(!b) return []; return b.rows.slice().sort((x,y)=>y.kills-x.kills||x.deaths-y.deaths); }
+function dmBoardHtml(compact){ const b=R.dmb; if(!b) return ''; const rows=dmBoardRows(); const me=NET.id;
+  const tr=r=>`<tr class="${r.id===me?'me':''}${r.here?'':' gone'}"><td>${esc(r.name)}</td><td>${r.kills}</td><td>${r.deaths}</td></tr>`;
+  if(b.mode==='tdm') return `<div class="dmboard tdm">${[1,2].map(sd=>`<table><caption><b class="side${sd}">${SIDE_NAMES[sd]}</b> ${b.team[sd]}</caption><tr><th>Player</th><th>K</th><th>D</th></tr>${rows.filter(r=>r.side===sd).map(tr).join('')}</table>`).join('')}</div>`;
+  return `<div class="dmboard"><table><tr><th>Player</th><th>K</th><th>D</th></tr>${rows.slice(0,compact?6:99).map(tr).join('')}</table></div>`; }
+function dmHud(){ const el=$('#dmhud'); if(!el) return; if(!R||!R.dm){ el.hidden=true; return; } el.hidden=false; const b=R.dmb; const I=DM_INFO[R.mode];
+  if(R.mode==='tdm'){ const my=R.side||1, ot=my===1?2:1; el.innerHTML=`<span class="side${my}">${SIDE_NAMES[my]} ${b.team[my]||0}</span><i>:</i><span class="side${ot}">${b.team[ot]||0} ${SIDE_NAMES[ot]}</span><small>first to ${b.limit}</small>`; return; }
+  const rows=dmBoardRows(); const i=rows.findIndex(r=>r.id===NET.id); const mine=i>=0?rows[i]:{kills:0}; const lead=rows[0];
+  el.innerHTML=`<span>You ${mine.kills}${i>=0?` · ${ordinal(i+1)}`:''}</span>${lead&&lead.id!==NET.id?`<i>·</i><span>${esc(lead.name)} ${lead.kills}</span>`:''}<small>first to ${b.limit}</small>`; }
+const ordinal=n=>n+(n%100>=11&&n%100<=13?'th':['th','st','nd','rd'][n%10]||'th');
+function dmNet(m){ if(!R||!R.dm) return;
+  if(m.t==='dmscore'){ R.dmb=m.board; const f=m.feed; if(f){ if(f.kid===NET.id&&f.vid!==NET.id){ R.dmKills++; msg(f.tk?`Team kill: ${f.v} (no point)`:`You killed ${f.v}`); sfxTone(1046,0.06,0.07,'square'); } } dmHud(); if(!$('#deathcard').hidden){ const bd=$('#deathcard .dmboard'); if(bd) bd.outerHTML=dmBoardHtml(true); } return; }
+  if(m.t==='dmend'){ R.dmb=m.board; R.dmOver=true; R.dmWinner=m.winner; dmHud(); P.trigger=false; const won=dmWon(); const I=DM_INFO[R.mode];
+    if(document.pointerLockElement) document.exitPointerLock(); const el=$('#deathcard'); el.hidden=false;
+    el.innerHTML=`<div class="card"><span class="lbl">${esc(I.name)} · match over</span><h2 class="${won?'ok':'bad'}">${dmWinText()}</h2>${dmBoardHtml(false)}<p class="muted" style="margin:0">Back to the hideout in a few seconds.</p><div class="acts"><button class="btn" id="dmLeave">Leave now</button></div></div>`;
+    $('#dmLeave').onclick=()=>{ recapClose(); endRaid('dm'); }; won?sfxExtracted():stinger('down'); }
+}
+function dmWon(){ if(R.dmWinner==null) return false; return R.mode==='tdm'?R.dmWinner===(R.side||1):R.dmWinner===NET.id; }
+function dmWinText(){ const w=R.dmWinner; if(R.mode==='tdm') return w?`${SIDE_NAMES[w]} win${w===(R.side||1)?' · your team':''}`:'A draw';
+  if(w==null) return 'A draw'; if(w===NET.id) return 'You win'; const r=(R.dmb.rows||[]).find(x=>x.id===w); return `${r?r.name:'Someone'} wins`; }
+
+/* ---------------- the end ---------------- */
+// called by endRaid for a deathmatch: your own gear comes back untouched, you're paid for kills and the result
+function dmFinish(kind){
+  R.over=true; if(document.pointerLockElement) document.exitPointerLock(); if(NET.on) netLeave();
+  if(R.realEq) S.eq=R.realEq; S.inRaid=false;
+  const b=R.dmb||{rows:[],team:{}}, mode=R.mode, I=DM_INFO[mode], mine=(b.rows||[]).find(r=>r.id===NET.id)||{kills:R.dmKills||0,deaths:0};
+  const full=R.dmOver||R.timeLeft<=2, won=R.dmOver&&dmWon(), winTxt=R.dmOver?dmWinText():'You left before the end';
+  const pay=mine.kills*DM_PAY.kill+(full?DM_PAY.played:0)+(won?DM_PAY.win:0); S.cash+=pay; S.stats.pvpMatches=(S.stats.pvpMatches||0)+1; if(won) S.stats.pvpWins=(S.stats.pvpWins||0)+1;
+  const board=dmBoardHtml(false), time=R.t, mapName=MAPS[R.map].name;
+  saveGame(); accFlush(); raidTeardown();
+  const r=$('#result'); r.hidden=false;
+  r.innerHTML=`<div class="card"><span class="lbl">${esc(I.name)} · ${esc(mapName)} · ${fmtTime(time)}</span><h2 class="${won?'ok':'mia'}">${esc(winTxt)}</h2>
+    <p class="muted" style="margin:0">Your own gear was never at risk and is back in your loadout.</p>${board}
+    <dl class="stats"><dt>Your kills</dt><dd>${mine.kills}</dd><dt>Deaths</dt><dd>${mine.deaths}</dd><dt>Paid</dt><dd class="cash">+${fmt$(pay)} <span class="muted" style="font-size:12px">${[mine.kills?`${mine.kills} × ${fmt$(DM_PAY.kill)}`:'',full?`${fmt$(DM_PAY.played)} for the full match`:'',won?`${fmt$(DM_PAY.win)} win`:''].filter(Boolean).join(' · ')}</span></dd><dt>Balance</dt><dd class="cash">${fmt$(S.cash)}</dd></dl>
+    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
+  $('#backBtn').onclick=goHub;
 }
 
 /* 50-engine: 3D engine: renderer, textures, materials, collision, map building helpers */
@@ -3394,7 +3889,7 @@ function heliSeat(){ const h=R.heli; h.g.updateMatrixWorld(true); _a.set(0.75,1.
 function updHelis(dt){
   const h=R.heli;
   if(h&&h.phase!=='gone'){ heliStep(h,dt);
-    if(h.phase!=='in'&&!h.landed){ h.landed=true; if(R.fogBase){ scene.fog.density=R.fogBase; R.viewDist=Math.min(320,2.5/R.fogBase); } const side=h.yaw+Math.PI/2; P.pos.set(h.lx-Math.sin(side)*4,0,h.lz-Math.cos(side)*4); resolve(P.pos,0.35); P.grace=10; P.yaw=h.yaw; P.pitch=0; msg('Boots on the ground. Ten seconds of cover.'); sfxBeep(); } }
+    if(h.phase!=='in'&&!h.landed){ h.landed=true; if(R.fogBase){ scene.fog.density=R.fogBase; R.viewDist=Math.min(320,2.5/R.fogBase); } const side=h.yaw+Math.PI/2; P.pos.set(h.lx-Math.sin(side)*4,0,h.lz-Math.cos(side)*4); resolve(P.pos,0.35); P.grace=SPAWN.grace; P.yaw=h.yaw; P.pitch=0; msg(`Boots on the ground. ${SPAWN.grace} seconds of cover.`); sfxBeep(); } }
 }
 function dropPlaneModel(){ const g=new THREE.Group(); const m=MC(0x6a7276); const B=(w,h,d,x,y,z)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); g.add(b); }; B(16,2.6,2.6,0,0,0); B(4,0.4,24,1,0.2,0); B(2.4,3,0.3,-7.4,2,0); B(3,0.3,7,-7.2,0.6,0); return g; }
 function updEvents(dt){
@@ -3445,18 +3940,18 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rand()*(i
 /* 53-enemies: enemy kinds, spawning, AI behaviour, shooting, damage, loot */
 /* ---- enemies ---- */
 const EK={
- scav:{name:'Scav',hp:100,head:35,acc:0.58,react:[0.45,0.8],guns:[['makar',3],['vintik',3],['tundra',2],['akr',1.6],['nord',0.5]],armor:[[null,4],['vest',4],['aramid',2]],helm:[[null,5],['hardhat',4],['bastion',0.6]],coat:0x5d5a3c,loot:[1,3],cash:[80,400],call:22,bonus:0.05},
- raider:{name:'Raider',hp:120,head:35,acc:0.7,react:[0.32,0.58],guns:[['akr',4],['vintik',1.5],['nord',1],['tundra',1],['kestrel',0.4]],bp:0.4,mods:0.35,armor:[['aramid',3],['plate',3],['vest',1]],helm:[[null,1],['hardhat',1],['bastion',3],['glacier',0.4]],coat:0xc7cdd0,loot:[2,4],cash:[250,900],call:32,bonus:0.15},
- guard:{name:"Chief's guard",hp:120,head:35,acc:0.68,react:[0.35,0.6],guns:[['akr',1]],bp:0.5,mods:0.3,armor:[['aramid',1],['plate',1]],helm:[['hardhat',1],['bastion',1]],coat:0x2f3b45,loot:[1,3],cash:[300,800],home:4,call:32,bonus:0.2},
+ scav:{name:'Scav',hp:100,head:28,acc:0.58,react:[0.45,0.8],guns:[['makar',3],['vintik',3],['tundra',2],['akr',1.6],['nord',0.5]],armor:[[null,4],['vest',4],['aramid',2]],helm:[[null,5],['hardhat',4],['bastion',0.6]],coat:0x5d5a3c,loot:[1,3],cash:[80,400],call:22,bonus:0.05},
+ raider:{name:'Raider',hp:120,head:28,acc:0.7,react:[0.32,0.58],guns:[['akr',4],['vintik',1.5],['nord',1],['tundra',1],['kestrel',0.4]],bp:0.4,mods:0.35,armor:[['aramid',3],['plate',3],['vest',1]],helm:[[null,1],['hardhat',1],['bastion',3],['glacier',0.4]],coat:0xc7cdd0,loot:[2,4],cash:[250,900],call:32,bonus:0.15},
+ guard:{name:"Chief's guard",hp:120,head:28,acc:0.68,react:[0.35,0.6],guns:[['akr',1]],bp:0.5,mods:0.3,armor:[['aramid',1],['plate',1]],helm:[['hardhat',1],['bastion',1]],coat:0x2f3b45,loot:[1,3],cash:[300,800],home:4,call:32,bonus:0.2},
  chief:{name:'Station Chief Halvorsen',hp:200,head:40,acc:0.76,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x8a221b,call:40,loot:[2,3],cash:[1500,3000],special:['satphone','goldbar'],trophy:'tr_chief',home:3},
- vguard:{name:'Vault guard',hp:130,head:35,acc:0.72,react:[0.3,0.55],mods:0.4,call:30,bonus:0.25,guns:[['akr',3],['tundra',1],['kestrel',1]],ammo:'a545bp',armor:[['plate',3],['warden',1]],helm:[['bastion',3],['glacier',1]],coat:0x1f2a33,loot:[1,3],cash:[400,1200],home:7},
+ vguard:{name:'Vault guard',hp:130,head:28,acc:0.72,react:[0.3,0.55],mods:0.4,call:30,bonus:0.25,guns:[['akr',3],['tundra',1],['kestrel',1]],ammo:'a545bp',armor:[['plate',3],['warden',1]],helm:[['bastion',3],['glacier',1]],coat:0x1f2a33,loot:[1,3],cash:[400,1200],home:7},
  warden:{name:'Vault Warden Brekke',hp:260,head:45,acc:0.8,react:[0.25,0.42],mods:1,call:40,guns:[['kestrel',1]],armor:[['warden',1]],helm:[['glacier',1]],coat:0x5a1a6b,loot:[2,3],cash:[3000,6000],special:['blackbox','bearer'],trophy:'tr_warden',home:5},
  foreman:{name:'Mine Foreman Rask',hp:230,head:42,acc:0.74,react:[0.28,0.48],call:40,guns:[['tundra',1]],armor:[['plate',1]],helm:[['bastion',1]],coat:0x8a6a1a,loot:[2,3],cash:[2000,4000],special:['goldbar','sensor'],trophy:'tr_foreman',home:6},
  jarl:{name:'Jarl Hrafn',hp:2600,head:99999,acc:0.3,react:[0.25,0.4],guns:[['jarlmg',1]],ammo:'a762',armor:[['warden',1]],helm:[['glacier',1]],coat:0x3a1414,loot:[3,4],cash:[8000,15000],special:['goldbar','diamond','cryocell','cryocell'],boss:true,home:20,call:60,dr:0.6},
  relay:{name:'Relay Chief Dahl',hp:220,head:42,acc:0.74,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x1f4a5a,call:40,loot:[2,3],cash:[1800,3600],special:['satphone','goldbar','sensor'],home:4},
- huskarl:{name:'Huskarl',hp:140,head:35,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
+ huskarl:{name:'Huskarl',hp:140,head:28,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
  harbor:{name:'Harbormaster Vinter',hp:240,head:42,acc:0.74,react:[0.28,0.48],guns:[['kestrel',1]],mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x2a3f5a,call:40,loot:[2,3],cash:[2500,5000],special:['satphone','meteorite'],home:6},
- mguard:{name:'Mine guard',hp:125,head:35,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
+ mguard:{name:'Mine guard',hp:125,head:28,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
 };
 const ELOOT=[['smokes',2],['handwarm',1.2],['tourniquet',0.8],['medal',0.4],['compass',0.3],['caviar',0.5],['lockpick',0.12],['bolts',2.5],['tape',2.5],['battery',2],['wire',2],['aquavit',1.5],['bandage',2.5],['thermos',2],['ifak',1.4],['watch',0.9],['notebook',0.8],['powder',1.2],['radio',0.5],['medsup',0.8],['fuel',0.4],['satphone',0.25],['fieldkit',0.35],['goldbar',0.12]];
 // a lucky extra: rolled on top of normal loot (rare find in containers, bonus on tougher bodies)
@@ -3488,7 +3983,9 @@ function humanoid(o){
   const la=arm(-1), ra=arm(1);
   const head=new THREE.Group(); head.position.set(0,1.52-0.9,0); spine.add(head);
   const Bh=(w,h,d,x,y,z,m,part)=>B(w,h,d,x,y,z,m,part,head,1.52);
-  Bh(0.28,0.3,0.29,0,1.7,0,mask,'head'); if(o.hat) Bh(0.3,0.08,0.3,0,1.66,-0.01,MC(0x7a5a3a),null);
+  Bh(0.28,0.3,0.29,0,1.7,0,mask,'head');
+  // a forgiving head hitbox: an invisible box a little bigger than the head and helmet, so headshots land when they look like they should
+  { const hb=Bh(0.46,0.46,0.46,0,1.74,0,HITBOX,'head'); hb.visible=false; } if(o.hat) Bh(0.3,0.08,0.3,0,1.66,-0.01,MC(0x7a5a3a),null);
   if(o.helm!=null){ Bh(0.33,0.15,0.34,0,1.87,0,MC(o.helm),'head'); if(o.hv>=6) Bh(0.3,0.09,0.03,0,1.73,-0.16,MC(0x1a3a46),null); } else if(o.hg) addHeadgear(Bh,o.hg); else Bh(0.3,0.12,0.3,0,1.88,0,coat,'head');
   const gun=B(0.06,0.09,0.7,0,1.4,-0.57,MC(0x222426),null,aim,1.42); gun.userData.z0=gun.position.z; // the gun, held between the two hands
   if(o.armor!=null) Bs(0.6,0.5,0.4,0,1.22,0,MC(o.armor),'thorax');
@@ -3496,6 +3993,7 @@ function humanoid(o){
   return {g,lp:ll.hip,rp:rl.hip,la,ra,head,parts,rig};
 }
 const ARM_PITCH=Math.PI-1.6, ARM_IN=0.5;
+const HITBOX=new THREE.MeshBasicMaterial({visible:false});
 function spawnEnemy(x,z,kind){
   if(kind==='scav'&&R.cond&&R.cond.mod==='quiet'&&rand()<0.4) return;
   const k=EK[kind]; const gunId=wpick(k.guns); const gd=ITEMS[gunId];
@@ -3521,16 +4019,20 @@ function targets(){
   const list=[];
   // someone in an aircraft is a target only while it's low and slow enough for a rifleman: the airframe takes the hits (see playerHit)
   const airAlt=(x,z,y)=>y-Math.max(R.terrain?R.terrain(x,z):0,0);
-  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,id:'me',grace:P.grace>0,x:P.pos.x,z:P.pos.z,eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
-  if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
+  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x,z:P.pos.z,eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
+  if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,fresh:st.gf??1,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
   return list;
 }
+// how far out an enemy will shoot: no further than you could see it through the fog, and never past 55 m
+// (75 m with a scope), so you aren't hit by someone you have no way to see
+function eEngage(e){ const fog=scene.fog&&scene.fog.density?Math.max(20,0.85/scene.fog.density):120; const g=ITEMS[e.gun.id], sc=g.zoom||(e.gun.att&&e.gun.att.optic&&ITEMS[e.gun.att.optic.id].zoom>2); return Math.min(fog,sc?75:55)*(e.k.boss?1.15:1); }
 function canSeeT(e,t,dist){
   if(t.grace) return false;
   let range=(R.map==='whiteout'?40:R.map==='vault'?34:R.map==='skarsvik'?80:70)*(R.sight||1); if(t.crouch) range*=0.72; if(t.sneak) range*=0.8;
   // fair sight: nobody spots you deeper into the fog than you could spot them (fog factor about 0.3)
   if(scene.fog&&scene.fog.density) range=Math.min(range,1.1/scene.fog.density);
-  if(e.aware>R.t) range*=1.15;  // warned on the radio or spooked: looking harder
+  if(e.aware>R.t) range*=1.15;
+  if(t.fresh<1) range*=0.5+0.5*t.fresh;  // just out of insertion cover: they're slow to pick you out  // warned on the radio or spooked: looking harder
   if(dist>range) return false;
   if(Math.abs(t.eye-e.pos.y)>30) return false; // nobody on foot picks out someone that far above them
   if(e.state!=='combat' && dist>5){ const fx=-Math.sin(e.yaw), fz=-Math.cos(e.yaw); const dx=(t.x-e.pos.x)/dist, dz=(t.z-e.pos.z)/dist; if(fx*dx+fz*dz<(e.aware>R.t?-0.25:0.15)) return false; }
@@ -3586,9 +4088,16 @@ function logErr(msg,stack){ const e={t:Date.now(),msg:String(msg).slice(0,300),s
 addEventListener('error',ev=>logErr(ev.message||'error',ev.error&&ev.error.stack||`${ev.filename||''}:${ev.lineno||''}`));
 addEventListener('unhandledrejection',ev=>logErr('Unhandled promise: '+(ev.reason&&ev.reason.message||ev.reason),ev.reason&&ev.reason.stack));
 // an admin on the server can send you cash, caches, scrip or items; they land in your save right away
-function applyGrant(m){ ensureCos(); const got=[]; if(m.cash){ S.cash+=m.cash|0; got.push(fmt$(m.cash)); } if(m.caches){ S.cos.caches+=m.caches|0; got.push(`${m.caches} sealed caches`); } if(m.scrip){ S.cos.scrip+=m.scrip|0; got.push(`${m.scrip} scrip`); }
-  for(const [id,n] of (Array.isArray(m.items)?m.items.slice(0,20):[])){ if(!ITEMS[id]) continue; const d=ITEMS[id]; const it=mk(id,d.stack?{n:Math.max(1,Math.min(d.stack,n|0||d.stack))}:{}); if(place(S.stash,it)) got.push(d.name); }
-  saveGame(); if(!R) renderTab(); toast(`An admin sent you ${got.join(', ')||'nothing'}.`); }
+function applyGrant(m,quiet){ ensureCos(); const got=[], lost=[]; const cash=m.cash|0;
+  if(cash>0){ S.cash+=cash; got.push(fmt$(cash)); } else if(cash<0){ const take=Math.min(S.cash,-cash); S.cash-=take; lost.push(fmt$(take)); }
+  if(m.caches){ S.cos.caches+=m.caches|0; got.push(`${m.caches} sealed caches`); } if(m.scrip){ S.cos.scrip+=m.scrip|0; got.push(`${m.scrip} scrip`); }
+  for(const [id,n] of (Array.isArray(m.items)?m.items.slice(0,20):[])){ if(!ITEMS[id]) continue; const d=ITEMS[id]; const it=mk(id,d.stack?{n:Math.max(1,Math.min(d.stack,n|0||d.stack))}:{}); if(place(S.stash,it)) got.push(d.name); else lost.push(`${d.name} (no room in your stash)`); }
+  if(quiet) return {got,lost};
+  // mid-raid, save the way the raid does (your gear stays at risk); in the hideout, a normal save
+  if(R) raidSave(); else { saveGame(); renderTab(); }
+  const say=[got.length?`An admin sent you ${got.join(', ')}.`:'', lost.length?(cash<0?`An admin took ${lost.join(', ')}.`:`Not delivered: ${lost.join(', ')}.`):''].filter(Boolean).join(' ')||'An admin sent you nothing.'; if(R) msg(say); else toast(say); }
+// gifts sent while you were offline wait in your save until you next sign in
+function takeGrants(){ if(!S||!Array.isArray(S.grants)||!S.grants.length) return; const got=[]; for(const g of S.grants){ const r=applyGrant(g,true); got.push(...r.got); } delete S.grants; saveGame(); if(got.length) setTimeout(()=>toast(`While you were away an admin sent you ${got.join(', ')}.`),400); }
 function forceCond(mapId,f){ const c=conditions(mapId), mc=MAP_COND[mapId]; const weather=WEATHER[f.weather]?f.weather:c.weather, mod=RMODS[f.mod]?f.mod:c.mod; const hot=mod==='hotzone'?((mc.hot||[])[0]||null):null; return {slot:c.slot,weather,mod,hot,W:WEATHER[weather],label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)}; }
 async function loadDebug(){ if(DBG.open) return true; if(!ACC.token) return false; try{ const r=await fetch('debug.js',{headers:{authorization:'Bearer '+ACC.token},cache:'no-store'}); if(!r.ok) return false; const sc=document.createElement('script'); sc.textContent=await r.text(); document.body.appendChild(sc); return !!DBG.open; }catch(e){ return false; } }
 async function openDebug(){ if(!NET.admin) return; if(await loadDebug()) DBG.open(); else toast('Could not load the debug tools.'); }
@@ -3670,10 +4179,11 @@ function updEnemy(e,dt){
     if(t){
       const dx=t.x-e.pos.x, dz=t.z-e.pos.z, dist=Math.hypot(dx,dz)||0.01;
       e.yaw=lerpA(e.yaw,Math.atan2(-dx,-dz),Math.min(1,dt*8)); e.react-=dt; e.aimT=(e.aimT||0)+dt;
-      if(e.react<=0 && e.cool<=0 && e.reloadT<=0){ if(e.gun.mag>0) enemyShoot(e,t,dist); else e.reloadT=ITEMS[e.gun.id].reload+0.4; }
+      // they only open fire inside the range you could see them at; further out they close in first
+      if(e.react<=0 && e.cool<=0 && e.reloadT<=0 && dist<=eEngage(e)){ if(e.gun.mag>0) enemyShoot(e,t,dist); else e.reloadT=ITEMS[e.gun.id].reload+0.4; }
       e.strafeT-=dt; if(e.strafeT<=0){ e.strafeT=1+rand()*1.6; e.strafeS=rand()<0.5?-1:1; }
       const fx=dx/dist, fz=dz/dist; let mx=-fz*e.strafeS*0.8, mz=fx*e.strafeS*0.8;
-      if(dist>e.pref){ mx+=fx; mz+=fz; } else if(dist<5){ mx-=fx; mz-=fz; }
+      if(dist>Math.min(e.pref,eEngage(e)-4)){ mx+=fx; mz+=fz; } else if(dist<5){ mx-=fx; mz-=fz; }
       // the plan is cover (hurt, reloading, or a peeker): head for it while still shooting back
       if(e.mode==='cover'&&e.goal){ const gx=e.goal.x-e.pos.x, gz=e.goal.z-e.pos.z, gd=Math.hypot(gx,gz); if(gd>0.6){ mx=gx/gd; mz=gz/gd; } else { mx=0; mz=0; } }
       if(e.k.home && Math.hypot(e.pos.x-e.home.x,e.pos.z-e.home.z)>e.k.home+4){ mx=e.home.x-e.pos.x; mz=e.home.z-e.pos.z; }
@@ -3714,7 +4224,7 @@ function enemyShoot(e,t,dist){
   const d=ITEMS[e.gun.id], am=ITEMS[e.gun.ammo]; e.gun.mag--;
   e.cool=60/d.rpm*(d.auto?1:1.4)+(d.auto?0:rand()*0.5); e.burst--; if(e.burst<=0){ e.burst=d.auto?(e.k.boss?8+Math.floor(rand()*8):3+Math.floor(rand()*4)):1; e.cool+=e.k.boss?0.7+rand()*0.6:0.45+rand()*0.8; } if(e.enraged) e.cool*=0.7;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, ty=t.eye-0.35, my=e.pos.y+eGunY(e); e.shotT=R.t; bodyKick(e.rig);
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
   // the bullet has to actually get there: anything solid in the way eats it
   _a.set(mx,my,mz); _b.set(t.x-mx,ty-my,t.z-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd-0.2;
   const wall=ray.intersectObjects(R.ray,false)[0];
@@ -3722,21 +4232,22 @@ function enemyShoot(e,t,dist){
   // hit chance per bullet: falls off hard with range, and starts low while they're still settling their aim
   // (settling takes longer at range; harder difficulties settle faster)
   const settle=(0.9+dist/30)*R.D.react, aim=0.35+0.65*Math.min(1,(e.aimT||0)/settle);
-  let p=e.k.acc*Math.max(0.04,1-dist/62)*aim; if(t.vel>4.5) p*=0.62; else if(t.vel>1) p*=0.82; if(t.crouch) p*=0.86; if(e.first){ p*=0.7; e.first=false; } p=Math.min(0.95,p*R.D.acc);
+  let p=e.k.acc*Math.max(0.04,1-dist/50)*aim; if(t.vel>4.5) p*=0.62; else if(t.vel>1) p*=0.82; if(t.crouch) p*=0.86; if(e.first){ p*=0.7; e.first=false; } p=Math.min(0.95,p*R.D.acc);
   const pel=d.pellets||1; let hits=0; for(let i=0;i<pel;i++){ const pp=pel>1?p*Math.max(0,1-dist/30)*0.6:p; if(rand()<pp) hits++; }
   const ex=t.x+(hits?0:rr(-1.2,1.2)), ey=ty+rr(-0.3,0.4), ez=t.z+(hits?0:rr(-1.2,1.2));
   tracer(mx,my-0.05,mz,ex,ey,ez,0xffcf7a); R.shots.push([mx,mz,ex,ey,ez]);
   if(hits){ e.dmgDone=(e.dmgDone||0)+hits*am.dmg; R.lastShooter=e; }
-  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(am.dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
-  else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg:am.dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z});
+  const dmg=am.dmg*(R.D.dmg||1);
+  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
+  else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
 function hearShot(x,z,radius){ if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
 function armorRes(a,dmg,pen){ const d=ITEMS[a.id]; const ratio=a.dur/d.dur; const eff=d.cls*10*(0.5+0.5*ratio); const chance=pen>=eff?0.92:Math.pow(pen/eff,2.2)*0.85; const through=rand()<chance; a.dur=Math.max(0,a.dur-(pen/10+(through?0.6:1.4))*(dmg/40)); return through?{d:dmg*(1-0.07*d.cls),pen:true}:{d:dmg*0.12+2,pen:false}; }
 function hitEnemy(e,part,am,pt,by){
   { const sh=by?R.tgts.find(t=>t.id===by):null; e.lastHitFrom=sh?{x:sh.x,z:sh.z}:{x:P.pos.x,z:P.pos.z}; bodyHit(e.rig,e.lastHitFrom.x,e.lastHitFrom.z,part); }
-  if(NET.on&&!NET.host){ puff(pt,0x8a1010,6,1.5); hitmark(part==='head'); nsend({t:'ehit',i:e.idx,part,ammo:am.id||'fist',px:pt.x,py:pt.y,pz:pt.z,w:curW()?curW().id:'fists'}); return; }
+  if(NET.on&&!NET.host){ puff(pt,0x8a1010,6,1.5); hitmark(part==='head'); nsend({t:'ehit',i:e.idx,part,ammo:am.id||'fist',dmg:am.id==='sled'?am.dmg:undefined,px:pt.x,py:pt.y,pz:pt.z,w:curW()?curW().id:'fists'}); return; }
   let dmg=am.dmg; const gear=part==='head'?e.helm:(part==='thorax'?e.armor:null);
-  if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,am.pen); dmg=r.d; if(!r.pen){ puff(pt,0xffe08a,4,2); if(!by) sfxPlink(); } }
+  if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,am.pen); dmg=r.d; if(!r.pen){ if(part==='head') dmg=am.dmg*0.32+4; puff(pt,0xffe08a,4,2); if(!by) sfxPlink(); } } // a stopped headshot still rings their bell
   if(part==='legs') dmg*=0.65; if(part==='arm') dmg*=0.7;
   puff(pt,0x8a1010,6,1.5);
   if(e.k.boss){ e.hp-=dmg*(part==='head'?1.8:1)*e.k.dr; } else if(part==='head') e.headHp-=dmg; else e.hp-=dmg;
@@ -3863,6 +4374,11 @@ const RETICLES={
 function scopeSvg(){ let dots=''; for(const v of [-24,-16,-8,8,16,24]) dots+=`<circle cx="${v}" cy="0" r=".9"/><circle cx="0" cy="${v}" r=".9"/>`; return `<svg viewBox="-100 -100 200 200" class="scopesvg"><g fill="none" stroke="#000"><path d="M-100 0H100M0 -100V100" stroke-width=".35"/><path d="M-100 0H-32M32 0H100M0 32V100M0 -100V-32" stroke-width="2.4"/></g><g fill="#000">${dots}</g><circle r=".7" fill="#d4241c"/></svg>`; }
 function setReticle(kind){ if(!R||R.ret===kind) return; R.ret=kind; const el=$('#reticle'); el.hidden=!kind; el.innerHTML=kind?RETICLES[kind]:''; $('#prismRing').hidden=kind!=='prism'; }
 function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists')+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
+
+// an enemy's muzzle flash as a bright point that shows through fog, so you can see where shots come from
+const SPARKS=[]; let _sparkMat=null;
+function muzzleSpark(x,y,z,dist){ if(!scene) return; if(!_sparkMat) _sparkMat=new THREE.SpriteMaterial({color:0xffe0a0,fog:false,transparent:true,depthWrite:false});
+  let s=SPARKS.find(q=>!q.parent); if(!s){ s=new THREE.Sprite(_sparkMat); SPARKS.push(s); } const k=Math.max(0.35,dist*0.012)*(OPTS.flash==='off'?0.6:1); s.scale.set(k,k,1); s.position.set(x,y,z); scene.add(s); setTimeout(()=>{ if(s.parent) s.parent.remove(s); },70); }
 
 /* 56-vm-anim: first-person weapon animation.
    vmAnimate(gun, state, input, dt, scene) poses the viewmodel every frame from what the player is doing. The gun group
@@ -4242,7 +4758,7 @@ function aiThink(e){
   else {
     // a squad splits the work: one keeps the angle covered, one lays down fire, the rest go after you
     const doing=m=>R.enemies.filter(o=>o!==e&&!o.dead&&o.tid===e.tid&&o.grp===e.grp&&o.mode===m).length;
-    if(lost<1.4&&e.gun.mag>3&&b.lastSeen>0) S.suppress=G.suppress*1.15*(1-lost/1.4)-doing('suppress')*0.5;
+    if(lost<1.4&&e.gun.mag>3&&b.lastSeen>0&&b.est&&Math.hypot(b.est.x-e.pos.x,b.est.z-e.pos.z)<eEngage(e)) S.suppress=G.suppress*1.15*(1-lost/1.4)-doing('suppress')*0.5;
     const hold=0.8+G.patience*6; if(lost<hold&&b.lastSeen>0) S.hold=0.55+G.patience*0.5-lost/hold*0.4-doing('hold')*0.45;
     if(lost>0.4&&!e.k.home&&(allies>=1||G.flank>0.75)&&b.est&&Math.hypot(b.est.x-e.pos.x,b.est.z-e.pos.z)<40) S.flank=G.flank*0.95+(e.role==='rush'?0.15:0)-(e.flankFail?0.6:0)-doing('flank')*0.25;
     S.search=0.45+Math.min(1,lost/5)*0.55+(e.role==='rush'?0.15:0)+(allies&&doing('hold')?0.15:0);
@@ -4293,15 +4809,15 @@ function aiAct(e,dt){
 function aiSuppress(e,x,z){
   const d=ITEMS[e.gun.id]; e.gun.mag--; e.cool=60/d.rpm*(d.auto?1.6:2.2)+0.15+Math.random()*0.35;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, my=e.pos.y+eGunY(e), ty=(R.terrain?R.terrain(x,z):0)+1.1+_gauss()*0.4, ex=x+_gauss()*1.2, ez=z+_gauss()*1.2;
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
   _a.set(mx,my,mz); _b.set(ex-mx,ty-my,ez-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd+20;
   const wall=ray.intersectObjects(R.ray,false)[0]; const end=wall?wall.point:{x:mx+_b.x*(dd+20),y:my+_b.y*(dd+20),z:mz+_b.z*(dd+20)};
   tracer(mx,my-0.05,mz,end.x,end.y,end.z,0xffcf7a); R.shots.push([mx,mz,end.x,end.y,end.z]); if(wall) puff(wall.point,0xc9d2d6,3,1.4);
   // does the line pass through a real player before it hits anything?
   for(const t of R.tgts){ const px=t.x-mx, py=(t.eye-0.5)-my, pz=t.z-mz, along=px*_b.x+py*_b.y+pz*_b.z; if(along<0||along>(wall?wall.distance:dd+20)) continue;
     const off=Math.hypot(px-_b.x*along,py-_b.y*along,pz-_b.z*along); if(off>0.45) continue;
-    if(Math.random()<0.3*e.k.acc){ const am=ITEMS[e.gun.ammo]; e.dmgDone=(e.dmgDone||0)+am.dmg; R.lastShooter=e;
-      if(t.id==='me') playerHit(am.dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg:am.dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z}); }
+    if(Math.random()<0.3*e.k.acc*R.D.acc){ const am=ITEMS[e.gun.ammo], dmg=am.dmg*(R.D.dmg||1); e.dmgDone=(e.dmgDone||0)+dmg; R.lastShooter=e;
+      if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
     else if(t.id==='me'){ sfxWhizz(); hitDir(e.pos.x,e.pos.z,true); } break; }
 }
 
@@ -4815,6 +5331,8 @@ function dronesStop(){ for(const d of (R&&R.drones)||[]) if(d.snd) droneSoundSto
 function startRaid(mapId,launch){
   const bail=()=>{ if(launch){ wsend({t:'leaveRaid'}); NET.on=false; } };
   if(R){ bail(); return; }
+  if(MG.on) mgAbort(true); // a lobby launching pulls you out of a rec-room game
+  if(TRADE.on){ wsend({t:'trcancel'}); TRADE.on=false; tradeRestore(); saveGame(); tradeUI(); }
   if(!initGL()){ toast('WebGL is not available in this browser.'); bail(); return; }
   const map=MAPS[mapId]; if(map.pvp&&!launch){ toast(`${map.name} is PvP only. Host a lobby to play it.`); return; }
   if(map.fee&&S.cash<map.fee){ toast(`You need ${fmt$(map.fee)} to go down.`); bail(); return; }
@@ -4826,11 +5344,13 @@ function startRaid(mapId,launch){
   if(map.fee){ S.cash-=map.fee; }
   S.lastKit=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; S.lastKit.push([it.id,1]); if(it.att) for(const k in it.att) if(it.att[k]) S.lastKit.push([it.att[k].id,1]); if(it.items) for(const x of it.items) S.lastKit.push([x.id,x.n||1]); }
   for(const x of S.eq.pockets.items) S.lastKit.push([x.id,x.n||1]);
-  const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; saveGame(strip); accFlush();
+  const dmMode=welcome&&DM_INFO[welcome.mode]?welcome.mode:null; // deathmatch: your gear stays home, so nothing is stripped (46-deathmatch.js)
+  if(dmMode){ saveGame(); accFlush(); } else { const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; saveGame(strip); accFlush(); }
   for(const s of [...SLOTS,'pockets','pouch']){ const it=S.eq[s]; if(it&&it.items) for(const x of it.items) delete x.hid; }
   scene=new THREE.Scene(); if(camera.far!==420){ camera.far=420; camera.updateProjectionMatrix(); }
   R={map:mapId,cols:[],ray:[],targets:[],indoor:[],bld:[],heaters:[],conts:[],enemies:[],extracts:[],fx:[],tr:[],aur:[],t:0,timeLeft:map.time,kills:0,invOpen:false,over:false,paused:true,lootTarget:null,msgs:[],startValue:carriedValue(),exT:0,bound:98,drain:0.32,lootMult:1,hudT:0,revealT:0,noLock:false,locked:false,dirty:false,shots:[],bodyN:0,tgts:[],chat:[],chatOpen:false,chatClosedAt:0,lastHitBy:null,lastHitT:0,ret:undefined};
   R.diff=welcome?(DIFF[welcome.diff]?welcome.diff:'normal'):(DIFF[OPTS.diff]?OPTS.diff:'normal'); R.D=DIFF[R.diff];
+  if(dmMode){ R.realEq=S.eq; S.eq=dmKit(); R.dmb=welcome.dmb||null; }
   // what you brought in, so the collection log only counts what you find (25-goals.js)
   R.startUids=new Set(); { const w=it=>{ if(!it) return; R.startUids.add(it.uid); (it.items||[]).forEach(w); if(it.att) Object.values(it.att).forEach(w); }; for(const k in S.eq) w(S.eq[k]); }
   R.side=welcome?(welcome.side||0):(map.teams?1:0); R.aiAir=map.air?(welcome?(welcome.air??1):(OPTS.air??1)):0;
@@ -4841,16 +5361,18 @@ function startRaid(mapId,launch){
   const sps = mapId==='kolvik'?buildKolvik():mapId==='whiteout'?buildWhiteout():mapId==='skarsvik'?buildSkarsvik():mapId==='ironfjord'?buildIronfjord():mapId==='ravnskar'?buildRavnskar():mapId==='hrimfell'?buildHrimfell():mapId==='storvidda'?buildStorvidda():mapId==='kaldfjord'?buildKaldfjord():mapId==='skerries'?buildSkerries():buildVault();
   addLockedRooms(mapId); applyMods(sps); diffExtras();
   rand=Math.random; BUILD=null;
+  if(dmMode) dmSetup(dmMode,sps);
   let sps2=sps; if(map.teams){ const mine=sps.filter(q=>q.side===(R.side||1)); if(mine.length) sps2=mine; }
-  const sp0=sps2[slot%sps2.length]; const mi=welcome&&welcome.mate||0; const sp={x:sp0.x+(mi?((mi%2)?1:-1)*Math.ceil(mi/2)*(map.heli?11:map.sleds?3.4:1.8):0),z:sp0.z,h:sp0.h}; { const v=new THREE.Vector3(sp.x,0,sp.z); resolve(v,0.4); sp.x=v.x; sp.z=v.z; }
+  const sp0=dmMode?dmStartSpawn():sps2[slot%sps2.length]; const mi=welcome&&welcome.mate||0; const sp={x:sp0.x+(mi?((mi%2)?1:-1)*Math.ceil(mi/2)*(map.heli?11:map.sleds?3.4:1.8):0),z:sp0.z,h:sp0.h}; { const v=new THREE.Vector3(sp.x,0,sp.z); resolve(v,0.4); sp.x=v.x; sp.z=v.z; }
   R.extracts.filter(e=>e.active).forEach(beacon);
   flash=new THREE.PointLight(0xffc070,0,14); scene.add(flash);
   snow=makeSnow(Math.round((mapId==='whiteout'?1800:mapId==='vault'?0:1100)*R.cond.W.snow),(mapId==='whiteout'?3.2:1.6)*(R.cond.weather==='blizzard'?1.8:1));
   R.targets=R.ray.concat(...R.enemies.map(e=>e.parts));
-  applyWeather(); setupCulling(); if(R.enemies.length) buildNav(); if(!welcome||welcome.hostId===welcome.id) spawnDrones(mapId);
-  P={pos:new THREE.Vector3(sp.x,0,sp.z),yaw:Math.atan2(sp.x,sp.z),pitch:0,vx:0,vz:0,eye:1.62,crouch:false,sprint:false,stam:100,hp:{...MAXHP},bleed:{},frac:{},temp:100,adsHeld:false,adsT:0,trigger:false,semiLock:false,cool:0,reloadT:0,reloadType:null,using:null,auto:true,keys:{},bob:0,kick:0,hurt:0,dead:false,slot:S.eq.primary?'primary':S.eq.secondary?'secondary':'fists',fov:72,sneak:false,punchT:0,grace:10,stepT:0,shiverT:0,y:0,vy:0,down:null,cam:pmCam(),foot:0,bobW:0,landT:0,fat:0,sprB:0};
-  // nobody camps the insertion point: anything close gets sent back toward its own patrol area
-  if((!welcome||NET.host)&&mapId!=='vault') for(const e of R.enemies){ const d=Math.hypot(e.pos.x-sp.x,e.pos.z-sp.z); if(d<30){ const ang=Math.atan2(e.pos.z-sp.z,e.pos.x-sp.x); const nx=clamp(sp.x+Math.cos(ang)*36,-R.bound,R.bound), nz=clamp(sp.z+Math.sin(ang)*36,-R.bound,R.bound); e.pos.set(nx,0,nz); resolve(e.pos,0.4); e.home={x:e.pos.x,z:e.pos.z}; e.nx=nx; e.nz=nz; e.wp=null; } }
+  spawnCover(sps); applyWeather(); setupCulling(); if(R.enemies.length) buildNav(); if((!welcome||welcome.hostId===welcome.id)&&!dmMode) spawnDrones(mapId);
+  P={pos:new THREE.Vector3(sp.x,0,sp.z),yaw:Math.atan2(sp.x,sp.z),pitch:0,vx:0,vz:0,eye:1.62,crouch:false,sprint:false,stam:100,hp:{...MAXHP},bleed:{},frac:{},temp:100,adsHeld:false,adsT:0,trigger:false,semiLock:false,cool:0,reloadT:0,reloadType:null,using:null,auto:true,keys:{},bob:0,kick:0,hurt:0,dead:false,slot:S.eq.primary?'primary':S.eq.secondary?'secondary':'fists',fov:72,sneak:false,punchT:0,grace:SPAWN.grace,stepT:0,shiverT:0,y:0,vy:0,down:null,cam:pmCam(),foot:0,bobW:0,landT:0,fat:0,sprB:0};
+  if(dmMode) P.grace=3;
+  // nobody patrols near where you come in (67-spawn.js)
+  if((!welcome||NET.host)&&mapId!=='vault') clearSpawns([sp]);
   if(MAPS[mapId].heli){ R.heli=makeHeliObj(sp.x,sp.z,14,45); R.heli.wait=2.5; R.heli.own=true; P.grace=999; P.yaw=R.heli.yaw; R.fogBase=scene.fog.density; scene.fog.density*=0.4; R.viewDist=320; }
   if(R.sleds) sledStart(sp,true);
   if(welcome){ R.timeLeft=welcome.timeLeft; R.endAt=performance.now()+welcome.timeLeft*1000; netApplyWelcome(welcome); }
@@ -4861,7 +5383,8 @@ function startRaid(mapId,launch){
   const others=welcome?Object.keys(NET.players).length:0;
   const b=$('#brief'); b.hidden=false;
   b.innerHTML=`<div class="card"><span class="lbl">${map.name} · ${R.D.name} · ${fmtTime(R.timeLeft)} left${welcome?` · online · ${others} other${others===1?'':'s'} in this raid`:' · solo'}</span><h2>Extract at ${esc(act)}</h2><div class="condline">${condHtml(R.cond)}</div><p class="muted" style="margin:0">${mapId==='vault'?'The lift is in a corner room. Guards patrol every room but yours.':mapId==='hrimfell'?'You start on a snowmobile at the summit. W throttle, S brake, A and D steer, mouse looks around. Hit a tree, rock or log fast, or fall into a crevasse, and you start again from the top; take the jumps fast enough to clear the crevasses. At the bottom, E gets off. Drivers can only use a sidearm; a squadmate can press E by your sled to ride on the back and shoot.':mapId==='skerries'?`You're on ${R.side===2?'Austholm':'Vestholm'}, the ${R.side===2?'eastern':'western'} island. The aircraft are lined up on the apron: walk up to one and press E. Pilot: W/S throttle, A/D steer on the ground and roll in the air, mouse steers in the air, click fires, G drops bombs, E gets out on the ground, X bails out with a parachute. Extra seats on the Skylark and the Storm are for a passenger or gunners. Loot on the islands in between; extract at your own pier.`:mapId==='kaldfjord'?'You start on a snowmobile at the edge of a 2.2 km map. W throttle, S brake, A and D steer, E gets off and back on. M opens the map and G plans a route to the nearest open extract. Watch the sky: recon drones call in what they see. Three of six extracts are open, all out at the edges.':mapId==='storvidda'?'You start on a snowmobile at the edge of the plateau, facing the relay 500 m away. W throttle, S brake, A and D steer. E gets off and back on; the sled stays where you leave it. Crashing into a tree, a rock or a steep bank throws you off and hurts. Drivers can only use a sidearm; a squadmate can ride on the back with a rifle. Extracts are back out on the edge, so keep your sled close.':mapId==='ravnskar'?'Co-op: everyone in this raid is on your side. Jarl Hrafn sleeps in the keep at the north end of the fort; his hoard opens when he dies. Watch the ground for red circles. Cliff road and Sea stairs are open the whole raid.':mapId==='ironfjord'?'No AI here. Every footstep and every shot is another player. Open extracts show a green beacon.':mapId==='skarsvik'?'A helicopter flies you in to a landing zone on the coast (Space jumps out early). Halfway through, an evac helicopter lands somewhere on the island and waits 100 seconds.':'Open extracts show a green beacon and appear top right with a distance and direction.'} Stand inside one for 7 seconds. ${welcome?'Other players are hostile and their bodies can be looted. Press Enter to chat.':'Stay warm, stay quiet, and don\'t get greedy.'}</p><div class="acts"><button class="btn" id="goBtn">Start raid</button></div></div>`;
-  $('#goBtn').onclick=()=>{ b.hidden=true; R.paused=false; lockPointer(); if(R.heli) msg('Inbound by helicopter. Space jumps out early.'); else msg('Deployed. Ten seconds of cover: move.'); if(R.cond.modText) msg(R.cond.modText); windStart(); };
+  if(dmMode){ dmBrief(b); dmHud(); }
+  $('#goBtn').onclick=()=>{ b.hidden=true; R.paused=false; lockPointer(); if(R.heli) msg('Inbound by helicopter. Space jumps out early.'); else if(R.dm) msg('Go. Three seconds before anyone can hurt you.'); else msg(`Deployed. ${SPAWN.grace} seconds of cover: move.`); if(R.cond.modText) msg(R.cond.modText); windStart(); };
 }
 function lockPointer(){ const cv=$('#cv'); try{ const p=cv.requestPointerLock(); if(p&&p.catch) p.catch(()=>{ R&&(R.noLock=true); }); }catch(e){ if(R) R.noLock=true; } }
 document.addEventListener('pointerlockchange',()=>{
@@ -4901,12 +5424,13 @@ function playerHit(dmg,pen,src,part,from){
   if(from) hitDir(from.x,from.z,false);
   // inside an aircraft the bullet hits the airframe first (the Skylark passenger sits in the open and is fair game)
   if(R&&R.fly&&!R.fly.hand){ const pl=R.planes[R.fly.i]; if(pl&&!pl.dead){ planeDamage(pl,dmg*0.6,R.lastHitBy&&R.t-R.lastHitT<0.2?R.lastHitBy:null); P.hurt=Math.min(1,P.hurt+0.1); return; } }
-  if(P.dead||DBG.god) return;
-  if(P.down){ P.down.hp-=dmg*(part==='head'?2:1); P.hurt=Math.min(1,P.hurt+0.4); sfxGrunt(0.45,90); if(P.down.hp<=0) reallyDie(`Finished off by ${src}`); return; }
+  if(P.dead||DBG.god||(R&&R.dm&&(P.grace>0||R.dmOver))) return;
+  if(P.down){ recordHit(src,part||'thorax',dmg*(part==='head'?2:1),from,true); P.down.hp-=dmg*(part==='head'?2:1); P.hurt=Math.min(1,P.hurt+0.4); sfxGrunt(0.45,90); if(P.down.hp<=0) reallyDie(`Finished off by ${src}`); return; }
   part=part||wpick([['head',0.08],['thorax',0.27],['stomach',0.2],['larm',0.11],['rarm',0.11],['lleg',0.115],['rleg',0.115]]);
   const gear=part==='head'?S.eq.helmet:(part==='thorax'||part==='stomach')?S.eq.armor:null;
   let d=dmg, through=true;
   if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,pen); d=r.d; through=r.pen; }
+  recordHit(src,part,d,from,through);
   dmgPart(part,d,`Shot in the ${PART_NAME[part]} by ${src}`);
   if(through && part!=='head' && rand()<0.28) P.bleed[part]=true;
   if(through && (part==='lleg'||part==='rleg') && rand()<0.18 && !P.frac[part]){ P.frac[part]=true; P.newFrac=true; }
@@ -4919,8 +5443,8 @@ function dmgPart(part,amt,cause){
   else spread(amt*0.7,cause);
 }
 function spread(amt,cause){ const alive=PARTS.filter(p=>P.hp[p]>0); if(!alive.length) return die(cause); const each=amt/alive.length; for(const p of alive){ P.hp[p]-=each; if(P.hp[p]<=0){ P.hp[p]=0; if(p==='head'||p==='thorax') return die(cause); } } }
-function die(cause){ if(P.dead) return; if(!P.down&&matesUp()) return goDown(cause); reallyDie(cause); }
-function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } R.deadT=1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
+function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&matesUp()) return goDown(cause); reallyDie(cause); }
+function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
 function myBodyItems(){ const out=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; if(it.items){ for(const x of it.items){ delete x.hid; out.push(x); } it.items=[]; } delete it.hid; out.push(it); } for(const x of S.eq.pockets.items){ delete x.hid; out.push(x); } return out; }
 function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
@@ -5092,7 +5616,7 @@ function updatePlayer(dt){
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
   const zoom=ws2&&ws2.zoom>1.2?ws2.zoom:0; P.sprB+=((P.sprint&&Math.hypot(P.vx,P.vz)>4?1:0)-P.sprB)*Math.min(1,dt*4); const fovT=72+((zoom?72/zoom:54)-72)*P.adsT+PMOVE.sprintFov*P.sprB*(1-P.adsT); if(Math.abs(fovT-P.fov)>0.05){ P.fov=fovT; camera.fov=fovT; camera.updateProjectionMatrix(); }
-  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0) msg('The station knows you are here.'); }
+  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0){ P.graceEnd=R.t; if(!R.dm) msg('Your cover is gone. Keep your head down for a bit: they are slow to notice you at first.'); } }
   P.kick=Math.max(0,P.kick-dt*9); P.punchT=Math.max(0,(P.punchT||0)-dt*5); P.hurt=Math.max(0,P.hurt-dt*0.9); P.shake=Math.max(0,(P.shake||0)-dt);
   // camera
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
@@ -5100,7 +5624,7 @@ function updatePlayer(dt){
   const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch;
   const sh=(P.shake||0)*0.06;
   camera.position.set(P.pos.x+C.x*Math.cos(P.yaw),P.y+P.eye+C.y,P.pos.z-C.x*Math.sin(P.yaw));
-  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?0.6:P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll));
+  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?(R.recap?0.15:0.6):P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll));
   if(R.fly&&!P.dead) flyCam();
   // viewmodel pose
   syncVM();
@@ -5111,8 +5635,8 @@ function updatePlayer(dt){
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
         using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene); } }
-  if(P.dead&&!R.spec){ R.deadT-=dt; if(R.deadT<=0&&!startSpectate()) endRaid('kia',R.cause); }
-  if(R.spec) specCam(dt);
+  if(R&&R.spec) specCam(dt);
+  if(R&&!P.dead) pouchSaveTick();
 }
 function updExtract(dt){
   if(P.dead||R.fly) return; let inside=null;
@@ -5530,6 +6054,122 @@ function addDrop(cid,x,z,items,y){
 function dropsTick(){ if(!R.conts) return; for(const c of R.conts){ if(!c.drop||c.gone) continue; if(!c.cont.items.length&&R.lootTarget!==c){ c.gone=true; scene.remove(c.bag); } } if(R.conts.some(c=>c.gone)) R.conts=R.conts.filter(c=>!c.gone); }
 const sfxDrop=()=>{ sfxNoise(0.12,500,0.12); setTimeout(()=>sfxNoise(0.06,300,0.1),60); };
 
+/* 66-recap: what happened when you died
+   Dying no longer drops you straight onto the results screen. The camera turns to whoever killed you (marked with a
+   red ring), and a card says who it was, with what, from how far and where it hit, lists the last hits you took, and
+   shows what your secure pouch kept. You leave when you're ready: Continue (the results), or watch a squadmate if one
+   is still up. The secure pouch is also saved as you go, so what's in it survives even if the page closes mid-raid. */
+function recordHit(src,part,dmg,from,through){ if(!R) return; const L=R.hits||(R.hits=[]); L.push({t:R.t,src,part,dmg:Math.round(dmg),from:from?{x:from.x,z:from.z}:null,blocked:!through,gun:R.hitGun||(R.lastShooter&&R.lastShooter.gun?R.lastShooter.gun.id:null)}); if(L.length>12) L.shift(); }
+function killerInfo(){
+  const last=(R.hits||[]).slice().reverse().find(h=>!h.blocked)||(R.hits||[])[R.hits?R.hits.length-1:0];
+  const e=R.lastShooter&&!R.lastShooter.dead&&last&&R.t-last.t<3&&last.src===R.lastShooter.k.name?R.lastShooter:null;
+  const pl=R.lastHitBy&&R.t-R.lastHitT<15&&NET.players[R.lastHitBy]?NET.players[R.lastHitBy]:null;
+  const from=e?{x:e.pos.x,z:e.pos.z}:pl&&pl.g?{x:pl.g.position.x,z:pl.g.position.z}:last&&last.from;
+  return {name:pl?pl.name:last?last.src:null, gun:e?ITEMS[e.gun.id].name:last&&last.gun&&!pl?ITEMS[last.gun].name:null, ammo:e?ITEMS[e.gun.ammo].short:null, part:last?last.part:null, from, dist:from?Math.round(Math.hypot(from.x-P.pos.x,from.z-P.pos.z)):null, enemy:e};
+}
+const BEARING=['north','north-west','west','south-west','south','south-east','east','north-east'];
+function bearingWord(dx,dz){ const a=Math.atan2(-dx,-dz); return BEARING[((Math.round(a/(Math.PI/4))%8)+8)%8]; }
+function showRecap(){
+  if(R.recap) return; const K=killerInfo(); R.recap={K,t:R.t};
+  if(document.pointerLockElement) document.exitPointerLock(); $('#deathfade').style.opacity=0.35;
+  // a ring where they were
+  if(K.from){ const m=new THREE.Mesh(new THREE.RingGeometry(0.9,1.25,24),new THREE.MeshBasicMaterial({color:0xff3a2a,transparent:true,opacity:0.9,depthTest:false,side:THREE.DoubleSide,fog:false})); m.rotation.x=-Math.PI/2; m.renderOrder=20; m.position.set(K.from.x,(R.terrain?R.terrain(K.from.x,K.from.z):0)+0.1,K.from.z); scene.add(m); R.recap.ring=m; }
+  const pouch=(S.eq.pouch&&S.eq.pouch.items||[]).map(it=>ITEMS[it.id].name);
+  const hits=(R.hits||[]).slice(-5).reverse();
+  const mates=NET.on?specList().length:0;
+  const el=$('#deathcard'); el.hidden=false;
+  el.innerHTML=`<div class="card"><span class="lbl">${esc(MAPS[R.map].name)} · ${fmtTime(R.t)} in raid</span><h2 class="bad">Killed in action</h2>
+    <p class="killed">${K.name?`<b>${esc(K.name)}</b>`:'Unknown'}${K.gun?` · ${esc(K.gun)}${K.ammo?' ('+esc(K.ammo)+')':''}`:''}${K.dist!=null?` · ${K.dist} m ${bearingWord(K.from.x-P.pos.x,K.from.z-P.pos.z)} of you`:''}${K.part?` · hit in the ${esc(PART_NAME[K.part]||K.part)}`:''}</p>
+    <p class="muted" style="margin:0">${esc(R.cause||'')}.${K.from?' The red ring is where they were.':''}</p>
+    ${hits.length?`<dl class="stats hitlog">${hits.map(h=>`<dt>${(R.t-h.t)<1?'just now':Math.round(R.t-h.t)+' s ago'}</dt><dd>${esc(h.src)} · ${esc(PART_NAME[h.part]||h.part)} · ${h.blocked?`stopped by armor (${h.dmg})`:`${h.dmg} damage`}</dd>`).join('')}</dl>`:''}
+    <p class="pouchkept"><span class="lbl">Secure pouch kept</span> ${pouch.length?pouch.map(esc).join(' · '):'nothing (it was empty)'}</p>
+    <div class="acts">${mates?`<button class="btn ghost" id="rcSpec">Watch a squadmate</button>`:''}<button class="btn" id="rcGo">Exit to main menu</button></div></div>`;
+  recapButtons();
+}
+function recapButtons(){
+  $('#rcGo').onclick=recapExit;
+  if($('#rcSpec')) $('#rcSpec').onclick=()=>{ recapClose(); let ok=false; try{ ok=startSpectate(); }catch(e){ console.warn(e); } if(!ok) recapExit(); };
+}
+function recapExit(){ const cause=R?R.cause:''; recapClose(); endRaid('kia',cause); }
+// if building the full card fails for any reason, still give a way out
+function recapFallback(err){ console.error('death recap',err); try{ logErr('death recap: '+err.message,err.stack); }catch(e){} if(!R.recap) R.recap={K:{},t:R.t};
+  const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><h2 class="bad">Killed in action</h2><p class="muted" style="margin:0">${esc(R.cause||'')}.</p><div class="acts"><button class="btn" id="rcGo">Exit to main menu</button></div></div>`; $('#rcGo').onclick=recapExit; }
+// called from the main loop every frame while you're dead, even with the game paused, so the card always shows up
+function deathTick(dt){
+  if(R.dm) return dmDeathTick(dt);
+  if(R.spec) return;
+  if(R.deadT>0){ R.deadT-=dt; return; }
+  if(R.paused){ R.paused=false; $('#pause').hidden=true; } // died with the pause menu open (online the world doesn't stop)
+  if(R.invOpen) try{ closeInv(true); }catch(e){}
+  if(!R.recap||$('#deathcard').hidden){ try{ R.recap=null; showRecap(); }catch(e){ recapFallback(e); } return; }
+  try{ recapTick(dt); }catch(e){}
+}
+// one line about who got you, for the results screen
+function killerLine(K){ if(!K||!K.name) return ''; return [K.name,K.gun?K.gun+(K.ammo?` (${K.ammo})`:''):null,K.dist!=null?K.dist+' m away':null,K.part?'hit in the '+(PART_NAME[K.part]||K.part):null].filter(Boolean).join(' · '); }
+function recapClose(){ const el=$('#deathcard'); el.hidden=true; el.innerHTML=''; if(R&&R.recap&&R.recap.ring&&scene){ scene.remove(R.recap.ring); R.recap.ring=null; } }
+// while the card is up: turn the camera toward the killer, slowly
+function recapTick(dt){ const rc=R.recap; if(!rc||!rc.K.from) return; const K=rc.K; const e=K.enemy; if(e&&!e.dead){ K.from={x:e.pos.x,z:e.pos.z}; if(rc.ring) rc.ring.position.set(e.pos.x,(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.1,e.pos.z); }
+  const want=Math.atan2(-(K.from.x-P.pos.x),-(K.from.z-P.pos.z)); P.yaw=lerpA(P.yaw,want,Math.min(1,dt*1.5)); P.pitch+=(-0.05-P.pitch)*Math.min(1,dt*1.5); if(rc.ring) rc.ring.rotation.z+=dt*1.5; }
+// keep the secure pouch in the save while you play (the raid-start save has your gear stripped out)
+function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.dm) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
+  raidSave(); }
+// the save as it stands mid-raid: everything at risk is left out, so closing the tab counts as losing it
+function raidSave(){ if(R&&R.dm) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
+addEventListener('keydown',e=>{ if(R&&R.recap&&!$('#deathcard').hidden&&(e.key==='Enter'||e.key==='Escape')){ e.preventDefault(); e.stopImmediatePropagation(); const b=$('#rcGo'); if(b) b.click(); } },true);
+
+/* 67-spawn: a fair start
+   - 30 seconds of insertion cover on every map (nobody sees or hears you, and drones ignore you) unless you fire.
+   - For 25 seconds after that, enemies spot you at only half their usual range, growing back to normal.
+   - At the start of a raid no enemy patrols within 60 m of any insertion point.
+   - Low concrete barriers and snowbanks at every insertion point, either side of the way in, so there's
+     something to duck behind. Placed the same way for everyone in an online raid (no randomness). */
+const SPAWN={grace:30, fade:25, clear:60};
+// 0 right after your cover ends, rising to 1: how far enemies can spot you (half range at first)
+const freshness=()=>!P||P.grace>0?0:clamp((R.t-(P.graceEnd??-99))/SPAWN.fade,0,1);
+function spawnCover(sps){
+  if(!sps||!sps.length||R.airMap||R.race||R.map==='vault') return;
+  const wall=M('concrete');
+  for(const sp of sps){
+    // face into the map: the spawn's heading if it has one, else toward the middle
+    const h=sp.h!=null?sp.h:Math.atan2(sp.x,sp.z); const fx=-Math.sin(h), fz=-Math.cos(h), rx=Math.cos(h), rz=-Math.sin(h);
+    for(const side of [-1,1]){ const x=sp.x+fx*4+rx*side*3.6, z=sp.z+fz*4+rz*side*3.6, alongX=Math.abs(rx)>Math.abs(rz);
+      const w=alongX?3.2:0.55, d=alongX?0.55:3.2; if(!spawnFree(x,z,w,d)) continue;
+      const keep=R.yOff||0; R.yOff=R.terrain?R.terrain(x,z):keep; R.targets.push(solid(x,0.6,z,w,1.2,d,wall,{ts:1.5})); R.yOff=keep;
+      drift(x-fx*0.9,z-fz*0.9,1.1); }
+  }
+}
+function spawnFree(x,z,w,d){ const x0=x-w/2-0.4, x1=x+w/2+0.4, z0=z-d/2-0.4, z1=z+d/2+0.4; if(Math.max(Math.abs(x),Math.abs(z))>R.bound-3) return false;
+  if(R.terrain){ const y=R.terrain(x,z); for(const [px,pz] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1]]) if(Math.abs(R.terrain(px,pz)-y)>0.6) return false; }
+  for(const b of R.cols) if(b.x1>x0&&b.x0<x1&&b.z1>z0&&b.z0<z1) return false;
+  for(const b of R.bld) if(b.x1+0.6>x0&&b.x0-0.6<x1&&b.z1+0.6>z0&&b.z0-0.6<z1) return false;
+  for(const e of R.extracts) if(Math.hypot(e.x-x,e.z-z)<(e.r||4)+2) return false;
+  return true; }
+// nobody patrols near an insertion point when the raid starts: they're moved out to their own areas
+function clearSpawns(sps){ if(R.map==='vault') return; for(const e of R.enemies){ for(const sp of sps){ const d=Math.hypot(e.pos.x-sp.x,e.pos.z-sp.z); if(d>=SPAWN.clear) continue;
+  const ang=Math.atan2(e.pos.z-sp.z,e.pos.x-sp.x); const nx=clamp(sp.x+Math.cos(ang)*(SPAWN.clear+6),-R.bound+2,R.bound-2), nz=clamp(sp.z+Math.sin(ang)*(SPAWN.clear+6),-R.bound+2,R.bound-2);
+  e.pos.set(nx,R.terrain?R.terrain(nx,nz):0,nz); resolve(e.pos,0.4); e.home={x:e.pos.x,z:e.pos.z}; e.nx=e.pos.x; e.nz=e.pos.z; e.wp=null; } } }
+
+/* 68-vehicles: running people over
+   A snowmobile at speed knocks down whoever it hits: an enemy, or another player who isn't on your side (online).
+   Damage rises steeply with speed: a nudge at walking pace does nothing, about 45 at 5 m/s, a kill at full speed.
+   The sled loses some speed in the hit and anyone who survives is thrown aside. */
+const RUNOVER={min:3.5, r:1.6, k:9, pow:1.6};
+const runDmg=spd=>Math.round(Math.pow(Math.max(0,spd-2),RUNOVER.pow)*RUNOVER.k);
+function sledRunOver(sl,spd){
+  if(spd<RUNOVER.min||!R.ride||R.ride.mode!=='drive') return; const c=Math.cos(sl.h), s=Math.sin(sl.h);
+  for(const e of R.enemies){ if(e.dead||R.t<(e.sledT||0)) continue; const dx=e.pos.x-sl.x, dz=e.pos.z-sl.z; if(dx*dx+dz*dz>RUNOVER.r*RUNOVER.r||Math.abs(e.pos.y-sl.y)>1.6) continue;
+    e.sledT=R.t+0.8; const dmg=runDmg(spd); e.lastW='sled';
+    hitEnemy(e,'thorax',{dmg,pen:99,id:'sled'},{x:e.pos.x,y:e.pos.y+1,z:e.pos.z});
+    if(e.dead){ goalBump('roadkill'); msg(`Ran down ${e.k.name}`); } else { const side=(dx*c-dz*s)>=0?1:-1; moveCol(e.pos,c*side*1.4,-s*side*1.4,0.35); }
+    sfxThud(spd); sl.u*=0.82; P.shake=0.35; }
+  if(NET.on) for(const id in NET.players){ const q=NET.players[id], st=q.st; if(!st||st.dead||st.rd||isMate(id)) continue; const gp=q.g?q.g.position:st; const dx=gp.x-sl.x, dz=gp.z-sl.z;
+    if(dx*dx+dz*dz>RUNOVER.r*RUNOVER.r||Math.abs((st.y||0)-sl.y)>1.6||R.t<(q.sledT||0)) continue; q.sledT=R.t+0.8; nsend({t:'runover',pid:id,dmg:runDmg(spd)}); sfxThud(spd); sl.u*=0.85; P.shake=0.35; }
+}
+// someone ran you down
+function runOverMe(dmg,from){ if(!P||P.dead) return; R.lastHitBy=from; R.lastHitT=R.t; const who=from&&NET.players[from]?NET.players[from].name+"'s snowmobile":'a snowmobile';
+  playerHit(dmg*0.45,99,who,'lleg'); playerHit(dmg*0.25,99,who,'rleg'); playerHit(dmg*0.3,99,who,'thorax'); P.vx+=(Math.random()-0.5)*6; P.vz+=(Math.random()-0.5)*6; }
+function sfxThud(spd){ sfxTone(70,0.25,0.35,'sine',38); sfxNoise(0.2,600,0.3); if(spd>7) setTimeout(()=>sfxNoise(0.15,1800,0.15,'bandpass'),60); }
+
 /* 70-hrimfell: Hrimfell Run: mountain terrain, snowmobile dynamics, world config */
 /* ================= HRIMFELL RUN: snowmobiles down a mountain ================= */
 // The run descends toward +z from the summit (z −780, 160 m up) to the loot camp (z −30 to 130, flat).
@@ -5718,7 +6358,7 @@ function rideStep(dt,can){
     if(sl.contact&&Math.abs(info.side)>0.75){ sl.tipT=(sl.tipT||0)+sub; if(sl.tipT>0.5){ sledCrash('Rolled the sled on the sidehill'); return; } } else sl.tipT=Math.max(0,(sl.tipT||0)-sub*(sl.contact?2:0.5));
     if(sl.y<R.terrainBase(sl.z)-2.5){ sledCrash('Fell into a crevasse'); return; }
   }
-  const spd=Math.hypot(sl.u,sl.w); sl.speed=sl.u; sl.air=!sl.contact;
+  const spd=Math.hypot(sl.u,sl.w); sl.speed=sl.u; sl.air=!sl.contact; sledRunOver(sl,spd);
   { const L=R.bound-2; if(sl.z<-L){ sl.z=-L; sl.u=Math.max(0,sl.u); } if(sl.z>L){ sl.z=L; sl.u=Math.min(0,sl.u); } if(sl.x<-L){ sl.x=-L; sl.u*=0.3; } if(sl.x>L){ sl.x=L; sl.u*=0.3; } }
   // obstacles: fast means crash, slow means bump
   for(const o of R.hrT.obs){ if(Math.abs(o.z-sl.z)>4) continue; let hit=false;
@@ -6699,7 +7339,7 @@ function updHUD(dt){
   else if(P.using) center=`<div>${esc(ITEMS[P.using.it.id].name)}</div><div class="bar"><i style="width:${(1-P.using.t/P.using.total)*100}%"></i></div>`;
   else if(P.reloadT>0&&w) center=`<div>Reloading</div><div class="bar"><i style="width:${(1-P.reloadT/ITEMS[w.id].reload)*100}%"></i></div>`;
   else if(P.temp<20) center=`<div style="color:var(--bad)">Freezing. Get indoors or near a heater.</div>`;
-  else if(P.dead&&!R.spec) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
+  else if(P.dead&&!R.spec&&!R.recap) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
   if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. A squadmate can hold F to revive you.'}</div>`;
   if(R.rev&&NET.players[R.rev.id]) center=`<div>Reviving ${esc(NET.players[R.rev.id].name)}</div><div class="bar"><i style="width:${R.rev.t/REVIVE_TIME*100}%"></i></div>`;
   $('#center').innerHTML=center;
@@ -6730,11 +7370,32 @@ function renderRaidInv(){
 function revealTick(dt){ const t=R.lootTarget; if(!t) return; const next=t.cont.items.filter(i=>i.hid).sort((a,b)=>a.y-b.y||a.x-b.x)[0]; if(!next) return; R.revealT-=dt; if(R.revealT<=0){ delete next.hid; R.revealT=0.35+ITEMS[next.id].rar*0.18; if(drag) R.dirty=true; else renderRaidInv(); } }
 
 /* ---- end raid ---- */
-function endRaid(kind,detail){
-  if(!R||R.over) return; R.over=true; if(document.pointerLockElement) document.exitPointerLock();
+// endRaid never leaves you stuck: if anything in the bookkeeping fails, the raid is torn down anyway and you get home
+function endRaid(kind,detail){ if(!R||R.over) return; try{ endRaidInner(kind,detail); }catch(err){ console.error('endRaid',err); try{ logErr('endRaid: '+err.message,err.stack); }catch(e){} endRaidRescue(kind,detail); } }
+function endRaidRescue(kind,detail){
+  if(R&&R.dm&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
+  try{ if(kind!=='extract'&&R&&!R.gearGone){ SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; } S.inRaid=false; saveGame(); }catch(e){}
+  try{ if(NET.on) netLeave(); }catch(e){} try{ raidMusicStop(0.5); dronesStop(); windStop(); }catch(e){} try{ disposeScene(); }catch(e){}
+  R=null; P=null; try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){}
+  for(const id of ['raid','rinv','pause','brief','deathcard','spec','gpsmap','minimap','gpsline','scope','tvhud']){ const el=$('#'+id); if(el) el.hidden=true; }
+  $('#deathfade').style.opacity=0; document.body.classList.remove('inraid','spectating','tvmode');
+  const r=$('#result'); r.hidden=false; r.innerHTML=`<div class="card"><h2 class="${kind==='extract'?'ok':'bad'}">${kind==='extract'?'Extracted':kind==='kia'?'Killed in action':'Missing in action'}</h2><p class="muted" style="margin:0">${esc(detail||'')}</p><div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
+  $('#backBtn').onclick=goHub;
+}
+// everything that closes a raid's scene and HUD (normal raids and deathmatches)
+function raidTeardown(){
+  raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
+  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
+  document.body.classList.remove('inraid');
+  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode');
+}
+function endRaidInner(kind,detail){
+  if(R.dm) return dmFinish(kind);
+  R.over=true; if(document.pointerLockElement) document.exitPointerLock();
   try{ gaRaidEnd(kind); }catch(err){ console.warn('adaptive AI',err); } // score the enemies' behaviour genes (57-ai.js)
   if(NET.on){ if(kind==='extract') nsend({t:'msg',text:`${S.name||'Nomad'} extracted through ${detail}`}); netLeave(); }
   const kills=R.kills, time=R.t, mapName=MAPS[R.map].name, startV=R.startValue;
+  let killedBy=''; if(kind==='kia') try{ killedBy=killerLine(R.recap&&R.recap.K&&R.recap.K.name?R.recap.K:killerInfo()); }catch(e){}
   for(const s of [...SLOTS,'pockets','pouch']){ const it=S.eq[s]; if(it&&it.items) for(const x of it.items) delete x.hid; }
   S.stats.raids++; S.stats.kills+=kills; S.career.raids++; S.career.kills+=kills; if(kind==='extract') S.career.extracts++;
   let deposited=0;
@@ -6746,26 +7407,35 @@ function endRaid(kind,detail){
     if(S.career.extracts%10===0) cacheBonus.push(`extraction #${S.career.extracts}`);
     S.cos.caches+=cacheIn+cacheBonus.length; }
   const bossRw=kind==='extract'?R.bossReward:null; if(bossRw){ S.cash+=bossRw.cash; S.cos.caches+=bossRw.caches; }
-  if(kind!=='extract'){ if(kind==='kia') S.stats.deaths++; SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; collectCash(); }
+  if(kind!=='extract'){ if(kind==='kia') S.stats.deaths++; SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; collectCash(); R.gearGone=true; }
   S.cash+=deposited; const gained=kind==='extract'?carriedValue()+deposited-R.startValue:deposited-R.startValue;
   if(kind==='extract') S.stats.best=Math.max(S.stats.best||0,gained);
   if(kind==='extract'){ const haul=value+deposited; qBump(o=>o.type==='extract'&&(!o.map||o.map===R.map)&&(!o.noFire||!R.fired)&&(!o.weather||o.weather===R.cond.weather)&&(!o.minHaul||haul>=o.minHaul)?1:0); }
   const fresh=kind==='extract'?goalExtract(value+deposited):[];
   const qlog=R.qlog||[];
   S.inRaid=false; saveGame(); accFlush();
-  raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
-  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
-  document.body.classList.remove('inraid');
+  raidTeardown();
   const title=kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
   const sub=kind==='extract'?`Out through ${detail}.`:kind==='kia'?`${detail}.`:(detail||'The raid timer ran out.')+'.';
   const r=$('#result'); r.hidden=false;
   r.innerHTML=`<div class="card"><span class="lbl">${mapName} · ${fmtTime(time)} in raid</span><h2 class="${title[0]}">${title[1]}</h2><p class="muted" style="margin:0">${esc(sub)} ${kind==='extract'?'Everything you carried is yours. Sell what you don\'t need.':'Your gear is gone. The secure pouch made it back.'}</p>
+   ${killedBy?`<p class="killedby"><span class="lbl">Killed by</span> ${esc(killedBy)}</p>`:''}
    <dl class="stats"><dt>Kills</dt><dd>${kills}</dd><dt>Cash deposited</dt><dd class="cash">${fmt$(deposited)}</dd><dt>${kind==='extract'?'Gear brought home':'Gear lost'}</dt><dd>${fmt$(kind==='extract'?value:startV)}</dd><dt>Net change</dt><dd class="cash" style="color:${gained>=0?'var(--cash)':'var(--bad)'}">${gained>=0?'+':'−'}${fmt$(Math.abs(gained))}</dd><dt>Balance</dt><dd class="cash" id="resBal">${fmt$(S.cash)}</dd>${bossRw?`<dt>Jarl's bounty</dt><dd class="cash">+${fmt$(bossRw.cash)} <span class="muted" style="font-size:12px">and ${bossRw.caches} sealed caches</span></dd>`:''}${cacheIn+cacheBonus.length?`<dt>Sealed caches</dt><dd style="color:var(--warn)">+${cacheIn+cacheBonus.length} <span class="muted" style="font-size:12px">${[cacheIn?`${cacheIn} carried out`:'',...cacheBonus].filter(Boolean).join(' · ')}</span></dd>`:''}</dl>${qlog.length?`<div class="qlog"><span class="lbl">Task progress</span>${qlog.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''}<div class="haulbox" id="haulBox" hidden></div>
    ${fresh.length?`<p class="muted newcoll"><span class="lbl">New in your collection</span> ${fresh.map(id=>esc(ITEMS[id].name)).join(' · ')}</p>`:''}
    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`;
   renderHaul($('#haulBox')); stinger(kind==='extract'?'extract':'down');
-  $('#backBtn').onclick=()=>{ r.hidden=true; $('#hub').hidden=false; setTab(NET.lobby?'deploy':'gear'); renderInvites(); applySeason(); if(S.music) musicStart(); };
+  $('#backBtn').onclick=goHub;
 }
+// back to the hideout from the results screen; if something in the hideout fails to draw, still show it
+function goHub(){ $('#result').hidden=true; $('#raid').hidden=true; $('#hub').hidden=false; document.body.classList.remove('inraid','spectating','tvmode');
+  try{ setTab(NET.lobby?'deploy':'gear'); }catch(e){ console.error(e); try{ logErr('goHub: '+e.message,e.stack); }catch(e2){} try{ setTab('gear'); }catch(e3){} }
+  try{ renderInvites(); applySeason(); if(S.music) musicStart(); }catch(e){ console.error(e); } }
+// never leave a blank screen: no raid running and nothing showing (or an empty results screen) for two seconds brings the hideout back
+let blankN=0; setInterval(()=>{ if(window.KOLVIK_WORKSHOP||!S) return; const res=$('#result');
+  const blank=!R&&$('#hub').hidden&&(res.hidden||!res.children.length)&&!document.querySelector('#mg:not([hidden]), #trade:not([hidden])');
+  const stuck=R&&R.over; // a raid that was ended but never torn down (frozen or black)
+  blankN=blank||stuck?blankN+1:0; if(blankN>=2){ blankN=0; try{ logErr(stuck?'raid stuck after ending: forced back to the hideout':'blank screen: brought the hideout back',''); }catch(e){}
+    if(stuck){ try{ disposeScene(); }catch(e){} R=null; P=null; $('#raid').hidden=true; $('#deathcard').hidden=true; if(document.pointerLockElement) document.exitPointerLock(); } goHub(); } },1000);
 function disposeScene(){ if(!scene) return; const keep=new Set(Object.values(MATS)); scene.traverse(o=>{ if(o.geometry&&o.geometry!==FXGEO) o.geometry.dispose(); if(o.material) for(const m of [].concat(o.material)) if(!keep.has(m)) m.dispose(); }); scene=null; }
 
 /* 81-loop-input: main loop, keyboard and mouse */
@@ -6774,11 +7444,12 @@ let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop); const dt=Math.min(0.1,(now-last)/1000)*(DBG.scale||1); last=now;
   if(!R||!scene) return;
+  if(P&&P.dead&&!R.over) deathTick(dt); if(!R||!scene) return; // runs even when paused (66-recap.js)
   if(!R.paused&&!R.over){
     R.t+=dt; const tl0=R.timeLeft;
     // online, the server's clock decides when the raid ends, so follow real time even if the frame rate drops
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
-    for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left: get to an extract or lose everything you carry`); sfxBeep(); setTimeout(sfxBeep,180); }
+    for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
     updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; doorsTick(dt); dropsTick(); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);
@@ -6870,6 +7541,8 @@ function netLeave(){ if(NET.on) wsend({t:'leaveRaid'}); NET.on=false; NET.player
 const stampL=list=>{ const t=performance.now(); for(const l of list) l._at=t; return list; };
 function netHubMsg(m){
   if(m.t==='grant'){ applyGrant(m); return true; }
+  if(m.t==='mgstart'||m.t==='mgscore'||m.t==='mgend') return mgNet(m);
+  if(m.t==='trreq'||m.t==='trade'||m.t==='trdone'||m.t==='trend') return tradeNet(m);
   switch(m.t){
     case 'hello': NET.id=m.id; NET.connected=true; NET.admin=!!m.admin; if(m.world) WORLD=m.world; $('#dbgBtn').hidden=!NET.admin; if(m.season){ NET.season=m.season; NET.hall=m.hall; applySeason(); } NET.lobbies=stampL(m.list||[]); NET.chat=(m.chat||[]).slice(-80); refreshOnline(); renderChat(); return true;
     case 'lobbies': NET.lobbies=stampL(m.list||[]); refreshOnline(); return true;
@@ -6905,8 +7578,11 @@ function onDM(m){
 function dmLine(m){ const d=new Date(m.ts||Date.now()); const tm=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; return `<div class="cm"><time>${tm}</time> <b class="${m.from===ACC.name?'me':''}">${esc(m.from)}</b> ${esc(m.text)}</div>`; }
 function renderInvites(){
   const el=$('#invites'); if(!el) return; NET.invites=NET.invites.filter(i=>Date.now()-i.at<180000);
-  if(R||!NET.invites.length){ el.innerHTML=''; return; }
-  el.innerHTML=NET.invites.map(i=>`<div class="invite"><span class="lbl">Squad invite</span><p><b>${esc(i.from)}</b> wants you in their squad.${NET.squad?' You will leave your current squad.':''}</p><div class="acts"><button class="btn sm" data-sacc="${esc(i.from)}">Join squad</button><button class="btn ghost sm" data-sdec="${esc(i.from)}">Decline</button></div></div>`).join('');
+  const tq=NET.trq=(NET.trq||[]).filter(r=>Date.now()-r.at<120000);
+  if(R||(!NET.invites.length&&(!tq.length||TRADE.on))){ el.innerHTML=''; return; }
+  el.innerHTML=(TRADE.on?'':tq.map(r=>`<div class="invite"><span class="lbl">Trade</span><p><b>${esc(r.from)}</b> wants to trade with you.</p><div class="acts"><button class="btn sm" data-tracc="${esc(r.from)}">Open trade</button><button class="btn ghost sm" data-trdec="${esc(r.from)}">Decline</button></div></div>`).join(''))+NET.invites.map(i=>`<div class="invite"><span class="lbl">Squad invite</span><p><b>${esc(i.from)}</b> wants you in their squad.${NET.squad?' You will leave your current squad.':''}</p><div class="acts"><button class="btn sm" data-sacc="${esc(i.from)}">Join squad</button><button class="btn ghost sm" data-sdec="${esc(i.from)}">Decline</button></div></div>`).join('');
+  el.querySelectorAll('[data-tracc]').forEach(b=>b.onclick=()=>{ wsend({t:'tracc',from:b.dataset.tracc}); NET.trq=NET.trq.filter(r=>r.from!==b.dataset.tracc); renderInvites(); });
+  el.querySelectorAll('[data-trdec]').forEach(b=>b.onclick=()=>{ wsend({t:'trdecline',from:b.dataset.trdec}); NET.trq=NET.trq.filter(r=>r.from!==b.dataset.trdec); renderInvites(); });
   el.querySelectorAll('[data-sacc]').forEach(b=>b.onclick=()=>{ wsend({t:'saccept',from:b.dataset.sacc}); NET.invites=NET.invites.filter(i=>i.from!==b.dataset.sacc); renderInvites(); socialBadge(); if(TAB==='friends') renderFriendList(); });
   el.querySelectorAll('[data-sdec]').forEach(b=>b.onclick=()=>{ wsend({t:'sdecline',from:b.dataset.sdec}); NET.invites=NET.invites.filter(i=>i.from!==b.dataset.sdec); renderInvites(); socialBadge(); if(TAB==='friends') renderFriendList(); });
 }
@@ -6931,8 +7607,8 @@ function renderFriendList(){
   const sq=NET.squad; const lead=sq&&sq.leader===NET.id;
   const stLbl={raid:'In raid',lobby:'In lobby',hideout:'At hideout',gone:'Offline'};
   sqEl.innerHTML=`<div class="colhead"><h2 class="h2">Squad</h2><span class="lbl">${sq?`${sq.members.length} of 4`:'No squad'}</span></div>
-   ${sq?`<ul class="members">${sq.members.map(m=>`<li class="${m.state!=='gone'?'rdy':''}"><span class="pip"></span><span class="mn">${esc(m.name)} ${m.id===sq.leader?'<span class="tag">leader</span>':''}${m.id===NET.id?' <span class="tag">you</span>':''}</span><span class="st">${stLbl[m.state]||''}${lead&&m.id!==NET.id?` <button class="btn ghost sm" data-spro="${m.id}">Make leader</button> <button class="btn ghost sm" data-skick="${m.id}">Remove</button>`:''}</span></li>`).join('')}</ul>
-     <div class="acts"><button class="btn ghost sm" id="sLeave">Leave squad</button></div>
+   ${sq?`<ul class="members">${sq.members.map(m=>`<li class="${m.state!=='gone'?'rdy':''}"><span class="pip"></span><span class="mn">${esc(m.name)} ${m.id===sq.leader?'<span class="tag">leader</span>':''}${m.id===NET.id?' <span class="tag">you</span>':''}</span><span class="st">${stLbl[m.state]||''}${lead&&m.id!==NET.id?` <button class="btn ghost sm" data-spro="${m.id}">Make leader</button> <button class="btn ghost sm warnbtn" data-skick="${m.id}">Kick</button>`:''}</span></li>`).join('')}</ul>
+     <div class="acts"><button class="btn ghost sm" id="sLeave">Leave squad</button>${lead?'<button class="btn ghost sm warnbtn" id="sDisband">Disband squad</button>':''}</div>
      <p class="muted" style="margin:0;font-size:13px">Squadmates can't hurt each other, show up green with a distance marker in raids, and follow the leader into lobbies. ${lead?'You pick the lobby on the Deploy tab.':`${esc(squadLeaderName())} picks the lobby.`} Every other player in the raid is still hostile.</p>`
    :'<p class="muted" style="margin:0">Invite an online friend to start a squad. Squads go into lobbies together and can\'t shoot each other.</p>'}
    ${NET.invites.length?`<h3>Invites</h3><ul class="frl">${NET.invites.map(i=>`<li><span class="dot on"></span><div class="fn"><b>${esc(i.from)}</b><small>wants you in their squad</small></div><div class="acts"><button class="btn sm" data-sacc="${esc(i.from)}">Join</button><button class="btn ghost sm" data-sdec="${esc(i.from)}">Decline</button></div></li>`).join('')}</ul>`:''}`;
@@ -6941,16 +7617,18 @@ function renderFriendList(){
   const inSquad=n=>!!(sq&&sq.members.some(m=>m.account===n));
   lists.innerHTML=`${NET.fin.length?`<h3>Requests</h3><ul class="frl">${NET.fin.map(n=>`<li><span class="dot"></span><div class="fn"><b>${esc(n)}</b><small>wants to be friends</small></div><div class="acts"><button class="btn sm" data-facc="${esc(n)}">Accept</button><button class="btn ghost sm" data-fdec="${esc(n)}">Decline</button></div></li>`).join('')}</ul>`:''}
    ${NET.fout.length?`<h3>Sent</h3><ul class="frl">${NET.fout.map(n=>`<li><span class="dot"></span><div class="fn"><b>${esc(n)}</b><small>request pending</small></div><div class="acts"><button class="btn ghost sm" data-fcan="${esc(n)}">Cancel</button></div></li>`).join('')}</ul>`:''}
-   ${fr.length?`<ul class="frl">${fr.map(f=>`<li class="${NET.dmWith===f.name?'sel':''}"><span class="dot ${f.online?'on '+f.state:''}"></span><button class="fn" data-dm="${esc(f.name)}"><b>${esc(f.name)}</b>${f.unread?` <span class="badge">${f.unread}</span>`:''}<small>${esc(f.status)}</small></button><div class="acts">${f.lobby&&!isFollower()&&!(NET.lobby&&NET.lobby.id===f.lobby)?`<button class="btn ghost sm" data-fjoin="${f.lobby}">Join lobby</button>`:''}<button class="btn ghost sm" data-inv="${esc(f.name)}" ${!f.online||inSquad(f.name)?'disabled':''}>${inSquad(f.name)?'In squad':'Invite'}</button><button class="btn ghost sm" data-frm="${esc(f.name)}" aria-label="Remove ${esc(f.name)}">✕</button></div></li>`).join('')}</ul>`:(NET.fin.length||NET.fout.length?'':'<p class="muted" style="margin:0">No friends yet. Add someone by the username they registered with.</p>')}`;
+   ${fr.length?`<ul class="frl">${fr.map(f=>`<li class="${NET.dmWith===f.name?'sel':''}"><span class="dot ${f.online?'on '+f.state:''}"></span><button class="fn" data-dm="${esc(f.name)}"><b>${esc(f.name)}</b>${f.unread?` <span class="badge">${f.unread}</span>`:''}<small>${esc(f.status)}</small></button><div class="acts">${f.lobby&&!isFollower()&&!(NET.lobby&&NET.lobby.id===f.lobby)?`<button class="btn ghost sm" data-fjoin="${f.lobby}">Join lobby</button>`:''}${f.online&&f.state!=='raid'?`<button class="btn ghost sm" data-trade="${esc(f.name)}">Trade</button>`:''}<button class="btn ghost sm" data-inv="${esc(f.name)}" ${!f.online||inSquad(f.name)?'disabled':''}>${inSquad(f.name)?'In squad':'Invite'}</button><button class="btn ghost sm" data-frm="${esc(f.name)}" aria-label="Remove ${esc(f.name)}">✕</button></div></li>`).join('')}</ul>`:(NET.fin.length||NET.fout.length?'':'<p class="muted" style="margin:0">No friends yet. Add someone by the username they registered with.</p>')}`;
   const all=$('#tabbody');
   all.querySelectorAll('[data-sacc],[data-sdec]').forEach(b=>b.onclick=()=>{ const acc=!!b.dataset.sacc; const from=b.dataset.sacc||b.dataset.sdec; wsend({t:acc?'saccept':'sdecline',from}); NET.invites=NET.invites.filter(i=>i.from!==from); renderInvites(); socialBadge(); renderFriendList(); });
   all.querySelectorAll('[data-spro]').forEach(b=>b.onclick=()=>wsend({t:'spromote',id:b.dataset.spro}));
   all.querySelectorAll('[data-skick]').forEach(b=>b.onclick=()=>wsend({t:'skick',id:b.dataset.skick}));
   const sl=$('#sLeave'); if(sl) sl.onclick=()=>wsend({t:'sleave'});
+  const sdb=$('#sDisband'); if(sdb) sdb.onclick=()=>{ if(!sdb.dataset.sure){ sdb.dataset.sure='1'; sdb.textContent='Disband: sure?'; return; } wsend({t:'sdisband'}); };
   lists.querySelectorAll('[data-facc]').forEach(b=>b.onclick=()=>wsend({t:'faccept',name:b.dataset.facc}));
   lists.querySelectorAll('[data-fdec]').forEach(b=>b.onclick=()=>wsend({t:'fdecline',name:b.dataset.fdec}));
   lists.querySelectorAll('[data-fcan]').forEach(b=>b.onclick=()=>wsend({t:'fcancel',name:b.dataset.fcan}));
   lists.querySelectorAll('[data-dm]').forEach(b=>b.onclick=()=>{ NET.dmWith=b.dataset.dm; renderFriendList(); renderDM(); $('#dmIn').focus(); });
+  lists.querySelectorAll('[data-trade]').forEach(b=>b.onclick=()=>{ b.disabled=true; tradeAsk(b.dataset.trade); });
   lists.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>{ b.disabled=true; wsend({t:'sinvite',name:b.dataset.inv}); });
   lists.querySelectorAll('[data-fjoin]').forEach(b=>b.onclick=()=>{ wsend({t:'ljoin',id:b.dataset.fjoin}); setTab('deploy'); });
   lists.querySelectorAll('[data-frm]').forEach(b=>b.onclick=()=>{ if(!b.dataset.sure){ b.dataset.sure='1'; b.textContent='Remove?'; return; } wsend({t:'fremove',name:b.dataset.frm}); if(NET.dmWith===b.dataset.frm){ NET.dmWith=null; renderDM(); } });
@@ -6975,7 +7653,7 @@ function playerColor(id){ let h=0; for(const ch of id) h=(h*31+ch.charCodeAt(0))
 function makeTag(name,col='#fff',title){ const ti=TITLES.includes(title)?title:''; const c=document.createElement('canvas'); c.width=160; c.height=ti?48:32; const g=c.getContext('2d'); g.font='bold 22px monospace'; g.textAlign='center'; g.fillStyle='#000'; g.fillText(name,81,24); g.fillStyle=col; g.fillText(name,80,23); if(ti){ g.font='bold 14px monospace'; g.fillStyle='#000'; g.fillText(ti,81,42); g.fillStyle='#e8c55a'; g.fillText(ti,80,41); } const t=new THREE.CanvasTexture(c); t.magFilter=THREE.NearestFilter; const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,fog:false})); sp.scale.set(2,ti?0.6:0.4,1); return sp; }
 function ensureRemote(id){ const p=NET.players[id]; if(!p||p.g||!scene||!R) return; p.lk=(p.st&&p.st.lk)||''; const L=parseLook(p.lk); const h=humanoid(Object.assign(lookOpts(L.fit,L.hv,L.av),{ud:{player:id}})); h.g.rotation.order='YXZ'; p.g=h.g; p.rig=h.rig; p.parts=h.parts; const tag=makeTag(p.name||'?',isMate(id)?'#7cc9a4':'#fff',p.st&&p.st.ti); p.tag=tag; tag.position.set(0,2.25,0); h.g.add(tag); h.g.visible=false; if(p.st){ h.g.position.set(p.st.x,0,p.st.z); } h.g.traverse(o=>o.layers.enable(1)); scene.add(h.g); R.targets.push(...h.parts); }
 const mySquad=()=>NET.squad?NET.squad.id:null;
-function isMate(id){ const q=NET.players[id]; return !!q&&(coopRaid()||!!(q.squad&&q.squad===mySquad())||!!(R&&R.sides&&q.side&&q.side===R.side)); }
+function isMate(id){ const q=NET.players[id]; if(R&&R.mode==='ffa') return false; if(R&&R.mode==='tdm') return !!(q&&q.side&&q.side===(R.side||1)); return !!q&&(coopRaid()||!!(q.squad&&q.squad===mySquad())||!!(R&&R.sides&&q.side&&q.side===R.side)); }
 function retag(){ for(const id in NET.players){ const q=NET.players[id]; if(!q.g||!q.tag) continue; q.g.remove(q.tag); const t=makeTag(q.name||'?',isMate(id)?'#7cc9a4':'#fff',q.st&&q.st.ti); t.position.set(0,2.25,0); q.g.add(t); q.tag=t; } }
 function friendlyFire(id,pt){ puff(pt,0xffffff,3,1); if(!R.ffWarn||R.t-R.ffWarn>3){ R.ffWarn=R.t; msg(`Hold fire: ${NET.players[id].name} is ${coopRaid()||(R&&R.sides)?'on your side':'in your squad'}`); } }
 function squadHud(hd){
@@ -7019,8 +7697,8 @@ function netMsg(m){
     case 'put': { const c=contById(m.cid); if(c){ place(c.cont,m.item); if(R.invOpen&&R.lootTarget===c) R.dirty=true; } break; }
     case 'pdmg': case 'adm': case 'pev': airMsg(m); break;
     case 'phit': { R.lastHitBy=m.from; R.lastHitT=R.t; const am=m.ammo==='fist'?{dmg:34,pen:6}:ITEMS[m.ammo]; const who=NET.players[m.from]?NET.players[m.from].name:'a player'; playerHit(am.dmg,am.pen,who,m.part); break; }
-    case 'eshot': for(let i=0;i<m.hits;i++) playerHit(m.dmg,m.pen,m.name,null,m.x!=null?{x:m.x,z:m.z}:null); break;
-    case 'ehit': { if(!NET.host) break; const e=R.enemies[m.i]; if(e&&!e.dead){ e.lastW=m.w; const am=m.ammo==='fist'?{dmg:34,pen:6}:ITEMS[m.ammo]; hitEnemy(e,m.part,am,new THREE.Vector3(m.px,m.py,m.pz),m.from); } break; }
+    case 'eshot': R.hitGun=ITEMS[m.gun]?m.gun:null; for(let i=0;i<m.hits;i++) playerHit(m.dmg,m.pen,m.name,null,m.x!=null?{x:m.x,z:m.z}:null); R.hitGun=null; break;
+    case 'ehit': { if(!NET.host) break; const e=R.enemies[m.i]; if(e&&!e.dead){ e.lastW=m.w; const am=m.ammo==='fist'?{dmg:34,pen:6}:m.ammo==='sled'?{dmg:Math.min(400,+m.dmg||0),pen:99,id:'sled'}:ITEMS[m.ammo]; if(!am) break; hitEnemy(e,m.part,am,new THREE.Vector3(m.px,m.py,m.pz),m.from); } break; }
     case 'shot': if(NET.host) hearShot(m.x,m.z,m.r); break;
     case 'estate': if(!NET.host) applyEstate(m,false); break;
     case 'body': addBody(m.cid,m.x,m.z,m.name,m.items); break;
@@ -7031,16 +7709,18 @@ function netMsg(m){
     case 'boss': applyBossEv(m,false); break;
     case 'msg': msg(m.text); break;
     case 'door': applyDoorMsg(m.id); break;
+    case 'runover': runOverMe(Math.min(400,+m.dmg||0),m.from); break;
     case 'dhit': { if(!NET.host) break; const d=R.drones&&R.drones[m.i]; if(d&&!d.dead) droneHit(d,{dmg:Math.min(200,+m.dmg||0)},{x:d.x,y:d.y,z:d.z},true); break; }
     case 'kcredit': { const e=R.enemies[m.i]; R.kills++; qKill(e||{kind:m.kind,pos:P.pos},m.head,m.w); goalKill(e||{kind:m.kind},m.head); break; }
-    case 'end': endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
+    case 'dmscore': case 'dmend': dmNet(m); break;
+    case 'end': if(R&&R.dm){ endRaid('dm'); break; } endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
   }
 }
 function netTick(dt){
   if(!NET.on||!R||R.over) return;
-  NET.sendT-=dt; if(NET.sendT<=0){ NET.sendT=0.07; if(R.lkBase==null) R.lkBase=lookStr(); { const st={t:'state',rd:R.ride?(R.ride.mode==='drive'?1:2):0,sh:R.sled?+R.sled.h.toFixed(2):0,sa:R.ride&&R.sled?[+(R.sled.pitch||0).toFixed(2),+(R.sled.roll||0).toFixed(2)]:0,cr:R.crashes||0,ps:(R.sled&&!R.ride)?[+R.sled.x.toFixed(1),+R.sled.y.toFixed(1),+R.sled.z.toFixed(1),+R.sled.h.toFixed(2)]:0,lk:R.lkBase+'|'+gearLook(),y:+P.y.toFixed(2),p:+P.pitch.toFixed(2),down:P.down?1:0,dt:P.down?Math.ceil(P.down.t):0,hp:Math.round(totalHP()),heli:(R.heli&&R.heli.phase==='in')?[+R.heli.g.position.x.toFixed(1),+R.heli.g.position.y.toFixed(1),+R.heli.g.position.z.toFixed(1),+R.heli.yaw.toFixed(2)]:0,grace:P.grace>0,x:+P.pos.x.toFixed(2),z:+P.pos.z.toFixed(2),yaw:+P.yaw.toFixed(3),crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,dead:P.dead,ti:(S.goals&&S.goals.title)||'',jam:myJammer()}; if(R.airMap) airState(st); nsend(st); } }
+  NET.sendT-=dt; if(NET.sendT<=0){ NET.sendT=0.07; if(R.lkBase==null) R.lkBase=lookStr(); { const st={t:'state',rd:R.ride?(R.ride.mode==='drive'?1:2):0,sh:R.sled?+R.sled.h.toFixed(2):0,sa:R.ride&&R.sled?[+(R.sled.pitch||0).toFixed(2),+(R.sled.roll||0).toFixed(2)]:0,cr:R.crashes||0,ps:(R.sled&&!R.ride)?[+R.sled.x.toFixed(1),+R.sled.y.toFixed(1),+R.sled.z.toFixed(1),+R.sled.h.toFixed(2)]:0,lk:R.lkBase+'|'+gearLook(),y:+P.y.toFixed(2),p:+P.pitch.toFixed(2),down:P.down?1:0,dt:P.down?Math.ceil(P.down.t):0,hp:Math.round(totalHP()),heli:(R.heli&&R.heli.phase==='in')?[+R.heli.g.position.x.toFixed(1),+R.heli.g.position.y.toFixed(1),+R.heli.g.position.z.toFixed(1),+R.heli.yaw.toFixed(2)]:0,grace:P.grace>0,x:+P.pos.x.toFixed(2),z:+P.pos.z.toFixed(2),yaw:+P.yaw.toFixed(3),crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,dead:P.dead,ti:(S.goals&&S.goals.title)||'',jam:myJammer(),gf:+freshness().toFixed(2)}; if(R.airMap) airState(st); nsend(st); } }
   if(R.airMap) airRemoteBegin();
-  for(const id in NET.players){ const p=NET.players[id]; if(!p.st) continue; if(p.g&&(p.st.lk||'')!==p.lk){ const pos=p.g.position.clone(), ry=p.g.rotation.y; scene.remove(p.g); R.targets=R.targets.filter(m=>!p.parts.includes(m)); p.g=null; ensureRemote(id); if(p.g){ p.g.position.copy(pos); p.g.rotation.y=ry; } } ensureRemote(id); if(!p.g) continue; remoteHeli(p,dt); p.g.visible=!p.st.dead&&!p.st.heli&&!(R.spec&&R.spec.id===id); const k=Math.min(1,dt*12); p.g.position.x+=(p.st.x-p.g.position.x)*k; p.g.position.z+=(p.st.z-p.g.position.z)*k; p.g.position.y+=(((p.st.y||0)+(p.st.down?0.22:0)+(p.st.rd?0.42:0))-p.g.position.y)*k; if(R.sleds) remoteSled(p,k); if(R.airMap) airRemote(id,p); p.g.rotation.x+=((p.st.down?-1.35:0)-p.g.rotation.x)*k; if(p.st.down){ const db=R.conts.find(c=>c.cid==='d'+id); if(db){ db.x=p.g.position.x; db.z=p.g.position.z; } } p.g.rotation.y=lerpA(p.g.rotation.y,p.st.yaw,k); if(p.g.visible) remotePose(p,dt); }
+  for(const id in NET.players){ const p=NET.players[id]; if(!p.st) continue; if(p.g&&(p.st.lk||'')!==p.lk){ const pos=p.g.position.clone(), ry=p.g.rotation.y; scene.remove(p.g); R.targets=R.targets.filter(m=>!p.parts.includes(m)); p.g=null; ensureRemote(id); if(p.g){ p.g.position.copy(pos); p.g.rotation.y=ry; } } ensureRemote(id); if(!p.g) continue; if(Math.hypot(p.st.x-p.g.position.x,p.st.z-p.g.position.z)>15){ p.g.position.x=p.st.x; p.g.position.z=p.st.z; } remoteHeli(p,dt); p.g.visible=!p.st.dead&&!p.st.heli&&!(R.spec&&R.spec.id===id); const k=Math.min(1,dt*12); p.g.position.x+=(p.st.x-p.g.position.x)*k; p.g.position.z+=(p.st.z-p.g.position.z)*k; p.g.position.y+=(((p.st.y||0)+(p.st.down?0.22:0)+(p.st.rd?0.42:0))-p.g.position.y)*k; if(R.sleds) remoteSled(p,k); if(R.airMap) airRemote(id,p); p.g.rotation.x+=((p.st.down?-1.35:0)-p.g.rotation.x)*k; if(p.st.down){ const db=R.conts.find(c=>c.cid==='d'+id); if(db){ db.x=p.g.position.x; db.z=p.g.position.z; } } p.g.rotation.y=lerpA(p.g.rotation.y,p.st.yaw,k); if(p.g.visible) remotePose(p,dt); }
   if(NET.host){ NET.estT-=dt; if(NET.estT<=0){ NET.estT=0.1; nsend({t:'estate',e:R.enemies.map(e=>[+e.pos.x.toFixed(2),+e.pos.z.toFixed(2),+e.yaw.toFixed(2),Math.round(e.hp),Math.round(e.headHp),e.dead?1:0,e.moving?1:0,enemyPoseBits(e),e.rig?Math.round(e.rig.s.aimP*100)/100:0]),shots:R.shots,dr:R.drones&&R.drones.length?droneState():undefined,bs:R.boss?[R.boss.maxHp,R.boss.phase,R.boss.awake?1:0]:undefined,ap:R.airMap?airEstate():undefined}); R.shots=[]; } }
 }
 
@@ -7053,8 +7733,8 @@ async function accFetch(url,method,body){ const r=await fetch(url,{method,header
 function accPush(obj){ if(!ACC.token||!NET.avail) return; ACC.pending=JSON.parse(JSON.stringify(obj)); clearTimeout(ACC.timer); ACC.timer=setTimeout(accFlush,400); }
 async function accFlush(){ if(!ACC.token||!ACC.pending) return; const body=ACC.pending; ACC.pending=null; try{ await accFetch('api/save','PUT',body); }catch(e){ if(/signed/.test(e.message)){ ACC.token=null; ACC.name=null; accStore(); accBtn(); toast('Signed out: your session expired.'); } } }
 addEventListener('beforeunload',()=>{ if(ACC.token&&ACC.pending&&navigator.sendBeacon){ /* best effort */ } });
-function accBtn(){ const b=$('#accBtn'); b.hidden=!NET.avail; b.textContent=ACC.name?`◉ ${ACC.name}`:'Sign in'; }
-async function accLoad(){ if(!ACC.token||!NET.avail) return; try{ const j=await accFetch('api/load','GET'); if(j.save&&j.save.v===2){ S=j.save; S.inRaid=false; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); applySeason(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} if(!R) renderTab(); } }catch(e){ if(/signed/.test(e.message)){ ACC.token=null; ACC.name=null; accStore(); } } accBtn(); }
+function accBtn(){ const b=$('#accBtn'); b.hidden=!NET.avail; b.textContent=ACC.name?`◉ ${ACC.name}`:'Sign in'; guestBar(); }
+async function accLoad(){ if(!ACC.token||!NET.avail) return; try{ const j=await accFetch('api/load','GET'); if(j.save&&j.save.v===2){ S=j.save; S.inRaid=false; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); applySeason(); takeGrants(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} if(!R) renderTab(); } }catch(e){ if(/signed/.test(e.message)){ ACC.token=null; ACC.name=null; accStore(); } } accBtn(); }
 function accModal(){
   const m=$('#accModal'); m.hidden=false;
   if(ACC.name){ m.innerHTML=`<div class="card acc"><span class="lbl">Account</span><h2>${esc(ACC.name)}</h2><p class="muted" style="margin:0">Your stash, cash, hideout and stats are saved on this server after every change. Sign in on any device to pick up where you left off.</p><div class="acts"><button class="btn ghost" id="accOut">Sign out</button><button class="btn" id="accClose">Close</button></div></div>`;
@@ -7063,9 +7743,10 @@ function accModal(){
   m.innerHTML=`<div class="card acc"><span class="lbl">Account</span><h2>Sign in</h2><p class="muted" style="margin:0">New name registers an account and keeps the progress in this browser. Existing name signs in and loads your server save.</p>
     <label class="lbl" for="accName">Name</label><input id="accName" maxlength="16" autocomplete="username" placeholder="3–16 letters, numbers, _">
     <label class="lbl" for="accPass">Password</label><input id="accPass" type="password" maxlength="64" autocomplete="current-password" placeholder="at least 6 characters">
+    <p class="pwwarn">⚠ ${pwWarning()}</p>
     <div class="err" id="accErr"></div><div class="acts"><button class="btn" id="accIn">Sign in</button><button class="btn ghost" id="accReg">Register</button><button class="btn ghost" id="accClose">Cancel</button></div></div>`;
   const go=async(reg)=>{ const name=$('#accName').value.trim(), pass=$('#accPass').value; $('#accErr').textContent='';
-    try{ const j=await accFetch(reg?'api/register':'api/login','POST',reg?{name,pass,save:S}:{name,pass}); ACC.token=j.token; ACC.name=j.name; accStore(); NET.dms=new Map(); NET.dmWith=null; netHello(); if(!reg){ if(j.save&&j.save.v===2){ S=j.save; S.inRaid=false; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); applySeason(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} } else accPush(S); } m.hidden=true; accBtn(); if(!S.name) S.name=j.name.slice(0,14); renderTab(); toast(reg?`Account ${j.name} created.`:`Signed in as ${j.name}.`); }
+    try{ const j=await accFetch(reg?'api/register':'api/login','POST',reg?{name,pass,save:S}:{name,pass}); ACC.token=j.token; ACC.name=j.name; accStore(); NET.dms=new Map(); NET.dmWith=null; netHello(); if(!reg){ if(j.save&&j.save.v===2){ S=j.save; S.inRaid=false; S.stash.h=STASH_ROWS[S.hide.stash]; normSave(); applySeason(); takeGrants(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} } else accPush(S); } m.hidden=true; accBtn(); if(!S.name) S.name=j.name.slice(0,14); renderTab(); toast(reg?`Account ${j.name} created.`:`Signed in as ${j.name}.`); }
     catch(e){ $('#accErr').textContent=e.message; } };
   $('#accIn').onclick=()=>go(false); $('#accReg').onclick=()=>go(true); $('#accClose').onclick=()=>m.hidden=true;
   $('#accPass').onkeydown=e=>{ if(e.key==='Enter') go(false); };
@@ -7088,7 +7769,7 @@ $('#nextBtn').onclick=()=>musicNext();
 // browsers only allow sound after a click, so start the menu theme on the first interaction
 // on click, not pointerdown: starting the music changes the header, and doing that between press and release made the first click on the page miss its button
 document.addEventListener('click',function first(){ document.removeEventListener('click',first,true); setTimeout(()=>{ if(S.music&&!R&&!MUS.on) musicStart(); },0); },true);
-if(!S.name) S.name=''; if(!S.lastKit) S.lastKit=[]; normSave(); buildHUD(); $('#scope').innerHTML=scopeSvg(); setTab('gear'); $('#accBtn').onclick=accModal; $('#optBtn').onclick=openOpts; $('#dbgBtn').onclick=openDebug;
+if(!S.name) S.name=''; if(!S.lastKit) S.lastKit=[]; normSave(); buildHUD(); $('#scope').innerHTML=scopeSvg(); setTab('gear'); $('#accBtn').onclick=accModal; $('#tipsBtn').onclick=tipsReset; $('#optBtn').onclick=openOpts; $('#dbgBtn').onclick=openDebug;
 $('#rchatForm').onsubmit=e=>{ e.preventDefault(); const t=$('#rchatIn').value.trim(); let mm;
   if(t){ if((mm=t.match(/^@(\w{3,16})\s+(.+)/))) wsend({t:'dm',to:mm[1].toLowerCase(),text:mm[2]});
     else if((mm=t.match(/^\/r\s+(.+)/))){ if(NET.lastDM) wsend({t:'dm',to:NET.lastDM,text:mm[1]}); else raidNote('Nobody has messaged you yet.'); }

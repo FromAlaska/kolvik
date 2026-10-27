@@ -19,8 +19,8 @@ const css=`
 #dbg button.b.warn{border-color:#7a2a20; color:#ff9a8a}
 #dbg input,#dbg select{background:#0e181d; color:var(--frost); border:1px solid var(--line); padding:4px 6px; font:12px var(--mono); min-width:0}
 #dbg table{border-collapse:collapse; width:100%; font:12px var(--mono)} #dbg td{padding:2px 4px; border-bottom:1px solid #18252b; vertical-align:top} #dbg td:first-child{color:var(--dim); white-space:nowrap}
-#dbg .list{display:flex; flex-direction:column; gap:3px; max-height:320px; overflow:auto}
-#dbg .it{display:flex; gap:6px; align-items:center; padding:3px 4px; background:#0e181d} #dbg .it span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#dbg .list{display:flex; flex-direction:column; gap:3px; max-height:320px; overflow:auto; flex-shrink:0}
+#dbg .it{display:flex; flex-shrink:0; gap:6px; align-items:center; padding:3px 4px; background:#0e181d} #dbg .it span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 #dbg .it img{width:22px; height:22px; image-rendering:pixelated}
 #dbg canvas{width:100%; background:#0e181d; cursor:crosshair; image-rendering:pixelated}
 #dbg .err{font:11.5px var(--mono); background:#1a0f0e; border-left:3px solid var(--bad); padding:4px 6px; white-space:pre-wrap; word-break:break-word}
@@ -237,18 +237,23 @@ function tabMap(el){
 
 /* ---------- Server ---------- */
 let srv=null, srvErr='';
+let GIVE_LAST='', GIVE_TO='';
 async function loadSrv(){ try{ srv=await api('api/admin/state'); srvErr=''; }catch(e){ srvErr=e.message; } if(panel&&TABD==='server') render(); }
 function tabServer(el){
   if(!NET.avail){ el.innerHTML='<p class="muted">Not running on the server.</p>'; return; }
   if(!srv&&!srvErr){ el.innerHTML='<p class="muted">Loading…</p>'; loadSrv(); return; }
   if(srvErr){ el.innerHTML=`<p class="err">${esc2(srvErr)}</p><button class="b" data-a="r">Retry</button>`; btns(el,{r:()=>{ srvErr=''; loadSrv(); }}); return; }
   el.innerHTML=`${table([['Up',fmtTime(srv.uptime)+' · '+srv.mem+' MB'],['Season',`${srv.season.n} · ends ${new Date(srv.season.end).toLocaleDateString()}`],['Accounts',srv.accounts],['Admins',srv.admins.join(', ')]])}<div class="row"><button class="b" data-a="refresh">Refresh</button></div>
-   <h4>Online (${srv.players.length})</h4><div class="list">${srv.players.map(q=>`<div class="it"><span>${esc2(q.name)}${q.account?'':' <span class="muted">guest</span>'} <span class="muted">${q.room?'in '+q.room:q.lobby?'lobby '+q.lobby:'hideout'}${q.squad?' · squad':''}</span></span>${q.id!==NET.id?`<button class="b warn" data-kick="${q.id}">Kick</button>`:''}</div>`).join('')}</div>
+   <h4>Online (${srv.players.length})</h4><div class="list">${srv.players.map(q=>`<div class="it"><span>${esc2(q.name)}${q.account?(q.account!==String(q.name||'').toLowerCase()?` <span class="muted">(account ${esc2(q.account)})</span>`:''):' <span class="muted">guest</span>'} <span class="muted">${q.room?'in '+q.room:q.lobby?'lobby '+q.lobby:'hideout'}${q.squad?' · squad':''}</span></span>${q.account?`<button class="b" data-giveto="${esc2(q.account)}">Give…</button>`:''}${q.id!==NET.id?`<button class="b warn" data-kick="${q.id}">Kick</button>`:''}</div>`).join('')}</div>
    <h4>Raids (${srv.rooms.length})</h4><div class="list">${srv.rooms.map(r=>`<div class="it"><span>${r.id} · ${esc2(MAPS[r.map]?MAPS[r.map].name:r.map)} · ${r.diff} · ${fmtTime(r.timeLeft)} · ${r.players.map(esc2).join(', ')} <span class="muted">AI: ${esc2(r.host||'—')}</span></span><button class="b warn" data-end="${r.id}">End</button></div>`).join('')||'<span class="muted">none</span>'}</div>
    <h4>Lobbies (${srv.lobbies.length})</h4><div class="list">${srv.lobbies.map(l=>`<div class="it"><span>${esc2(l.name)} · ${esc2(l.map)} · ${l.state} · ${l.members.map(esc2).join(', ')}</span></div>`).join('')||'<span class="muted">none</span>'}</div>
    <h4>Message everyone</h4><div class="row"><input id="dbgBc" placeholder="Server restarting in 5 minutes" style="flex:1"><button class="b" data-a="bc">Send</button></div>
-   <h4>Send to a player</h4><div class="row"><input id="dbgTo" placeholder="account name" style="width:120px"><input id="dbgGc" type="number" placeholder="cash" style="width:80px"><input id="dbgGk" type="number" placeholder="caches" style="width:64px"><input id="dbgGs" type="number" placeholder="scrip" style="width:64px"></div>
-   <div class="row"><input id="dbgGi" placeholder="item id (optional)" style="width:140px"><input id="dbgGn" type="number" placeholder="qty" style="width:56px"><button class="b" data-a="give">Send</button></div>
+   <h4 id="dbgGiveH">Give money or items to a player</h4>
+   <p class="muted">Account name, as it appears in the Online list above (start typing for suggestions). Online players get it straight away, mid-raid too; offline players find it when they next sign in. A negative cash amount takes money away (never below $0).</p>
+   <datalist id="dbgNames">${(srv.names||[]).map(n=>`<option value="${esc2(n)}">`).join('')}</datalist>
+   <div class="row"><input id="dbgTo" list="dbgNames" placeholder="account name" style="width:140px" autocomplete="off"><input id="dbgGc" type="number" placeholder="cash" style="width:96px"><button class="b" data-amt="10000">+10k</button><button class="b" data-amt="100000">+100k</button><button class="b" data-amt="1000000">+1M</button></div>
+   <div class="row"><input id="dbgGk" type="number" min="0" placeholder="caches" style="width:72px"><input id="dbgGs" type="number" min="0" placeholder="scrip" style="width:72px"><input id="dbgGi" placeholder="item id (optional)" style="width:140px"><input id="dbgGn" type="number" placeholder="qty" style="width:56px"><button class="b" data-a="give">Send</button></div>
+   <p class="muted" id="dbgGiveOut"></p>
    <h4>Season</h4><div class="row"><button class="b warn" data-a="season">End season now</button></div>
    <h4>Backups</h4><p class="muted">${srv.db?`kolvik.sqlite · ${(srv.db.size/1024).toFixed(0)} KB · ${srv.db.users} accounts, ${srv.db.saves} saves, ${srv.db.dms} threads · daily snapshots: ${srv.db.snapshots.length?esc2(srv.db.snapshots[0]):'none yet'}`:''}</p>
    <div class="row"><button class="b" data-a="bakjson">Download backup (.json)</button><button class="b" data-a="bakdb">Download database (.sqlite)</button><button class="b" data-a="snap">Snapshot now</button></div>
@@ -262,9 +267,12 @@ function tabServer(el){
     snap:async()=>{ const r=await api('api/admin/snapshot','POST'); say('saved '+r.file); loadSrv(); },
     restore:async(b)=>{ const f=$('#dbgRestore').files[0]; if(!f) throw new Error('choose a backup .json first'); if(!b.dataset.sure){ b.dataset.sure=1; b.textContent='Click again to restore'; throw new Error('click again to confirm'); } const doc=JSON.parse(await f.text()); const r=await api('api/admin/restore','POST',{backup:doc}); say(`restored ${r.users} accounts, ${r.saves} saves`); loadSrv(); },
     bc:async()=>{ const t=$('#dbgBc').value.trim(); if(t){ await api('api/admin/broadcast','POST',{text:t}); say('sent'); } },
-    give:async()=>{ const it=$('#dbgGi').value.trim(); if(it&&!ITEMS[it]) throw new Error('unknown item id'); const r=await api('api/admin/give','POST',{name:$('#dbgTo').value.trim(),cash:+$('#dbgGc').value||0,caches:+$('#dbgGk').value||0,scrip:+$('#dbgGs').value||0,items:it?[[it,+$('#dbgGn').value||1]]:[]}); say('delivered to '+r.delivered); },
+    give:async()=>{ const it=$('#dbgGi').value.trim(); if(it&&!ITEMS[it]) throw new Error('unknown item id'); const to=$('#dbgTo').value.trim(); if(!to) throw new Error('type an account name'); GIVE_TO=to; const r=await api('api/admin/give','POST',{name:to,cash:Math.round(+$('#dbgGc').value||0),caches:+$('#dbgGk').value||0,scrip:+$('#dbgGs').value||0,items:it?[[it,+$('#dbgGn').value||1]]:[]}); GIVE_LAST=`Sent to ${r.account}: ${r.delivered}`; say(GIVE_LAST); },
     season:async(b)=>{ if(!b.dataset.sure){ b.dataset.sure=1; b.textContent='Click again: wipes everyone'; throw new Error('click again to confirm'); } await api('api/admin/season/next','POST'); say('season ended'); loadSrv(); },
   });
+  { const out=el.querySelector('#dbgGiveOut'); if(out) out.textContent=GIVE_LAST; const t=el.querySelector('#dbgTo'); if(t&&GIVE_TO) t.value=GIVE_TO; }
+  el.querySelectorAll('[data-giveto]').forEach(b=>b.onclick=()=>{ const t=el.querySelector('#dbgTo'); t.value=b.dataset.giveto; el.querySelector('#dbgGiveH').scrollIntoView({block:'start'}); el.querySelector('#dbgGc').focus(); });
+  el.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{ const c=el.querySelector('#dbgGc'); c.value=(Math.round(+c.value||0))+(+b.dataset.amt); });
   el.querySelectorAll('[data-kick]').forEach(b=>b.onclick=async()=>{ try{ await api('api/admin/kick','POST',{id:b.dataset.kick}); loadSrv(); }catch(e){ say(e.message); } });
   el.querySelectorAll('[data-end]').forEach(b=>b.onclick=async()=>{ try{ await api('api/admin/endroom','POST',{id:b.dataset.end}); loadSrv(); }catch(e){ say(e.message); } });
 }

@@ -4,7 +4,7 @@ function playerHit(dmg,pen,src,part,from){
   if(from) hitDir(from.x,from.z,false);
   // inside an aircraft the bullet hits the airframe first (the Skylark passenger sits in the open and is fair game)
   if(R&&R.fly&&!R.fly.hand){ const pl=R.planes[R.fly.i]; if(pl&&!pl.dead){ planeDamage(pl,dmg*0.6,R.lastHitBy&&R.t-R.lastHitT<0.2?R.lastHitBy:null); P.hurt=Math.min(1,P.hurt+0.1); return; } }
-  if(P.dead||DBG.god) return;
+  if(P.dead||DBG.god||(R&&R.dm&&(P.grace>0||R.dmOver))) return;
   if(P.down){ recordHit(src,part||'thorax',dmg*(part==='head'?2:1),from,true); P.down.hp-=dmg*(part==='head'?2:1); P.hurt=Math.min(1,P.hurt+0.4); sfxGrunt(0.45,90); if(P.down.hp<=0) reallyDie(`Finished off by ${src}`); return; }
   part=part||wpick([['head',0.08],['thorax',0.27],['stomach',0.2],['larm',0.11],['rarm',0.11],['lleg',0.115],['rleg',0.115]]);
   const gear=part==='head'?S.eq.helmet:(part==='thorax'||part==='stomach')?S.eq.armor:null;
@@ -23,8 +23,8 @@ function dmgPart(part,amt,cause){
   else spread(amt*0.7,cause);
 }
 function spread(amt,cause){ const alive=PARTS.filter(p=>P.hp[p]>0); if(!alive.length) return die(cause); const each=amt/alive.length; for(const p of alive){ P.hp[p]-=each; if(P.hp[p]<=0){ P.hp[p]=0; if(p==='head'||p==='thorax') return die(cause); } } }
-function die(cause){ if(P.dead) return; if(!P.down&&matesUp()) return goDown(cause); reallyDie(cause); }
-function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } R.deadT=1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
+function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&matesUp()) return goDown(cause); reallyDie(cause); }
+function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
 function myBodyItems(){ const out=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; if(it.items){ for(const x of it.items){ delete x.hid; out.push(x); } it.items=[]; } delete it.hid; out.push(it); } for(const x of S.eq.pockets.items){ delete x.hid; out.push(x); } return out; }
 function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
@@ -196,7 +196,7 @@ function updatePlayer(dt){
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
   const zoom=ws2&&ws2.zoom>1.2?ws2.zoom:0; P.sprB+=((P.sprint&&Math.hypot(P.vx,P.vz)>4?1:0)-P.sprB)*Math.min(1,dt*4); const fovT=72+((zoom?72/zoom:54)-72)*P.adsT+PMOVE.sprintFov*P.sprB*(1-P.adsT); if(Math.abs(fovT-P.fov)>0.05){ P.fov=fovT; camera.fov=fovT; camera.updateProjectionMatrix(); }
-  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0){ P.graceEnd=R.t; msg('Your cover is gone. Keep your head down for a bit: they are slow to notice you at first.'); } }
+  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0){ P.graceEnd=R.t; if(!R.dm) msg('Your cover is gone. Keep your head down for a bit: they are slow to notice you at first.'); } }
   P.kick=Math.max(0,P.kick-dt*9); P.punchT=Math.max(0,(P.punchT||0)-dt*5); P.hurt=Math.max(0,P.hurt-dt*0.9); P.shake=Math.max(0,(P.shake||0)-dt);
   // camera
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
@@ -215,7 +215,6 @@ function updatePlayer(dt){
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
         using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene); } }
-  if(P.dead&&!R.spec){ R.deadT-=dt; if(R.deadT<=0&&!R.recap) showRecap(); if(R&&R.recap) recapTick(dt); }
   if(R&&R.spec) specCam(dt);
   if(R&&!P.dead) pouchSaveTick();
 }

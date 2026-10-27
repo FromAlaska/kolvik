@@ -57,6 +57,16 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 #reticle{position:absolute; left:50%; top:50%; width:0; height:0}
 #reticle svg{position:absolute; left:0; top:0; transform:translate(-50%,-50%); overflow:visible; filter:drop-shadow(0 0 2px rgba(255,70,40,.75))}
 #deathfade{position:absolute; inset:0; background:#300; opacity:0; transition:opacity 1.2s}
+#deathcard{position:absolute; right:max(16px, env(safe-area-inset-right,0px)); top:50%; transform:translateY(-50%); z-index:55; pointer-events:auto; width:min(420px, calc(100% - 32px)); max-height:calc(100% - 32px); overflow:auto; animation:dcIn .45s ease-out}
+#deathcard .card{background:rgba(11,18,21,.9); gap:10px; padding:18px; box-sizing:border-box; width:100%; max-width:none}
+#deathcard h2{font-size:36px; color:var(--bad)}
+#deathcard .killed{margin:0; font-size:15px; line-height:1.4}
+#deathcard .killed b{font-family:var(--display); font-size:22px; letter-spacing:.03em; color:#fff}
+#deathcard .hitlog{grid-template-columns:auto 1fr; font-size:13px}
+#deathcard .pouchkept{margin:0; font-size:13px; line-height:1.45}
+#deathcard .acts{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap}
+@keyframes dcIn{from{opacity:0; transform:translate(12px,-50%)}}
+@media (max-width:640px){ #deathcard{left:16px; right:16px; width:auto; top:auto; bottom:max(16px, env(safe-area-inset-bottom,0px)); transform:none; max-height:62%} @keyframes dcIn{from{opacity:0}} }
 .overlay{position:absolute; inset:0; z-index:60; display:grid; place-items:center; background:rgba(5,9,11,.78); padding:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) max(16px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow:auto}
 .card{background:var(--panel); border:1px solid var(--line); padding:22px; max-width:560px; width:100%; display:flex; flex-direction:column; gap:14px}
 .card h2{font-family:var(--display); font-weight:800; font-size:44px; line-height:.95; letter-spacing:.03em}
@@ -70,6 +80,7 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 .searching{font-family:var(--mono); font-size:12px; color:var(--warn)}
 /* result */
 #result{position:fixed; inset:0; z-index:80; background:var(--ice); display:grid; place-items:center; overflow:auto; padding:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) max(16px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px))}
+#result .killedby{margin:0; font-size:15px; line-height:1.4} #result .killedby .lbl{margin-right:6px}
 #result .card h2.ok{color:var(--ok)} #result .card h2.bad{color:var(--bad)} #result .card h2.mia{color:var(--warn)}
 @media (prefers-reduced-motion: reduce){ .fig .bl{animation:none} #toast{transition:none} }
 /* operator: cosmetics + sealed caches */
@@ -91,7 +102,7 @@ body.spectating #bodyhud, body.spectating #weph, body.spectating #cross, body.sp
 .diffbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:0 0 14px; padding:10px 12px; background:var(--panel); border:1px solid var(--line)}
 .diffbar .seg button[data-diff="hard"][aria-checked="true"]{background:#c98a2a} .diffbar .seg button[data-diff="brutal"][aria-checked="true"]{background:var(--bad); color:#1a0503}
 .diffbar small{color:var(--dim); font-size:13px; flex:1 1 260px}
-.tag.d-hard{background:#3a2c10; color:#e8b04a} .tag.d-brutal{background:#3a1410; color:#ff8a7a}
+.tag.d-easy{background:#14302a; color:#7cc9a4} .tag.d-hard{background:#3a2c10; color:#e8b04a} .tag.d-brutal{background:#3a1410; color:#ff8a7a}
 #airhud{position:absolute; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); display:flex; gap:18px; align-items:flex-end; font-family:var(--mono); text-shadow:0 1px 0 #000, 0 0 6px rgba(0,0,0,.8); pointer-events:none}
 #aimdot{position:absolute; width:14px; height:14px; margin:-7px 0 0 -7px; border:2px solid rgba(120,220,255,.9); transform:rotate(45deg); box-shadow:0 0 3px #000; pointer-events:none}
 #cv.thermal{filter:grayscale(1) invert(1) contrast(1.35) brightness(0.95)}
@@ -157,3 +168,16 @@ body.tvmode #cross, body.tvmode #airhud{display:none}
 .gps-leg div{display:flex; align-items:center; gap:8px} .gps-leg i{width:12px; height:12px; border-radius:50%; flex:none}
 .gps-leg p{margin:4px 0 0; font-size:12.5px} #gpsInfo p{color:#ffb070; font-family:var(--mono)}
 @media (max-width:760px){ .gps-body{flex-direction:column} .gps-leg{width:auto; max-height:30vh} #minimap{width:120px; height:120px; bottom:calc(100px + env(safe-area-inset-bottom,0px))} #gpsline{bottom:calc(226px + env(safe-area-inset-bottom,0px))} }
+
+/* deathmatch */
+#dmhud{position:absolute; left:50%; top:calc(34px + env(safe-area-inset-top,0px)); transform:translateX(-50%); display:flex; gap:8px; align-items:baseline; background:rgba(11,18,21,.72); border:1px solid var(--line); padding:5px 12px; font-family:var(--mono); font-size:15px; white-space:nowrap; pointer-events:none}
+#dmhud i{color:var(--dim); font-style:normal} #dmhud small{color:var(--dim); font-size:11px; margin-left:6px}
+.side1{color:#7fb6e8} .side2{color:#ff8a6a}
+.dmboard{display:flex; gap:12px; flex-wrap:wrap}
+.dmboard table{border-collapse:collapse; font-family:var(--mono); font-size:13px; flex:1; min-width:160px}
+.dmboard caption{text-align:left; font-size:15px; padding-bottom:4px}
+.dmboard th{color:var(--dim); font-weight:400; text-align:left; font-size:11px; padding:2px 6px} .dmboard td{padding:3px 6px; border-top:1px solid var(--line)} .dmboard td+td,.dmboard th+th{text-align:right; width:34px}
+.dmboard tr.me td{color:var(--signal)} .dmboard tr.gone td{opacity:.5}
+.dmresp{margin:0; font-family:var(--mono)} .dmresp b{font-size:24px; color:var(--signal)}
+#deathcard h2.ok{color:var(--ok)}
+body.dmmode #taskHud{display:none}

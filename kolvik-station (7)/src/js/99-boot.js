@@ -15,7 +15,7 @@ $('#nextBtn').onclick=()=>musicNext();
 // browsers only allow sound after a click, so start the menu theme on the first interaction
 // on click, not pointerdown: starting the music changes the header, and doing that between press and release made the first click on the page miss its button
 document.addEventListener('click',function first(){ document.removeEventListener('click',first,true); setTimeout(()=>{ if(S.music&&!R&&!MUS.on) musicStart(); },0); },true);
-if(!S.name) S.name=''; if(!S.lastKit) S.lastKit=[]; normSave(); buildHUD(); $('#scope').innerHTML=scopeSvg(); setTab('gear'); $('#accBtn').onclick=accModal; $('#optBtn').onclick=openOpts; $('#dbgBtn').onclick=openDebug;
+if(!S.name) S.name=''; if(!S.lastKit) S.lastKit=[]; normSave(); buildHUD(); $('#scope').innerHTML=scopeSvg(); setTab('gear'); $('#accBtn').onclick=accModal; $('#tipsBtn').onclick=tipsReset; $('#optBtn').onclick=openOpts; $('#dbgBtn').onclick=openDebug;
 $('#rchatForm').onsubmit=e=>{ e.preventDefault(); const t=$('#rchatIn').value.trim(); let mm;
   if(t){ if((mm=t.match(/^@(\w{3,16})\s+(.+)/))) wsend({t:'dm',to:mm[1].toLowerCase(),text:mm[2]});
     else if((mm=t.match(/^\/r\s+(.+)/))){ if(NET.lastDM) wsend({t:'dm',to:NET.lastDM,text:mm[1]}); else raidNote('Nobody has messaged you yet.'); }

@@ -67,7 +67,7 @@ main#tabbody{flex:1; padding-block:20px 48px}
 .item .ic{position:absolute; left:2px; right:2px; top:12px; bottom:2px; background:center/contain no-repeat; image-rendering:pixelated; opacity:.95; pointer-events:none}
 .item .nm{position:relative; z-index:1} .item .bd{z-index:1}
 .atts{display:flex; flex-direction:column; gap:4px; border-top:1px solid var(--line); padding-top:8px}
-.attrow{display:grid; grid-template-columns:52px 1fr auto; gap:8px; align-items:center; font-size:13px}
+.attrow{display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; font-size:13px} .attrow > .lbl{width:52px} .attrow .attname{flex:1; min-width:90px} .attrow .attnone{font-size:12px}
 .online{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:24px; align-items:start}
 @media (max-width:900px){ .online{grid-template-columns:minmax(0,1fr)} }
 .lobbies,.members{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px}
@@ -240,3 +240,59 @@ table.board{border-collapse:collapse; min-width:760px; width:100%; font-variant-
 .newcoll{margin:10px 0 0}
 .goal .pip{width:14px; height:6px; background:var(--line); display:inline-block} .goal .pip.on{background:var(--warn)}
 .coll .ci .hic{background-position:center; background-repeat:no-repeat}
+
+/* ---------- rec room ---------- */
+.recbroke{margin:0 0 12px; padding:10px 12px; border-left:3px solid var(--cash); background:var(--panel); max-width:72ch}
+.recparty{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between; background:var(--panel2); border:1px solid var(--line); padding:12px 14px; margin-bottom:14px}
+.recparty .acts{display:flex; flex-wrap:wrap; gap:6px}
+.recgames .task h3{font-family:var(--display); font-size:26px; letter-spacing:.03em}
+.recgames .task .acts{margin-top:auto}
+#mg{position:fixed; z-index:90}
+.mgbox{background:var(--panel); border:1px solid var(--line); width:min(860px,100%); padding:18px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box}
+.mghead{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap}
+.mghead h2{font-family:var(--display); font-size:38px; line-height:.95; letter-spacing:.03em}
+.mghud{display:flex; gap:18px}
+.mghud span{display:flex; flex-direction:column; align-items:flex-end}
+.mghud b{font-family:var(--mono); font-size:26px; line-height:1; font-variant-numeric:tabular-nums}
+.mgmain{display:flex; gap:12px; align-items:stretch}
+.mgcv{position:relative; flex:1; min-width:0}
+.mgcv canvas{display:block; width:100%; aspect-ratio:320/200; image-rendering:pixelated; touch-action:none; cursor:crosshair; background:#000; border:1px solid var(--line)}
+.mgcount{position:absolute; inset:0; display:grid; place-items:center; font-family:var(--display); font-size:96px; color:var(--signal); text-shadow:0 2px 0 #000; pointer-events:none}
+.mgparty{list-style:none; margin:0; padding:0; width:180px; display:flex; flex-direction:column; gap:4px; font-family:var(--mono); font-size:13px}
+.mgparty li{display:flex; gap:8px; align-items:baseline; background:var(--panel2); padding:6px 8px}
+.mgparty li.me{outline:1px solid var(--signal)}
+.mgparty .pl{color:var(--dim)} .mgparty .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap} .mgparty small{color:var(--ok)}
+.mghow{margin:0; font-size:14px}
+#mgActs{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+.mgres{flex:1; min-width:220px} .mgres p{margin:0} .mgres .cash{color:var(--cash); font-family:var(--mono); font-size:22px}
+@media (max-width:640px){ .mgmain{flex-direction:column} .mgparty{width:auto} .mghead h2{font-size:30px} .mgbox{padding:12px} }
+
+/* ---------- trading ---------- */
+#trade{position:fixed; z-index:88}
+.tradebox{background:var(--panel); border:1px solid var(--line); width:min(980px,100%); padding:18px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box; max-height:calc(100dvh - 32px)}
+.tradecols{display:grid; grid-template-columns:1fr 1fr; gap:14px; min-height:0; overflow:auto}
+.tcol{background:var(--panel2); border:1px solid var(--line); padding:12px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.tcol h3{font-family:var(--display); font-size:24px; letter-spacing:.03em; display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.tcash{display:flex; align-items:center; gap:8px; margin:0; font-family:var(--mono)}
+.tcash input{width:120px; background:var(--ice); border:1px solid var(--line); color:var(--frost); font:14px var(--mono); padding:5px 7px}
+.tlist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px}
+.tlist li{display:flex; align-items:center; gap:8px; background:var(--panel); padding:4px 6px; font-size:14px}
+.tlist .hic{width:26px; height:26px; flex:none; background-size:contain; background-repeat:no-repeat; background-position:center; image-rendering:pixelated}
+.tlist .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap} .tlist .v{font-family:var(--mono); font-size:12px; color:var(--cash)}
+.tstash{border-top:1px solid var(--line); padding-top:8px; display:flex; flex-direction:column; gap:6px}
+.tstash .tlist{max-height:260px; overflow:auto}
+.tstash input{background:var(--ice); border:1px solid var(--line); color:var(--frost); font:13px var(--mono); padding:4px 6px; width:140px}
+.tok{margin:0; color:var(--ok); font-weight:700} .tbad{margin:0; color:var(--bad)}
+.tradebox > .acts{display:flex; gap:8px; justify-content:flex-end}
+@media (max-width:720px){ .tradecols{grid-template-columns:1fr} .tradebox{padding:12px} }
+
+/* ---------- tips and the guest bar ---------- */
+.tabtip{display:flex; align-items:flex-start; gap:12px; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--signal); padding:10px 12px; margin:0 0 14px}
+.tabtip p{margin:0; flex:1; font-size:14px; line-height:1.5; max-width:110ch} .tabtip .lbl{padding-top:3px}
+kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line); border-bottom-width:2px; padding:0 4px; background:var(--ice); white-space:nowrap}
+#guestBar{display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; background:#2a2310; border-bottom:1px solid #5e4518; padding-block:10px}
+#guestBar p{margin:0; flex:1 1 420px; font-size:14px} #guestBar .pw{color:var(--warn)} #guestBar .acts{display:flex; gap:8px}
+.pwwarn{margin:2px 0 0; font-size:13px; line-height:1.45; color:var(--warn)}
+@media (max-width:640px){ .tabtip{flex-wrap:wrap} .tabtip .lbl{width:100%} }
+
+.btn.warnbtn{color:var(--bad); border-color:rgba(226,87,74,.5)}

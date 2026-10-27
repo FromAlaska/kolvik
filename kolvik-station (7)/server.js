@@ -16,12 +16,35 @@ const DUR = { kolvik: 540, whiteout: 420, vault: 360, skarsvik: 900, ironfjord: 
 const TEAM_MAPS = new Set(['skerries']);
 // co-op maps: everyone in the raid is on the same side (no player damage; revives and downed looting for all)
 const COOP_MAPS = new Set(['ravnskar']);
-const DIFFS = new Set(['normal', 'hard', 'brutal']);
+const DIFFS = new Set(['easy', 'normal', 'hard', 'brutal']);
 // PvP-only maps: no AI, so a raid needs at least two sides (players not in the same squad)
 const PVP_MAPS = new Set(['ironfjord', 'hrimfell']);
+/* deathmatch modes: no AI, a fixed loadout (your own gear stays home), respawns, first to the kill limit or most kills
+   when the 10 minutes run out. Only on the compact maps. */
+const DM_MODES = { tdm: { limit: 40, dur: 600, name: 'Team deathmatch' }, ffa: { limit: 20, dur: 600, name: 'Free for all' } };
+const DM_MAPS = new Set(['ironfjord', 'kolvik', 'whiteout']);
+const teamMode = l => TEAM_MAPS.has(l.map) || l.mode === 'tdm';
 const MAP_NAMES = { kolvik: 'Kolvik Station', whiteout: 'Whiteout', vault: 'Black Ice Vault', skarsvik: 'Skarsvik Island', ironfjord: 'Ironfjord Depot', ravnskar: 'Fort Ravnskar', hrimfell: 'Hrimfell Run', storvidda: 'Storvidda', skerries: 'Skjærgård', kaldfjord: 'Kaldfjord Reach' };
 const COND_SLOT_MS = 3 * 3600 * 1000; // raid conditions rotate on this clock; clients compute the same table
 const SQUAD_MAX = 4;
+/* trading between friends (44-trade.js): both sides put items and cash up, both press Ready on the same version of
+   the deal, then each game gets what it gives and what it gets. Each side's offer sits in escrow in its own save
+   until then, so nothing can be used twice. */
+const trades = new Map(); let nextTrade = 1;
+function tradeState(T, q) { const o = T.a === q ? T.b : T.a; return { t: 'trade', id: T.id, with: o.account, mine: T.offer[q.id], theirs: T.offer[o.id], okMe: !!T.ok[q.id], okThem: !!T.ok[o.id], ver: T.ver }; }
+function tradeSend(T) { for (const q of [T.a, T.b]) send(q, tradeState(T, q)); }
+function tradeEnd(p, why) { const T = p.trade; if (!T) return; trades.delete(T.id); for (const q of [T.a, T.b]) { q.trade = null; send(q, { t: 'trend', id: T.id, reason: q === p ? 'Trade cancelled.' : `${p.account || p.name} ${why}.` }); } }
+function cleanOffer(m) {
+  const cash = Math.max(0, Math.min(1e9, Math.floor(+m.cash || 0)));
+  const items = Array.isArray(m.items) ? m.items.slice(0, 30).filter(x => x && typeof x === 'object' && typeof x.id === 'string' && JSON.stringify(x).length < 6000) : [];
+  return { cash, items };
+}
+const MG_SECS = { fish: 30, drop: 30, freq: 60, draw: 25 }; let nextMg = 1;
+function mgFinish(sq, mg) {
+  clearTimeout(mg.timer); if (sq.mg !== mg) return; sq.mg = null;
+  const rank = mg.players.map(id => ({ id, name: mg.names[id], score: mg.scores[id] || 0 })).sort((a, b) => b.score - a.score);
+  for (const id of mg.players) { const q = conns.get(id); if (q) send(q, { t: 'mgend', id: mg.id, rank }); }
+}
 // accounts allowed to use the debug tools (comma-separated usernames). Nobody else is even sent the debug code.
 const ADMINS = new Set(String(process.env.ADMINS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean));
 const isAdmin = name => !!name && ADMINS.has(name);
@@ -161,7 +184,7 @@ async function api(req, res, u) {
       players: [...conns.values()].map(q => ({ id: q.id, name: q.name, account: q.account, room: q.room ? q.room.id : null, lobby: q.lobby ? q.lobby.id : null, squad: q.squad ? q.squad.id : null })),
       lobbies: [...lobbies.values()].map(l => Object.assign(lobbyInfo(l), { members: [...l.members.keys()].map(id => (conns.get(id) || {}).name) })),
       rooms: [...rooms.values()].map(r => ({ id: r.id, map: r.map, diff: r.diff, timeLeft: timeLeft(r), host: (conns.get(r.hostId) || {}).name || null, players: [...r.players.values()].map(q => q.name), events: r.events.length, taken: r.taken.size, bodies: r.bodies.length })),
-      accounts: Object.keys(users).length, admins: [...ADMINS], db: dbInfo() });
+      accounts: Object.keys(users).length, names: Object.keys(users).sort().slice(0, 1000), admins: [...ADMINS], db: dbInfo() });
     if (u === '/api/admin/errors' && req.method === 'GET') return json(res, 200, { errors: clientErrors.slice().reverse() });
     if (u === '/api/admin/errors/clear' && req.method === 'POST') { clientErrors.length = 0; return json(res, 200, { ok: true }); }
     const b = req.method === 'POST' ? await readBody(req) : {};
@@ -183,13 +206,20 @@ async function api(req, res, u) {
       console.log(`backup restored by ${name}: ${r.users} accounts, ${r.saves} saves`); return json(res, 200, Object.assign({ ok: true }, r)); }
     if (u === '/api/admin/world' && req.method === 'POST') { world = cleanWorld(b.world); db.putKv('world', world); sendAll({ t: 'world', world }); console.log(`world config updated by ${name}`); return json(res, 200, { ok: true, world }); }
     if (u === '/api/admin/give' && req.method === 'POST') {
-      const who = String(b.name || '').toLowerCase(); if (!users[who]) return json(res, 404, { error: 'No such account.' });
-      const g = { cash: Math.max(0, Math.min(1e7, b.cash | 0)), caches: Math.max(0, Math.min(500, b.caches | 0)), scrip: Math.max(0, Math.min(1e5, b.scrip | 0)), items: Array.isArray(b.items) ? b.items.slice(0, 20).map(x => [String(x[0]).slice(0, 20), x[1] | 0]) : [] };
-      const online = [...conns.values()].find(q => q.account === who);
-      if (online) { send(online, Object.assign({ t: 'grant' }, g)); return json(res, 200, { ok: true, delivered: 'online' }); }
-      const sv = readSave(who); if (!sv) return json(res, 404, { error: 'That account has no save yet.' });
-      sv.cash = (sv.cash || 0) + g.cash; if (sv.cos) { sv.cos.caches = (sv.cos.caches || 0) + g.caches; sv.cos.scrip = (sv.cos.scrip || 0) + g.scrip; }
-      writeSave(who, sv); return json(res, 200, { ok: true, delivered: 'save file (items are only delivered to players who are online)' });
+      // the account name, or the name someone is showing in game right now
+      let who = String(b.name || '').trim().toLowerCase();
+      if (!users[who]) { const q = [...conns.values()].find(c => c.account && String(c.name || '').toLowerCase() === who); if (q) who = q.account; }
+      if (!users[who]) return json(res, 404, { error: `No account called "${String(b.name || '').slice(0, 30)}".` });
+      const g = { cash: Math.max(-1e7, Math.min(1e7, b.cash | 0)), caches: Math.max(0, Math.min(500, b.caches | 0)), scrip: Math.max(0, Math.min(1e5, b.scrip | 0)), items: Array.isArray(b.items) ? b.items.slice(0, 20).map(x => [String(x[0]).slice(0, 20), x[1] | 0]) : [] };
+      if (!g.cash && !g.caches && !g.scrip && !g.items.length) return json(res, 400, { error: 'Nothing to send.' });
+      console.log(`admin ${name} → ${who}: ${JSON.stringify(g)}`);
+      // online: their game adds it (it holds the live save and would overwrite a change made here)
+      const online = [...conns.values()].filter(q => q.account === who);
+      if (online.length) { for (const q of online) send(q, Object.assign({ t: 'grant' }, g)); return json(res, 200, { ok: true, account: who, delivered: 'online: it shows up in their game now' }); }
+      const sv = readSave(who); if (!sv) return json(res, 404, { error: `${who} has never saved a game on this server.` });
+      sv.cash = Math.max(0, (sv.cash || 0) + g.cash); if (sv.cos) { sv.cos.caches = (sv.cos.caches || 0) + g.caches; sv.cos.scrip = (sv.cos.scrip || 0) + g.scrip; }
+      if (g.items.length) sv.grants = (Array.isArray(sv.grants) ? sv.grants : []).concat([{ items: g.items }]).slice(-20);
+      writeSave(who, sv); return json(res, 200, { ok: true, account: who, cash: sv.cash, delivered: `offline: added to their save${g.items.length ? ' (items go into their stash when they next sign in)' : ''}. Balance now $${sv.cash.toLocaleString()}` });
     }
     return json(res, 404, { error: 'No such call.' });
   }
@@ -213,7 +243,7 @@ const timeLeft = r => Math.max(0, Math.round(r.dur - (Date.now() - r.start) / 10
 const cleanText = t => String(t || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200);
 const cleanName = n => String(n || '').replace(/[^\w \-]/g, '').trim().slice(0, 14);
 
-function lobbyInfo(l) { return { id: l.id, name: l.name, map: l.map, diff: l.diff || 'normal', air: l.air == null ? 1 : l.air, state: l.state, players: l.members.size, max: MAX_PLAYERS, timeLeft: l.room ? timeLeft(l.room) : null }; }
+function lobbyInfo(l) { return { id: l.id, name: l.name, map: l.map, mode: l.mode || 'raid', diff: l.diff || 'normal', air: l.air == null ? 1 : l.air, state: l.state, players: l.members.size, max: MAX_PLAYERS, timeLeft: l.room ? timeLeft(l.room) : null }; }
 function lobbyDetail(l) {
   return Object.assign(lobbyInfo(l), { owner: l.owner, members: [...l.members].map(([id, m]) => { const q = conns.get(id); return { id, name: q ? q.name : '?', guest: !(q && q.account), squad: q && q.squad ? q.squad.id : null, side: m.side || 0, ready: m.ready, inRaid: !!(q && l.room && q.room === l.room) }; }) });
 }
@@ -229,7 +259,7 @@ function lobbiesChanged() {
 setInterval(() => { for (const l of lobbies.values()) if (l.room) return lobbiesChanged(); }, 10000);
 
 // team maps: new members go to the smaller side, squadmates stay together
-function pickSide(p, l) { if (!TEAM_MAPS.has(l.map)) return 0; if (p.squad) for (const [id, m] of l.members) { const q = conns.get(id); if (q && q !== p && q.squad === p.squad && m.side) return m.side; } let a = 0, b = 0; for (const m of l.members.values()) { if (m.side === 1) a++; else if (m.side === 2) b++; } return a <= b ? 1 : 2; }
+function pickSide(p, l) { if (!teamMode(l)) return 0; if (p.squad) for (const [id, m] of l.members) { const q = conns.get(id); if (q && q !== p && q.squad === p.squad && m.side) return m.side; } let a = 0, b = 0; for (const m of l.members.values()) { if (m.side === 1) a++; else if (m.side === 2) b++; } return a <= b ? 1 : 2; }
 function joinLobby(p, l) { if (p.lobby && p.lobby !== l) leaveLobby(p); l.members.set(p.id, { ready: false, side: pickSide(p, l) }); p.lobby = l; lobbiesChanged(); touch(p); }
 function leaveLobby(p) {
   const l = p.lobby; if (!l) return;
@@ -241,23 +271,41 @@ function leaveLobby(p) {
 
 function openRoom(l) {
   const r = { id: 'r' + nextRoom++, map: l.map, world: JSON.parse(JSON.stringify(world)), seed: (Math.random() * 1e9) | 0, start: Date.now(), dur: DUR[l.map] || 480, players: new Map(), hostId: null, taken: new Set(), puts: [], bodies: [], doors: new Set(), estate: null, joins: 0, groups: new Map(), events: [], diff: l.diff || 'normal', coop: COOP_MAPS.has(l.map), lobby: l };
-  r.air = l.air == null ? 1 : l.air; r.teams = TEAM_MAPS.has(l.map);
-  r.timer = setTimeout(() => { toRoom(r, { t: 'end' }); closeRoom(r); }, r.dur * 1000 + 2000);
+  r.air = l.air == null ? 1 : l.air; r.teams = TEAM_MAPS.has(l.map); r.mode = l.mode || 'raid';
+  if (DM_MODES[r.mode]) { r.dur = DM_MODES[r.mode].dur; r.teams = r.mode === 'tdm'; r.dm = { limit: DM_MODES[r.mode].limit, kills: {}, deaths: {}, names: {}, sides: {}, team: { 1: 0, 2: 0 }, over: false }; }
+  r.timer = setTimeout(() => { if (r.dm && !r.dm.over) return dmEnd(r); toRoom(r, { t: 'end' }); closeRoom(r); }, r.dur * 1000 + 2000);
   rooms.set(r.id, r); console.log(`raid ${r.id} started on ${r.map} from lobby "${l.name}"`);
   return r;
 }
 function enterRoom(p, r) {
-  if (p.room) leaveRoom(p);
+  if (p.room) leaveRoom(p); tradeEnd(p, 'went into a raid');
   p.room = r; p.lastRoom = r.id; p.st = null; r.players.set(p.id, p); if (!r.hostId) r.hostId = p.id;
   p.side = r.teams ? ((r.lobby && r.lobby.members.get(p.id) || {}).side || 1) : 0;
   // squads share an insertion point; everyone else gets the next free one
   const sq = p.squad ? p.squad.id : null; let slot, mate = 0;
   if (sq && r.groups.has(sq)) { const g = r.groups.get(sq); slot = g.slot; mate = ++g.n; } else { slot = r.joins++; if (sq) r.groups.set(sq, { slot, n: 0 }); }
-  send(p, { t: 'launch', id: p.id, seed: r.seed, world: r.world, cslot: Math.floor(r.start / COND_SLOT_MS), map: r.map, timeLeft: timeLeft(r), hostId: r.hostId, slot, mate, diff: r.diff, side: p.side, air: r.air, events: r.events, players: [...r.players.values()].map(q => ({ id: q.id, name: q.name, st: q.st, squad: q.squad ? q.squad.id : null, side: q.side || 0 })), taken: [...r.taken], puts: r.puts, bodies: r.bodies, doors: [...r.doors], estate: r.estate });
+  if (r.dm) { r.dm.names[p.id] = p.name; r.dm.sides[p.id] = p.side; }
+  send(p, { t: 'launch', mode: r.mode, dmb: r.dm ? dmBoard(r) : undefined, id: p.id, seed: r.seed, world: r.world, cslot: Math.floor(r.start / COND_SLOT_MS), map: r.map, timeLeft: timeLeft(r), hostId: r.hostId, slot, mate, diff: r.diff, side: p.side, air: r.air, events: r.events, players: [...r.players.values()].map(q => ({ id: q.id, name: q.name, st: q.st, squad: q.squad ? q.squad.id : null, side: q.side || 0 })), taken: [...r.taken], puts: r.puts, bodies: r.bodies, doors: [...r.doors], estate: r.estate });
   toRoom(r, { t: 'pjoin', p: { id: p.id, name: p.name, squad: p.squad ? p.squad.id : null, side: p.side || 0 } }, p);
+  if (r.dm) dmBroadcast(r);
   touch(p);
 }
-function sameSide(r, p, v) { return r.coop || (p.squad && v.squad === p.squad) || (p.side && v.side === p.side); }
+function sameSide(r, p, v) { if (r.mode === 'ffa') return false; if (r.mode === 'tdm') return !!p.side && p.side === v.side; return r.coop || (p.squad && v.squad === p.squad) || (p.side && v.side === p.side); }
+function dmBoard(r) { const D = r.dm; return { mode: r.mode, limit: D.limit, team: D.team, over: D.over, rows: Object.keys(D.names).map(id => ({ id, name: D.names[id], side: D.sides[id] || 0, kills: D.kills[id] || 0, deaths: D.deaths[id] || 0, here: r.players.has(id) })) }; }
+function dmBroadcast(r, feed) { toRoom(r, { t: 'dmscore', board: dmBoard(r), feed }); }
+function dmDeath(r, p, k) {
+  const D = r.dm; D.deaths[p.id] = (D.deaths[p.id] || 0) + 1; let scored = false;
+  if (k && k !== p && !(r.mode === 'tdm' && k.side === p.side)) { D.kills[k.id] = (D.kills[k.id] || 0) + 1; if (r.mode === 'tdm' && k.side) D.team[k.side]++; scored = true; }
+  dmBroadcast(r, { k: k && k !== p ? k.name : null, kid: k && k !== p ? k.id : null, v: p.name, vid: p.id, tk: !!(k && k !== p && !scored) });
+  if (scored && (r.mode === 'tdm' ? D.team[k.side] >= D.limit : D.kills[k.id] >= D.limit)) dmEnd(r);
+}
+function dmEnd(r) {
+  const D = r.dm; if (D.over) return; D.over = true; const b = dmBoard(r); let winner = null;
+  if (r.mode === 'tdm') winner = D.team[1] > D.team[2] ? 1 : D.team[2] > D.team[1] ? 2 : 0;
+  else { const top = b.rows.slice().sort((x, y) => y.kills - x.kills); winner = top.length && (top.length < 2 || top[0].kills > top[1].kills) ? top[0].id : null; }
+  toRoom(r, { t: 'dmend', board: b, winner }); console.log(`${r.mode} ${r.id} over: ${JSON.stringify(D.team)} ${JSON.stringify(D.kills)}`);
+  clearTimeout(r.timer); r.timer = setTimeout(() => { toRoom(r, { t: 'end' }); closeRoom(r); }, 7000);
+}
 function closeRoom(r) {
   clearTimeout(r.timer); rooms.delete(r.id);
   for (const q of r.players.values()) { q.room = null; q.st = null; touch(q); }
@@ -269,7 +317,7 @@ function closeRoom(r) {
 function leaveRoom(p) {
   const r = p.room; if (!r) return;
   r.players.delete(p.id); p.room = null; p.st = null; touch(p);
-  toRoom(r, { t: 'pleave', id: p.id });
+  toRoom(r, { t: 'pleave', id: p.id }); if (r.dm && r.players.size) dmBroadcast(r);
   if (r.players.size === 0) return closeRoom(r);
   if (r.hostId === p.id) { r.hostId = r.players.keys().next().value; toRoom(r, { t: 'host', id: r.hostId }); }
   lobbiesChanged();
@@ -405,21 +453,27 @@ wss.on('connection', ws => {
         const l = lobbies.get(m.id);
         if (!l) return send(p, { t: 'sys', text: 'That lobby is gone.' });
         if (l.state !== 'waiting') return send(p, { t: 'sys', text: 'That raid has already started.' });
+        if (l.banned && l.banned.has(p.account || p.id)) return sys(p, 'The leader of that lobby removed you, so you cannot rejoin it.');
         if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
         const fl = followers(p).filter(f => f.lobby !== l);
         if (l.members.size + 1 + fl.length > MAX_PLAYERS) return send(p, { t: 'sys', text: fl.length ? 'Not enough room in that lobby for your squad.' : 'That lobby is full.' });
         joinLobby(p, l); for (const f of fl) joinLobby(f, l); return;
       }
       case 'lleave': { const l = p.lobby; if (l && !p.room) for (const f of followers(p)) if (f.lobby === l) leaveLobby(f); return leaveLobby(p); }
+      case 'lkick': { const l = p.lobby; if (!l || l.owner !== p.id) return; const q = conns.get(m.id); if (!q || q === p || q.lobby !== l) return;
+        if (q.room && l.room === q.room) return sys(p, `${q.name} is in the raid; you can kick them once they're back.`);
+        (l.banned = l.banned || new Set()).add(q.account || q.id); leaveLobby(q); sys(q, `${p.name} removed you from the lobby.`); sys(p, `${q.name} was removed from the lobby.`); return; }
       case 'lready': { const l = p.lobby; if (l && l.state === 'waiting') { const me = l.members.get(p.id); if (me) { me.ready = !!m.ready; lobbiesChanged(); } } return; }
       case 'ldiff': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DIFFS.has(m.diff)) { l.diff = m.diff; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
-      case 'lmap': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DUR[m.map]) { l.map = m.map; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (TEAM_MAPS.has(l.map)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
-      case 'lside': { const l = p.lobby; if (l && l.state === 'waiting' && TEAM_MAPS.has(l.map)) { const me = l.members.get(p.id); if (me) { me.side = me.side === 1 ? 2 : 1; me.ready = false; lobbiesChanged(); } } return; }
+      case 'lmode': { const l = p.lobby; const mode = DM_MODES[m.mode] ? m.mode : 'raid'; if (l && l.owner === p.id && l.state === 'waiting') { l.mode = mode; if (mode !== 'raid' && !DM_MAPS.has(l.map)) l.map = 'ironfjord'; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
+      case 'lmap': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DUR[m.map] && (!l.mode || l.mode === 'raid' || DM_MAPS.has(m.map))) { l.map = m.map; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
+      case 'lside': { const l = p.lobby; if (l && l.state === 'waiting' && teamMode(l)) { const me = l.members.get(p.id); if (me) { me.side = me.side === 1 ? 2 : 1; me.ready = false; lobbiesChanged(); } } return; }
       case 'lair': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && [0, 1, 2].includes(m.air)) { l.air = m.air; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
       case 'lstart': {
         const l = p.lobby; if (!l || l.owner !== p.id || l.state !== 'waiting') return;
         if (![...l.members.values()].every(x => x.ready)) return send(p, { t: 'sys', text: 'Not everyone is ready.' });
-        if (PVP_MAPS.has(l.map)) { const sides = new Set([...l.members.keys()].map(id => { const q = conns.get(id); return q && q.squad ? 's' + q.squad.id : id; })); if (sides.size < 2) return send(p, { t: 'sys', text: `${MAP_NAMES[l.map]} is PvP only: it needs at least two players who are not in the same squad.` }); }
+        if (DM_MODES[l.mode] && l.members.size < 2) return sys(p, `${DM_MODES[l.mode].name} needs at least two players.`);
+        if (PVP_MAPS.has(l.map) && !DM_MODES[l.mode]) { const sides = new Set([...l.members.keys()].map(id => { const q = conns.get(id); return q && q.squad ? 's' + q.squad.id : id; })); if (sides.size < 2) return send(p, { t: 'sys', text: `${MAP_NAMES[l.map]} is PvP only: it needs at least two players who are not in the same squad.` }); }
         const r = openRoom(l); l.room = r; l.state = 'raid';
         for (const id of l.members.keys()) { const q = conns.get(id); if (q) enterRoom(q, r); }
         return lobbiesChanged();
@@ -428,6 +482,7 @@ wss.on('connection', ws => {
         const l = lobbies.get(m.id);
         if (!l || !l.room) return send(p, { t: 'sys', text: 'That raid has ended.' });
         if (timeLeft(l.room) < 90) return send(p, { t: 'sys', text: 'Too little time left in that raid.' });
+        if (l.banned && l.banned.has(p.account || p.id)) return sys(p, 'The leader of that lobby removed you, so you cannot rejoin it.');
         if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
         const fl = followers(p);
         if (l.room.players.size + 1 + fl.length > MAX_PLAYERS) return send(p, { t: 'sys', text: 'That raid is full.' });
@@ -473,6 +528,55 @@ wss.on('connection', ws => {
       case 'dmhist': { if (!p.account) return; const w = uname(m.with); if (soc(p.account).friends.includes(w)) send(p, { t: 'dmhist', with: w, msgs: dmLoad(p.account, w).slice(-100) }); return; }
       case 'dmread': { if (!p.account) return; const w = uname(m.with); soc(p.account).reads[w] = Date.now(); socialDirty = true; sendFriends(p.account); return; }
 
+      // rec-room party rounds (43-recroom.js): the squad leader starts one, everyone in the squad who isn't in a raid plays it
+      case 'mgparty': {
+        const sq = p.squad; if (!sq || sq.leader !== p.id) return sys(p, 'Only the squad leader can start a party round.');
+        const game = String(m.game || ''); if (!MG_SECS[game]) return;
+        if (sq.mg && Date.now() < sq.mg.ends) return sys(p, 'A party round is already running.');
+        const ids = [...sq.members].filter(id => { const q = conns.get(id); return q && !q.room; }); if (ids.length < 2) return sys(p, 'Nobody else in your squad is free right now.');
+        const mg = { id: 'm' + (nextMg++), game, seed: (Math.random() * 2147483647) | 0, ends: Date.now() + 4000 + MG_SECS[game] * 1000 + 15000, players: ids, names: {}, scores: {}, final: new Set() };
+        for (const id of ids) mg.names[id] = conns.get(id).name;
+        sq.mg = mg; mg.timer = setTimeout(() => mgFinish(sq, mg), mg.ends - Date.now());
+        const players = ids.map(id => ({ id, name: mg.names[id] }));
+        for (const id of ids) send(conns.get(id), { t: 'mgstart', id: mg.id, game, seed: mg.seed, in: 4000, players });
+        return;
+      }
+      case 'mgscore': {
+        const sq = p.squad, mg = sq && sq.mg; if (!mg || mg.id !== m.id || !mg.players.includes(p.id)) return;
+        const sc = Math.max(0, Math.min(99999, Math.round(+m.score || 0))); mg.scores[p.id] = sc; if (m.final) mg.final.add(p.id);
+        for (const id of mg.players) { const q = conns.get(id); if (q && q !== p) send(q, { t: 'mgscore', id: mg.id, pid: p.id, score: sc, final: !!m.final }); }
+        if (mg.players.every(id => mg.final.has(id) || !conns.get(id) || conns.get(id).squad !== sq)) mgFinish(sq, mg);
+        return;
+      }
+      case 'trreq': {
+        if (!p.account) return sys(p, 'Sign in to trade.'); const n = uname(m.name);
+        if (!soc(p.account).friends.includes(n)) return sys(p, 'You can only trade with friends.');
+        if (p.room) return sys(p, 'Finish your raid first.'); if (p.trade) return sys(p, 'You are already trading.');
+        const t = connsOf(n).find(q => !q.room); if (!t) return sys(p, `${n} isn't at the hideout right now.`);
+        if (t.trade) return sys(p, `${n} is busy with another trade.`);
+        t.trq = t.trq || new Map(); t.trq.set(p.account, { pid: p.id, at: Date.now() });
+        send(t, { t: 'trreq', from: p.account }); sys(p, `Trade request sent to ${n}.`); return;
+      }
+      case 'trdecline': { const from = uname(m.from); if (p.trq) p.trq.delete(from); for (const q of connsOf(from)) sys(q, `${p.account || p.name} declined your trade.`); return; }
+      case 'tracc': {
+        const from = uname(m.from); const rq = p.trq && p.trq.get(from); if (p.trq) p.trq.delete(from);
+        if (!rq || Date.now() - rq.at > 120000) return sys(p, 'That trade request has expired.');
+        const a = conns.get(rq.pid); if (!a || a.account !== from || a.room) return sys(p, `${from} isn't at the hideout any more.`);
+        if (a.trade || p.trade || p.room) return sys(p, 'One of you is already trading.');
+        const T = { id: 't' + (nextTrade++), a, b: p, offer: { [a.id]: { cash: 0, items: [] }, [p.id]: { cash: 0, items: [] } }, ok: {}, ver: 0 };
+        trades.set(T.id, T); a.trade = p.trade = T; tradeSend(T); return;
+      }
+      case 'troffer': { const T = p.trade; if (!T || T.id !== m.id) return; T.offer[p.id] = cleanOffer(m); T.ver++; T.ok = {}; tradeSend(T); return; }
+      case 'trok': {
+        const T = p.trade; if (!T || T.id !== m.id || m.ver !== T.ver) return; T.ok[p.id] = !!m.ok;
+        if (T.ok[T.a.id] && T.ok[T.b.id]) {
+          trades.delete(T.id); T.a.trade = T.b.trade = null;
+          for (const [q, o] of [[T.a, T.b], [T.b, T.a]]) send(q, { t: 'trdone', id: T.id, with: o.account, give: T.offer[q.id], get: T.offer[o.id] });
+          console.log(`trade ${T.id}: ${T.a.account} gave $${T.offer[T.a.id].cash} + ${T.offer[T.a.id].items.length} items, ${T.b.account} gave $${T.offer[T.b.id].cash} + ${T.offer[T.b.id].items.length} items`);
+        } else tradeSend(T);
+        return;
+      }
+      case 'trcancel': return tradeEnd(p, 'cancelled the trade');
       case 'sinvite': {
         if (!p.account) return sys(p, 'Sign in to form a squad.');
         const n = uname(m.name); if (!soc(p.account).friends.includes(n)) return sys(p, 'You can only invite friends.');
@@ -502,7 +606,11 @@ wss.on('connection', ws => {
       }
       case 'sdecline': { const from = uname(m.from); if (p.invites) p.invites.delete(from); for (const q of connsOf(from)) sys(q, `${p.name} declined your squad invite.`); return; }
       case 'sleave': return leaveSquad(p);
-      case 'skick': { const sq = p.squad; if (!sq || sq.leader !== p.id) return; const q = conns.get(m.id); if (q && q.squad === sq && q !== p) { leaveSquad(q); sys(q, 'You were removed from the squad.'); } return; }
+      case 'skick': { const sq = p.squad; if (!sq || sq.leader !== p.id) return; const q = conns.get(m.id);
+        if (q && q.squad === sq && q !== p) { leaveSquad(q); sys(q, 'The squad leader removed you from the squad.'); sys(p, `${q.name} was removed from the squad.`); }
+        else if (!q && sq.members.has(m.id)) { sq.members.delete(m.id); squadSend(sq); }
+        return; }
+      case 'sdisband': { const sq = p.squad; if (!sq || sq.leader !== p.id) return; for (const id of [...sq.members]) { const q = conns.get(id); if (q && q !== p) { leaveSquad(q); sys(q, `${p.name} disbanded the squad.`); } } leaveSquad(p); return; }
       case 'spromote': { const sq = p.squad; if (!sq || sq.leader !== p.id || !sq.members.has(m.id)) return; sq.leader = m.id; squadSend(sq); lobbiesChanged(); return; }
     }
     const r = p.room; if (!r) return;
@@ -512,13 +620,14 @@ wss.on('connection', ws => {
       case 'put': if (m.item && typeof m.item === 'object') { r.puts.push({ cid: m.cid, item: m.item }); toRoom(r, { t: 'put', cid: m.cid, item: m.item, from: p.id }, p); } break;
       case 'body': if (Array.isArray(m.items) && m.items.length <= 60) { r.bodies.push({ cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }); toRoom(r, { t: 'body', cid: m.cid, x: m.x, z: m.z, name: m.name, items: m.items }, p); } break;
       case 'phit': { const v = r.players.get(m.pid); if (v && !sameSide(r, p, v)) send(v, { t: 'phit', part: m.part, ammo: m.ammo, from: p.id }); break; }
-      case 'eshot': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'eshot', hits: m.hits, dmg: m.dmg, pen: m.pen, name: m.name }); break; }
+      case 'eshot': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'eshot', hits: m.hits, dmg: m.dmg, pen: m.pen, name: m.name, x: Number.isFinite(m.x) ? m.x : undefined, z: Number.isFinite(m.z) ? m.z : undefined, gun: typeof m.gun === 'string' ? m.gun.slice(0, 24) : undefined }); break; }
       case 'ehit': case 'shot': case 'dhit': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, Object.assign({}, m, { from: p.id })); break; }
       case 'estate': if (p.id === r.hostId) { r.estate = { e: m.e, ap: m.ap, dr: m.dr }; toRoom(r, m, p); } break;
       case 'pdmg': { const v = r.players.get(m.pid); if (v && v !== p && (!sameSide(r, p, v) || (m.ai && p.id === r.hostId))) send(v, { t: 'pdmg', i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), from: m.ai ? null : p.id }); break; }
       case 'adm': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, { t: 'adm', i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), from: p.id }); break; }
       case 'pev': if (['dead', 'dmg', 'boom'].includes(m.k)) toRoom(r, { t: 'pev', k: m.k, i: m.i | 0, dmg: Math.min(5000, +m.dmg || 0), by: m.by ? String(m.by) : null, x: +m.x || 0, y: +m.y || 0, z: +m.z || 0 }, p); break;
       case 'msg': toRoom(r, { t: 'msg', text: String(m.text || '').slice(0, 120) }, p); break;
+      case 'runover': { const v = r.players.get(m.pid); if (v && v !== p && !sameSide(r, p, v)) send(v, { t: 'runover', dmg: Math.min(400, +m.dmg || 0), from: p.id }); break; }
       // a locked room someone opened stays open for everyone, including players who join later
       case 'door': if (typeof m.id === 'string' && m.id.length < 32 && r.doors.size < 40) { r.doors.add(m.id); toRoom(r, { t: 'door', id: m.id }, p); } break;
       // squad-only: going down, being looted while down, revives
@@ -528,10 +637,10 @@ wss.on('connection', ws => {
       // boss fight events come from whoever runs the AI; lasting ones are kept for players who join late
       case 'boss': if (p.id === r.hostId && typeof m.k === 'string') { const ev = { t: 'boss', k: m.k, x: +m.x || 0, z: +m.z || 0, p: m.p | 0, d: +m.d || 0, list: Array.isArray(m.list) ? m.list.slice(0, 16) : undefined }; if (ev.k !== 'mortar' && r.events.length < 40) r.events.push(ev); toRoom(r, ev, p); } break;
       case 'kcredit': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'kcredit', i: m.i, kind: m.kind, head: !!m.head, w: m.w }); break; }
-      case 'pdied': { const k = conns.get(m.by); if (k && k !== p && (k.room === r || k.lastRoom === r.id)) { bump(k.account, 'kills'); bump(p.account, 'deaths'); } break; }
+      case 'pdied': { const k = conns.get(m.by); if (k && k !== p && (k.room === r || k.lastRoom === r.id)) { bump(k.account, 'kills'); bump(p.account, 'deaths'); } if (r.dm && !r.dm.over) dmDeath(r, p, k && k.room === r ? k : null); break; }
     }
   });
-  const gone = () => { if (!conns.has(p.id)) return; leaveRoom(p); leaveLobby(p); leaveSquad(p); conns.delete(p.id); presenceChanged(p.account); };
+  const gone = () => { if (!conns.has(p.id)) return; tradeEnd(p, 'went offline'); leaveRoom(p); leaveLobby(p); leaveSquad(p); conns.delete(p.id); presenceChanged(p.account); };
   ws.on('close', gone); ws.on('error', gone);
 });
 

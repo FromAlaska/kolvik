@@ -19,7 +19,9 @@ function renderTab(){
   else if(TAB==='goals') renderGoals(body);
   else if(TAB==='friends') renderFriends(body);
   else if(TAB==='operator') renderOperator(body);
+  else if(TAB==='rec') renderRec(body);
   else renderDeploy(body);
+  tabTip(body); guestBar();
 }
 function getCont(key){
   if(key==='stash') return S.stash;
@@ -120,21 +122,29 @@ function renderInfo(el){
       if(it.mag>0) btn('Unload',()=>{ const a=mk(it.ammo,{n:it.mag}); it.mag=0; if(!place(S.stash,a)) toast('Stash is full.'); afterChange(); },'btn ghost sm');
     }
     if(it.items && it.items.length && loc && loc.key==='stash') btn('Empty into stash',()=>{ const left=[]; for(const s of it.items.slice()){ if(!place(S.stash,s)) left.push(s); } it.items.length=0; it.items.push(...left); if(left.length) toast('Some items did not fit.'); afterChange(); },'btn ghost sm');
-    if(d.type==='weapon' && loc){
-      const box=document.createElement('div'); box.className='atts';
-      for(const sl of ['optic','muzzle','mag']){
-        const row=document.createElement('div'); row.className='attrow'; const cur=it.att&&it.att[sl];
-        const opts=S.stash.items.filter(a=>ITEMS[a.id].type==='att'&&ITEMS[a.id].aslot===sl&&ITEMS[a.id].fits.includes(it.id));
-        row.innerHTML=`<span class="lbl">${sl}</span><span class="attname">${cur?esc(ITEMS[cur.id].name):'<span class="muted">none</span>'}</span>`;
-        const b=document.createElement('button'); b.className='btn ghost sm';
-        if(cur){ b.textContent='Detach'; b.onclick=()=>{ if(!place(S.stash,cur)){ toast('Stash is full.'); return; } it.att[sl]=null; fixMag(it); afterChange(); }; }
-        else { b.textContent=opts.length?`Attach ${ITEMS[opts[0].id].short}`:'None in stash'; b.disabled=!opts.length; b.onclick=()=>{ const a=opts[0]; removeAt({key:'stash'},a); if(!it.att) it.att={}; it.att[sl]=a; afterChange(); }; }
-        row.appendChild(b); box.appendChild(row);
-      }
-      el.appendChild(box);
-    }
   }
+  if(d.type==='weapon' && loc && !(R&&loc.key==='loot'&&R.lootTarget&&R.lootTarget.mate)) el.appendChild(attBox(it));
 }
+/* attachments: fit, swap or take off optics, muzzles and magazines, in the hideout (from your stash) and in a raid
+   (from anything you carry or the container you have open). Dragging an attachment onto a gun does the same. */
+function attachSources(){ if(!R) return [{key:'stash'}]; const L=['eq:pockets','eq:rig','eq:pack','eq:pouch'].filter(k=>getCont(k)).map(key=>({key})); if(R.lootTarget) L.push({key:'loot'}); return L; }
+const stowAtt=a=>R?addToPlayer(a):place(S.stash,a);
+function attachTo(w,a,src){ const ad=ITEMS[a.id], wd=ITEMS[w.id];
+  if(ad.type!=='att') return null; if(!ad.fits.includes(w.id)) return {msg:`${ad.name} doesn't fit the ${wd.name}.`};
+  const sl=ad.aslot, old=w.att&&w.att[sl]; const sc=getCont(src.key); const i=sc?sc.items.indexOf(a):-1; if(i<0) return null;
+  sc.items.splice(i,1); if(R&&src.key==='loot') netTake(a);
+  if(old&&!(place(sc,old)||stowAtt(old))){ sc.items.push(a); return {msg:`No room for the ${ITEMS[old.id].short} that's on it now.`}; }
+  if(!w.att) w.att={optic:null,muzzle:null,mag:null}; w.att[sl]=a; fixMag(w); sfxTone(1400,0.03,0.05,'square'); return {ok:true,msg:`${ad.short} fitted to the ${wd.short}${old?`, ${ITEMS[old.id].short} put away`:''}.`}; }
+function detachFrom(w,sl){ const cur=w.att&&w.att[sl]; if(!cur) return; if(!stowAtt(cur)){ toast(R?'No room in your pockets, rig or pack.':'Stash is full.'); return; } w.att[sl]=null; fixMag(w); sfxTone(900,0.03,0.05,'square'); afterChange(); }
+function attBox(it){ const box=document.createElement('div'); box.className='atts'; const srcs=attachSources();
+  for(const sl of ['optic','muzzle','mag']){ const row=document.createElement('div'); row.className='attrow'; const cur=it.att&&it.att[sl];
+    const opts=[], seen=new Set(); for(const s of srcs){ const c=getCont(s.key); if(!c) continue; for(const a of c.items){ const ad=ITEMS[a.id]; if(a.hid||ad.type!=='att'||ad.aslot!==sl||!ad.fits.includes(it.id)||seen.has(a.id)) continue; seen.add(a.id); opts.push([a,s]); } }
+    row.innerHTML=`<span class="lbl">${sl}</span><span class="attname">${cur?esc(ITEMS[cur.id].name):'<span class="muted">none</span>'}</span>`;
+    if(cur){ const b=document.createElement('button'); b.className='btn ghost sm'; b.textContent='Take off'; b.onclick=()=>detachFrom(it,sl); row.appendChild(b); }
+    for(const [a,s] of opts.slice(0,3)){ const b=document.createElement('button'); b.className='btn ghost sm'; b.textContent=`${cur?'Swap to':'Fit'} ${ITEMS[a.id].short}`; b.onclick=()=>{ const r=attachTo(it,a,s); if(r&&r.msg) toast(r.msg); afterChange(); }; row.appendChild(b); }
+    if(!cur&&!opts.length){ const n=document.createElement('span'); n.className='muted attnone'; n.textContent=R?'none carried':'none in stash'; row.appendChild(n); }
+    box.appendChild(row); }
+  return box; }
 function afterChange(){ if(!R) saveGame(); refreshInv(); }
 function refreshInv(){ if(R){ if(R.invOpen) renderRaidInv(); } else renderTab(); }
 
@@ -212,6 +222,9 @@ function tryDrop(x,y){
   const t=document.elementFromPoint(x,y); if(!t) return null;
   const it=drag.it, d=ITEMS[it.id], src=drag.src;
   const gEl=t.closest('[data-grid]'), sEl=t.closest('[data-slot]'), sell=t.closest('[data-sell]'), disc=t.closest('[data-discard]');
+  if(d.type==='att'&&src.key){ let w=null; if(sEl&&(sEl.dataset.slot==='primary'||sEl.dataset.slot==='secondary')) w=S.eq[sEl.dataset.slot];
+    else if(gEl){ const cont=getCont(gEl.dataset.grid); if(cont){ const c=cellPx(), rect=gEl.getBoundingClientRect(); const o=itemAt(cont,Math.floor((x-rect.left-1)/c),Math.floor((y-rect.top-1)/c)); if(o&&o!==it&&ITEMS[o.id].type==='weapon') w=o; } }
+    if(w) return attachTo(w,it,src); }
   if(gEl){
     const key=gEl.dataset.grid, cont=getCont(key); if(!cont) return null; const c=cellPx(); const rect=gEl.getBoundingClientRect();
     if(gridOwner(key)===it) return {msg:"A container can't go inside itself."};

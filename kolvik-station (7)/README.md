@@ -3,6 +3,17 @@
 Browser extraction shooter: PS1-style arctic research station, Tetris-grid inventory, body-part damage,
 a cash economy with a trader, hideout and build kits, and PvPvE online raids.
 
+## Help on the main screen
+
+Every hideout tab opens with a short tip saying what it's for and how to work it (Deploy lists the raid controls).
+*Got it* hides that tab's tip; the **Tips** button in the header brings them all back.
+
+Guests (not signed in, on a server) see a bar asking them to register, since a guest's progress lives only in that
+browser and they can't add friends, squad up or trade. The bar and the sign-in box both warn **not to reuse a real
+password**: when the page is served over plain HTTP (anything but localhost), the password crosses the network
+unencrypted. If you put the server behind HTTPS (a reverse proxy such as Caddy or nginx with a certificate), the
+warning softens to the usual advice.
+
 ## Run it
 
 ```sh
@@ -71,16 +82,82 @@ Fair fights at range:
 
 ## Difficulty
 
-Pick **Normal**, **Hardened** or **Brutal** on the Deploy tab for solo raids; in a lobby the leader picks it (changing it
-un-readies everyone) and it shows next to the lobby in the list.
+Pick **Recruit**, **Normal**, **Hardened** or **Brutal** on the Deploy tab for solo raids; in a lobby the leader picks it
+(changing it un-readies everyone) and it shows next to the lobby in the list. Normal was toned down in 0.17.0 after
+playtesting, and Recruit is new for people learning the game.
 
-| | Enemies | Health | Reactions / aim | Loot | Cash |
-|---|---|---|---|---|---|
-| Normal | as built | 100% | normal | 100% | 100% |
-| Hardened | ~30% more | 125% | 20% faster, 12% more accurate, more AP rounds | ~145% | 150% |
-| Brutal | ~60% more | 150% | 38% faster, 25% more accurate, AP rounds everywhere | ~200% | 220% |
+| | Enemies | Health | Aim | Reactions | Damage they deal | Loot | Cash |
+|---|---|---|---|---|---|---|---|
+| Recruit | ~25% fewer | 85% | 55% | 60% slower | 70% | 85% | 85% |
+| Normal | as built | 100% | 75% | 25% slower | 85% | 100% | 100% |
+| Hardened | ~30% more | 120% | 100% | 10% faster | 100% | ~145% | 150% |
+| Brutal | ~60% more | 145% | 115% | 30% faster, AP rounds everywhere | 110% | ~200% | 220% |
+
+Recruit only thins out ordinary enemies: bosses and their guards are all still there.
+
+**Whoever is shooting at you is in range to be seen.** Enemies only open fire inside an engagement range: 55 m with
+iron sights or a red dot, 75 m with a scope (15% further for bosses), and never further than you can see through the
+fog (at least 20 m). Past that they close in first. Their hit chance also falls off faster with distance (to almost
+nothing at 50 m without a scope), and every enemy shot shows a muzzle flash that cuts through fog and darkness, so
+you can see where it came from.
+
+**Headshots are easier.** Every humanoid now has a slightly larger invisible head hitbox (46 cm), so shots that clip
+the edge of a head count. Head health went from 35 to 28, so most rifle rounds kill on an unprotected head. A helmet
+that stops a round still passes on about a third of the damage.
 
 On Ironfjord Depot (no AI) difficulty only changes the loot.
+
+## A fair start
+
+- **30 seconds of cover** after you land, on every map (also after a helicopter drop): enemies don't see or hear you
+  and drones ignore you, unless you fire.
+- **Then 25 seconds of being hard to spot:** enemies notice you at half their usual range at first, rising back to
+  normal. Online, each player's own timer is used.
+- **Nobody patrols within 60 m** of any insertion point when the raid starts (enemies there are moved out to their own
+  areas). The Vault is the exception: it's built as a fight from the door.
+- **Cover at every insertion point:** two low concrete barriers either side of the way in, with a snowbank behind
+  each, placed the same way for everyone in an online raid. Not on the snowmobile race or the aircraft map.
+
+## When you die
+
+You no longer get thrown straight back to the results screen. The camera turns to face whoever killed you and marks
+the spot with a red ring, and a card shows:
+
+- who killed you, with what weapon and ammo, how far away and in which direction, and where it hit;
+- the last five hits you took (and which ones your armor stopped);
+- exactly what your secure pouch kept.
+
+Press **Exit to main menu** (or Enter or Esc) when you're ready, or **Watch a squadmate** if one is still alive. The
+results screen repeats who killed you, then *Back to the hideout* returns to the main menu.
+
+The death screen can't get stuck any more: it runs even if you died with the pause menu open (online the world keeps
+going while you're paused), and if anything fails while it's drawn there's still a plain card with the exit button.
+Ending a raid is guarded the same way: if any part of the bookkeeping fails, the raid is torn down anyway and you
+land on the results screen. As a last resort, a check every second notices a blank screen or a raid that ended but
+never closed, and brings the hideout back (and reports it in the admin Log tab). Enemy hits on online clients now
+carry the shooter's position and weapon, so the hit direction and the death card are right for everyone, not just
+the host.
+
+## Attachments in a raid
+
+Click a gun in the raid inventory (Tab) and its details show the optic, muzzle and magazine slots. *Fit* puts on any
+compatible attachment you carry (pockets, rig, backpack, secure pouch) or one in the container you have open; *Swap to*
+replaces the current one and puts the old one away; *Take off* puts it in your pockets, rig or pack. You can also drag
+an attachment onto a gun, in its slot or in a grid. The same works in the hideout from your stash.
+
+## Secure pouch
+
+The pouch is kept when you die or go missing, and it's now also saved every few seconds during a raid, so anything you
+put in it survives a crash, a closed tab or a lost connection. Sealed caches never fit in it (by design: you have to
+extract to keep one). Cash in the pouch is deposited when you get home.
+
+## Running people over
+
+A snowmobile at speed knocks down whoever it hits: enemies, and online, other players who aren't on your side.
+Damage climbs steeply with speed: nothing below 3.5 m/s, about 50 at 5 m/s, about 160 at 8 m/s and a kill at full
+speed. The sled loses some speed in the hit and anyone who survives is thrown aside. A run-over kill counts toward
+the **Road warrior** goal (1, 10 and 40 kills, with a title at the end).
+
 
 ## Kaldfjord Reach: the big one
 
@@ -146,7 +223,7 @@ block both sight lines and bullets, so the approach is a real approach.
   you on their own sleds, or hop on the back of yours with a rifle.
 - **The relay:** the Storvidda Relay sits in the centre, 500 m from every insert: a radio mast, a relay hall with vault
   safes, a barracks, a garage, a bunker and a fuel depot behind concrete cover. Relay Chief Dahl and his guards hold
-  the hall; raiders and scavs hold the rest. Normal, Hardened and Brutal apply.
+  the hall; raiders and scavs hold the rest. All four difficulties apply.
 - **On the way:** a hunter's cabin, a pump station and a fishing hut on the lake, each lightly held.
 - **Extracts:** four on the far edges, two open per raid, so plan to ride back out. The sled stays where you leave it
   (E gets off and on), so park it somewhere you can get back to.
@@ -498,6 +575,59 @@ curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" http://<server>:8080/api/ad
 
 Season state and the hall of fame live in the database (`season` and `hall` in the `kv` table).
 
+## Team deathmatch and Free for all
+
+In a lobby, the leader picks the **Mode**: *Extraction raid* (the normal game), *Team deathmatch* or *Free for all*.
+The deathmatch modes run on the compact maps (Ironfjord Depot, Kolvik Station, Whiteout) and need at least two players.
+
+- **No AI, no extraction, no risk.** Everyone spawns with the same kit: an AKR-5 with a red dot, a Makar-9, a Bastion
+  helmet, a plate carrier and a chest rig with spare ammo, an IFAK, bandages and a splint. Your own gear stays at the
+  hideout untouched (it's never written out of your save), and nothing you pick up comes home. Body heat doesn't drain.
+- **Respawns.** You're back 4 seconds after dying, with a fresh kit, at the spawn point furthest from the enemy (the
+  map's insertion points plus open ground around it), and nobody can hurt you for 3 seconds (firing ends that early).
+  The death card shows who got you and the live scoreboard; *Leave match* takes you home.
+- **Team deathmatch:** two teams (Skjold and Hauk), picked in the lobby like the team maps, each spawning on its own
+  half. First team to **40** kills wins. Team kills don't score.
+- **Free for all:** everyone against everyone, squads included. First to **20** kills wins.
+- Matches last **10 minutes**; if nobody reaches the limit, whoever leads wins. A scoreboard sits at the top of the
+  screen. The server keeps the score, so it's the same for everyone, and players can join a match in progress.
+- **Pay:** $250 a kill, $500 for staying to the end, and $2,000 for the win (your team in TDM, you in FFA).
+
+## Kicking
+
+- **Squad:** the leader has *Kick* next to each member on the Friends tab and *Disband squad* (press twice).
+- **Lobby:** the lobby leader has *Kick* next to each member who isn't in the raid (press twice). A kicked player can't
+  rejoin that lobby.
+
+## Rec room: games for cash
+
+The **Rec room** tab has four short games. Each pays up to $2,500 depending on the score (up to 30% more for beating
+par). Anyone worth under $20,000 (cash plus everything they own) gets **double**, the scav bonus, so a broke player can
+always earn a kit back. After $20,000 in a day, games pay 10%.
+
+| Game | Length | How | Par |
+|---|---|---|---|
+| Ice hole | 30 s | Strike when the float goes right under; a twitch is a nibble and striking then scares the fish. Grayling 1, pike 2, king salmon 5 | 18 |
+| Supply drop | 30 s | Move the sled to catch crates (+1) and cash (+3); ice chunks cost 2 and freeze you | 40 |
+| Frequency | up to 60 s | Repeat the radio code; one more tone every round; one mistake ends it | 9 tones |
+| Quick draw | 5 rounds | Fire when the flare goes up; early is a foul. Score is 1000 minus your reaction in ms | 3,200 |
+
+**Party rounds.** In a squad, the leader can start a party round (a chosen game or a random one). Everyone in the squad
+who isn't in a raid is pulled into the same game at the same moment with the same seed (the same fish, drops and
+code), with a live scoreboard beside it. The final ranking comes from the server: 1st gets +50% and 2nd +20%.
+
+## Trading with friends
+
+On the Friends tab, press **Trade** next to an online friend who is at the hideout or in a lobby. They get a card in
+the corner to open it. Each side puts up cash and items from their stash (search and click to offer, click again to
+take back) and sees the other's offer and its value live. When both press **Ready** on the same version of the deal it
+goes through. Changing anything un-readies you both, and Ready is disabled if their items wouldn't fit in your stash.
+
+What you offer is held in escrow in your own save (out of your stash and cash) until the trade completes or is
+cancelled, so it can't be used twice, and if the page closes or someone goes offline, it comes back to you. Up to
+30 items per trade; equipped gear has to go back in the stash first. The server only relays the deal and logs
+completed trades.
+
 ## Friends, messages and squads
 
 All of this needs an account (guests can still use lobbies and the *Everyone* channel).
@@ -656,8 +786,13 @@ answers "No such call" to anyone else.
     toolbox, medical cabinet or wooden hut where you stand (cover and containers face the way you look; huts get their
     own flat pad). They sit on the terrain, block bullets and movement, and count as sled obstacles.
   - *Save* sends it to the server and tells every connected player; raids already running keep their own version.
-- **Server:** who is online, lobbies and raids in progress, kick a player, end a raid, message everyone, send cash /
-  caches / scrip / an item to any account (arrives instantly if they're online), end the season.
+- **Server:** who is online, lobbies and raids in progress, kick a player, end a raid, message everyone, end the season.
+  - *Give money or items to a player:* press **Give…** next to someone in the Online list (or type any account name;
+    it suggests names as you type), enter cash (or tap +10k / +100k / +1M), caches, scrip and/or an item id and
+    quantity, and press Send. Online players get it straight away with a message, even mid-raid (it's saved the way
+    a raid saves, so their gear is still at risk). Offline players have the cash, caches and scrip added to their save,
+    and items land in their stash the next time they sign in. A negative cash amount takes money away (never below
+    $0). Every gift is printed to the server log.
 - **Log:** network traffic, errors in your browser, and uncaught errors reported by every player's browser (each
   browser sends at most 20 per page load; the server keeps the last 200 in memory and prints them to the container log).
 - **Tests:** runs every item through the game's own code and lists what fails (see *Testing items*).
@@ -856,7 +991,7 @@ browsers still allow it, but a few do not.
     `22-tasks` · `23-seasons` · `24-save` · `25-goals` (goals, titles, collection log) · `30-music` · `31-sfx` · `32-music-slavic` (the Russian instruments and tracks) · `33-music-chant` (the church pieces) · `34-voices` (footsteps, voices, positional sound) · `35-raid-music` · `40-hub` · `41-deploy` (conditions rotation, Deploy tab, lobbies
     and teams) · `42-leaderboard-maps` (leaderboard, overview maps) · `50-engine` (renderer, textures, collision, building helpers) · `51-maps`
     (Kolvik, Whiteout, Vault, Skarsvik, Ironfjord, Ravnskar) · `52-helis-drops` · `53-enemies` · `54-nav` ·
-    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `70-hrimfell` (also the snowmobile physics and the
+    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `70-hrimfell` (also the snowmobile physics and the
     world config) · `71-storvidda` · `72-skjaergard` (aircraft) · `73-boss` · `74-kaldfjord` (Kaldfjord Reach) · `80-hud` · `81-loop-input` · `90-net` ·
     `91-accounts` · `99-boot`
 - `build.js` – `node build.js` assembles `src/` into `game.html`, and checks it: a syntax error in a file is reported

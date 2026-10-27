@@ -27,15 +27,36 @@ function showRecap(){
     <p class="muted" style="margin:0">${esc(R.cause||'')}.${K.from?' The red ring is where they were.':''}</p>
     ${hits.length?`<dl class="stats hitlog">${hits.map(h=>`<dt>${(R.t-h.t)<1?'just now':Math.round(R.t-h.t)+' s ago'}</dt><dd>${esc(h.src)} · ${esc(PART_NAME[h.part]||h.part)} · ${h.blocked?`stopped by armor (${h.dmg})`:`${h.dmg} damage`}</dd>`).join('')}</dl>`:''}
     <p class="pouchkept"><span class="lbl">Secure pouch kept</span> ${pouch.length?pouch.map(esc).join(' · '):'nothing (it was empty)'}</p>
-    <div class="acts">${mates?`<button class="btn ghost" id="rcSpec">Watch a squadmate</button>`:''}<button class="btn" id="rcGo">Continue</button></div></div>`;
-  $('#rcGo').onclick=()=>{ recapClose(); endRaid('kia',R.cause); };
-  if($('#rcSpec')) $('#rcSpec').onclick=()=>{ recapClose(); if(!startSpectate()) endRaid('kia',R.cause); };
+    <div class="acts">${mates?`<button class="btn ghost" id="rcSpec">Watch a squadmate</button>`:''}<button class="btn" id="rcGo">Exit to main menu</button></div></div>`;
+  recapButtons();
 }
-function recapClose(){ const el=$('#deathcard'); el.hidden=true; el.innerHTML=''; if(R&&R.recap&&R.recap.ring){ scene.remove(R.recap.ring); } }
+function recapButtons(){
+  $('#rcGo').onclick=recapExit;
+  if($('#rcSpec')) $('#rcSpec').onclick=()=>{ recapClose(); let ok=false; try{ ok=startSpectate(); }catch(e){ console.warn(e); } if(!ok) recapExit(); };
+}
+function recapExit(){ const cause=R?R.cause:''; recapClose(); endRaid('kia',cause); }
+// if building the full card fails for any reason, still give a way out
+function recapFallback(err){ console.error('death recap',err); try{ logErr('death recap: '+err.message,err.stack); }catch(e){} if(!R.recap) R.recap={K:{},t:R.t};
+  const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><h2 class="bad">Killed in action</h2><p class="muted" style="margin:0">${esc(R.cause||'')}.</p><div class="acts"><button class="btn" id="rcGo">Exit to main menu</button></div></div>`; $('#rcGo').onclick=recapExit; }
+// called from the main loop every frame while you're dead, even with the game paused, so the card always shows up
+function deathTick(dt){
+  if(R.dm) return dmDeathTick(dt);
+  if(R.spec) return;
+  if(R.deadT>0){ R.deadT-=dt; return; }
+  if(R.paused){ R.paused=false; $('#pause').hidden=true; } // died with the pause menu open (online the world doesn't stop)
+  if(R.invOpen) try{ closeInv(true); }catch(e){}
+  if(!R.recap||$('#deathcard').hidden){ try{ R.recap=null; showRecap(); }catch(e){ recapFallback(e); } return; }
+  try{ recapTick(dt); }catch(e){}
+}
+// one line about who got you, for the results screen
+function killerLine(K){ if(!K||!K.name) return ''; return [K.name,K.gun?K.gun+(K.ammo?` (${K.ammo})`:''):null,K.dist!=null?K.dist+' m away':null,K.part?'hit in the '+(PART_NAME[K.part]||K.part):null].filter(Boolean).join(' · '); }
+function recapClose(){ const el=$('#deathcard'); el.hidden=true; el.innerHTML=''; if(R&&R.recap&&R.recap.ring&&scene){ scene.remove(R.recap.ring); R.recap.ring=null; } }
 // while the card is up: turn the camera toward the killer, slowly
 function recapTick(dt){ const rc=R.recap; if(!rc||!rc.K.from) return; const K=rc.K; const e=K.enemy; if(e&&!e.dead){ K.from={x:e.pos.x,z:e.pos.z}; if(rc.ring) rc.ring.position.set(e.pos.x,(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.1,e.pos.z); }
   const want=Math.atan2(-(K.from.x-P.pos.x),-(K.from.z-P.pos.z)); P.yaw=lerpA(P.yaw,want,Math.min(1,dt*1.5)); P.pitch+=(-0.05-P.pitch)*Math.min(1,dt*1.5); if(rc.ring) rc.ring.rotation.z+=dt*1.5; }
 // keep the secure pouch in the save while you play (the raid-start save has your gear stripped out)
-function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
-  try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
-addEventListener('keydown',e=>{ if(R&&R.recap&&!$('#deathcard').hidden&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); const b=$('#rcGo'); if(b) b.click(); } });
+function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.dm) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
+  raidSave(); }
+// the save as it stands mid-raid: everything at risk is left out, so closing the tab counts as losing it
+function raidSave(){ if(R&&R.dm) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
+addEventListener('keydown',e=>{ if(R&&R.recap&&!$('#deathcard').hidden&&(e.key==='Enter'||e.key==='Escape')){ e.preventDefault(); e.stopImmediatePropagation(); const b=$('#rcGo'); if(b) b.click(); } },true);
