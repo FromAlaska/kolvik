@@ -8,7 +8,7 @@ const SPAWN={grace:30, fade:25, clear:60};
 // 0 right after your cover ends, rising to 1: how far enemies can spot you (half range at first)
 const freshness=()=>!P||P.grace>0?0:clamp((R.t-(P.graceEnd??-99))/SPAWN.fade,0,1);
 function spawnCover(sps){
-  if(!sps||!sps.length||R.airMap||R.race||R.map==='vault') return;
+  if(!sps||!sps.length||R.airMap||R.race||R.map==='vault'||R.noCover) return;
   const wall=M('concrete');
   for(const sp of sps){
     // face into the map: the spawn's heading if it has one, else toward the middle

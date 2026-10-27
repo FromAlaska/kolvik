@@ -133,7 +133,8 @@ function enemyShoot(e,t,dist){
   tracer(mx,my-0.05,mz,ex,ey,ez,0xffcf7a); R.shots.push([mx,mz,ex,ey,ez]);
   if(hits){ e.dmgDone=(e.dmgDone||0)+hits*am.dmg; R.lastShooter=e; }
   const dmg=am.dmg*(R.D.dmg||1);
-  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
+  if(t.id==='tower'){ if(hits) towerHit(dmg*hits); }
+  else if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
   else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
 function hearShot(x,z,radius){ radius*=Math.sqrt((R&&R.hear)||1); if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }

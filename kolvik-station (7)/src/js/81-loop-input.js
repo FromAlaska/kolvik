@@ -11,7 +11,7 @@ function loop(now){
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
     for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
-    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; pdTick(dt); pdCamera(); grenadesTick(dt); arrowTick(dt); pdRemoteTick(); spotsTick(); doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
+    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; pdTick(dt); pdCamera(); if(R.td) tdTick(dt); grenadesTick(dt); arrowTick(dt); pdRemoteTick(); spotsTick(); doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);
     updFx(dt); updSnow(dt); updCulling(dt); updExtract(dt); if(!R||R.over) return;
     if(R.invOpen){ revealTick(dt); if(R.dirty&&!drag){ R.dirty=false; renderRaidInv(); } }
@@ -55,7 +55,7 @@ addEventListener('keydown',e=>{
     case 'KeyV': if(R.airMap&&R.fly){ OPTS.chase=!OPTS.chase; saveOpts(); R.stick={x:0,y:0}; if(R.fly.seat===0){ const pl=R.planes[R.fly.i]; if(pl){ planeAxes(pl); P.yaw=Math.atan2(-_pf.x,-_pf.z); P.pitch=Math.asin(clamp(_pf.y,-1,1)); } } msg(OPTS.chase?'Chase camera: the plane flies toward where you point. V for the cockpit.':'Cockpit: the mouse is your stick, A/D rudder. V for the chase camera.'); } break;
     case 'Space': if(P.crouch) P.crouch=false; else P.jumpReq=true; break;
     case 'KeyX': if(R.airMap&&R.fly&&R.planes[R.fly.i]&&!R.planes[R.fly.i].onG) bailOut(); break;
-    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; if(!R.near&&!R.nearDoor&&R.nearTree!=null){ startCut(R.nearTree); break; } if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
+    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; { const tn=R.td?tdNear():null; if(tn&&!R.near){ tdUse(tn); break; } } if(!R.near&&!R.nearDoor&&R.nearTree!=null){ startCut(R.nearTree); break; } if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
     case 'Digit4': if(R.airMap&&R.fly){ seatSwap(3); break; } hotUse(d=>d.med==='bandage'); break;
     case 'Digit5': if(R.airMap&&R.fly){ seatSwap(4); break; } hotUse(d=>d.med==='splint'); break;
     case 'Digit6': hotUse(d=>d.med==='heal'); break;

@@ -163,7 +163,7 @@ function netApplyWelcome(m){
   if(m.estate){ applyEstate(m.estate,true); }
   for(const p of m.players) if(p.id!==NET.id&&p.st) NET.players[p.id].st=p.st;
 }
-function applyEstate(m,snap){
+function applyEstate(m,snap){ if(m.td&&R.td) tdApply(m.td);
   if(!R) return;
   (m.e||[]).forEach((a,i)=>{ const e=R.enemies[i]; if(!e) return; e.nx=a[0]; e.nz=a[1]; e.nyaw=a[2]; e.hp=a[3]; e.headHp=a[4]; e.moving=!!a[6]; e.np={b:a[7]||0,aim:a[8]||0}; if(snap){ e.pos.x=a[0]; e.pos.z=a[1]; e.yaw=a[2]; } if(a[5]&&!e.dead){ e.dead=true; e.deathT=snap?1:0; if(snap){ bodySnapDead(e.rig,1); e.g.position.y=(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.18; } R.targets=R.targets.filter(x=>!e.parts.includes(x)); } });
   if(m.ap&&R.airMap) airApplyEstate(m.ap,snap);
@@ -205,7 +205,8 @@ function netMsg(m){
     case 'dhit': { if(!NET.host) break; const d=R.drones&&R.drones[m.i]; if(d&&!d.dead) droneHit(d,{dmg:Math.min(200,+m.dmg||0)},{x:d.x,y:d.y,z:d.z},true); break; }
     case 'kcredit': { const e=R.enemies[m.i]; R.kills++; qKill(e||{kind:m.kind,pos:P.pos},m.head,m.w); goalKill(e||{kind:m.kind},m.head); break; }
     case 'dmscore': case 'dmend': dmNet(m); break;
-    case 'end': if(R&&R.dm){ endRaid('dm'); break; } endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
+    case 'tdspawn': case 'tdbuild': case 'tdrepair': case 'tdend': tdNet(m); break;
+    case 'end': if(R&&R.td){ endRaid('td'); break; } if(R&&R.dm){ endRaid('dm'); break; } endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
   }
 }
 function netTick(dt){
@@ -213,5 +214,5 @@ function netTick(dt){
   NET.sendT-=dt; if(NET.sendT<=0){ NET.sendT=0.07; if(R.lkBase==null) R.lkBase=lookStr(); { const st={t:'state',pd:R.pd?[+R.pd.x.toFixed(1),+R.pd.y.toFixed(1),+R.pd.z.toFixed(1),+R.pd.yaw.toFixed(2)]:0,gw:(curW()||{}).id||'',ln:+(P.lean||0).toFixed(2),rd:R.ride?(R.ride.mode==='drive'?1:2):0,sh:R.sled?+R.sled.h.toFixed(2):0,sa:R.ride&&R.sled?[+(R.sled.pitch||0).toFixed(2),+(R.sled.roll||0).toFixed(2)]:0,cr:R.crashes||0,ps:(R.sled&&!R.ride)?[+R.sled.x.toFixed(1),+R.sled.y.toFixed(1),+R.sled.z.toFixed(1),+R.sled.h.toFixed(2)]:0,lk:R.lkBase+'|'+gearLook(),y:+P.y.toFixed(2),p:+P.pitch.toFixed(2),down:P.down?1:0,dt:P.down?Math.ceil(P.down.t):0,hp:Math.round(totalHP()),heli:(R.heli&&R.heli.phase==='in')?[+R.heli.g.position.x.toFixed(1),+R.heli.g.position.y.toFixed(1),+R.heli.g.position.z.toFixed(1),+R.heli.yaw.toFixed(2)]:0,grace:P.grace>0,x:+P.pos.x.toFixed(2),z:+P.pos.z.toFixed(2),yaw:+P.yaw.toFixed(3),crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,dead:P.dead,ti:(S.goals&&S.goals.title)||'',jam:myJammer(),gf:+freshness().toFixed(2)}; if(R.airMap) airState(st); nsend(st); } }
   if(R.airMap) airRemoteBegin();
   for(const id in NET.players){ const p=NET.players[id]; if(!p.st) continue; if(p.g&&(p.st.lk||'')!==p.lk){ const pos=p.g.position.clone(), ry=p.g.rotation.y; scene.remove(p.g); R.targets=R.targets.filter(m=>!p.parts.includes(m)); p.g=null; ensureRemote(id); if(p.g){ p.g.position.copy(pos); p.g.rotation.y=ry; } } ensureRemote(id); if(!p.g) continue; if(p.rig&&p.st.gw!=null&&p.st.gw!==(p.rig.gunId||'')) setHeldGun(p.rig,p.st.gw); if(Math.hypot(p.st.x-p.g.position.x,p.st.z-p.g.position.z)>15){ p.g.position.x=p.st.x; p.g.position.z=p.st.z; } remoteHeli(p,dt); p.g.visible=!p.st.dead&&!p.st.heli&&!(R.spec&&R.spec.id===id); const k=Math.min(1,dt*12); p.g.position.x+=(p.st.x-p.g.position.x)*k; p.g.position.z+=(p.st.z-p.g.position.z)*k; p.g.position.y+=(((p.st.y||0)+(p.st.down?0.22:0)+(p.st.rd?0.42:0))-p.g.position.y)*k; if(R.sleds) remoteSled(p,k); if(R.airMap) airRemote(id,p); p.g.rotation.x+=((p.st.down?-1.35:0)-p.g.rotation.x)*k; if(p.st.down){ const db=R.conts.find(c=>c.cid==='d'+id); if(db){ db.x=p.g.position.x; db.z=p.g.position.z; } } p.g.rotation.y=lerpA(p.g.rotation.y,p.st.yaw,k); if(p.g.visible) remotePose(p,dt); }
-  if(NET.host){ NET.estT-=dt; if(NET.estT<=0){ NET.estT=0.1; nsend({t:'estate',e:R.enemies.map(e=>[+e.pos.x.toFixed(2),+e.pos.z.toFixed(2),+e.yaw.toFixed(2),Math.round(e.hp),Math.round(e.headHp),e.dead?1:0,e.moving?1:0,enemyPoseBits(e),e.rig?Math.round(e.rig.s.aimP*100)/100:0]),shots:R.shots,dr:R.drones&&R.drones.length?droneState():undefined,bs:R.boss?[R.boss.maxHp,R.boss.phase,R.boss.awake?1:0]:undefined,ap:R.airMap?airEstate():undefined}); R.shots=[]; } }
+  if(NET.host){ NET.estT-=dt; if(NET.estT<=0){ NET.estT=0.1; nsend({t:'estate',td:R.td?tdState():undefined,e:R.enemies.map(e=>[+e.pos.x.toFixed(2),+e.pos.z.toFixed(2),+e.yaw.toFixed(2),Math.round(e.hp),Math.round(e.headHp),e.dead?1:0,e.moving?1:0,enemyPoseBits(e),e.rig?Math.round(e.rig.s.aimP*100)/100:0]),shots:R.shots,dr:R.drones&&R.drones.length?droneState():undefined,bs:R.boss?[R.boss.maxHp,R.boss.phase,R.boss.awake?1:0]:undefined,ap:R.airMap?airEstate():undefined}); R.shots=[]; } }
 }

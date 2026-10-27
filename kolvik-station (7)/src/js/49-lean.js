@@ -9,7 +9,7 @@
 const LEAN={off:0.38, roll:0.16, rate:7, drop:0.05};
 function leanTick(dt){
   const k=P.keys, busy=P.dead||P.down||R.invOpen||R.ride||R.fly||(R.pd&&R.pd.ctl)||(R.gps&&R.gps.open);
-  let want=0; if(!busy){ if(k.KeyQ) want-=1; if(k.KeyE&&!R.near&&!R.nearDoor&&R.nearTree==null) want+=1; }
+  let want=0; if(!busy){ if(k.KeyQ) want-=1; if(k.KeyE&&!R.near&&!R.nearDoor&&R.nearTree==null&&!(R.td&&tdNear())) want+=1; }
   if(want) P.sprint=false;
   P.lean=(P.lean||0)+clamp(want-(P.lean||0),-LEAN.rate*dt,LEAN.rate*dt);
   // stop short of walls: walk the offset out in 8 cm steps and stop at the first box at head height

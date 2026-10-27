@@ -12,10 +12,10 @@ const { WebSocketServer } = require('ws');
 
 const PORT = Number(process.env.PORT) || 8080;
 const MAX_PLAYERS = Number(process.env.MAX_PLAYERS) || 8;
-const DUR = { kolvik: 540, whiteout: 420, vault: 360, skarsvik: 900, ironfjord: 600, ravnskar: 780, hrimfell: 720, storvidda: 900, skerries: 1200, kaldfjord: 1800 };
+const DUR = { holdout: 2400, kolvik: 540, whiteout: 420, vault: 360, skarsvik: 900, ironfjord: 600, ravnskar: 780, hrimfell: 720, storvidda: 900, skerries: 1200, kaldfjord: 1800 };
 const TEAM_MAPS = new Set(['skerries']);
 // co-op maps: everyone in the raid is on the same side (no player damage; revives and downed looting for all)
-const COOP_MAPS = new Set(['ravnskar']);
+const COOP_MAPS = new Set(['ravnskar', 'holdout']);
 const DIFFS = new Set(['easy', 'normal', 'hard', 'brutal']);
 // PvP-only maps: no AI, so a raid needs at least two sides (players not in the same squad)
 const PVP_MAPS = new Set(['ironfjord', 'hrimfell']);
@@ -24,7 +24,7 @@ const PVP_MAPS = new Set(['ironfjord', 'hrimfell']);
 const DM_MODES = { tdm: { limit: 40, dur: 600, name: 'Team deathmatch' }, ffa: { limit: 20, dur: 600, name: 'Free for all' } };
 const DM_MAPS = new Set(['ironfjord', 'kolvik', 'whiteout']);
 const teamMode = l => TEAM_MAPS.has(l.map) || l.mode === 'tdm';
-const MAP_NAMES = { kolvik: 'Kolvik Station', whiteout: 'Whiteout', vault: 'Black Ice Vault', skarsvik: 'Skarsvik Island', ironfjord: 'Ironfjord Depot', ravnskar: 'Fort Ravnskar', hrimfell: 'Hrimfell Run', storvidda: 'Storvidda', skerries: 'Skjærgård', kaldfjord: 'Kaldfjord Reach' };
+const MAP_NAMES = { holdout: 'Last Light', kolvik: 'Kolvik Station', whiteout: 'Whiteout', vault: 'Black Ice Vault', skarsvik: 'Skarsvik Island', ironfjord: 'Ironfjord Depot', ravnskar: 'Fort Ravnskar', hrimfell: 'Hrimfell Run', storvidda: 'Storvidda', skerries: 'Skjærgård', kaldfjord: 'Kaldfjord Reach' };
 const COND_SLOT_MS = 3 * 3600 * 1000; // raid conditions rotate on this clock; clients compute the same table
 const SQUAD_MAX = 4;
 /* trading between friends (44-trade.js): both sides put items and cash up, both press Ready on the same version of
@@ -482,6 +482,7 @@ wss.on('connection', ws => {
         const l = lobbies.get(m.id);
         if (!l || !l.room) return send(p, { t: 'sys', text: 'That raid has ended.' });
         if (timeLeft(l.room) < 90) return send(p, { t: 'sys', text: 'Too little time left in that raid.' });
+        if (l.room.map === 'holdout') return sys(p, 'Last Light cannot be joined once the waves have started.');
         if (l.banned && l.banned.has(p.account || p.id)) return sys(p, 'The leader of that lobby removed you, so you cannot rejoin it.');
         if (isFollower(p)) return sys(p, 'Your squad leader picks the lobby.');
         const fl = followers(p);
@@ -622,7 +623,7 @@ wss.on('connection', ws => {
       case 'phit': { const v = r.players.get(m.pid); if (v && !sameSide(r, p, v)) send(v, { t: 'phit', part: m.part, ammo: m.ammo, from: p.id }); break; }
       case 'eshot': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'eshot', hits: m.hits, dmg: m.dmg, pen: m.pen, name: m.name, x: Number.isFinite(m.x) ? m.x : undefined, z: Number.isFinite(m.z) ? m.z : undefined, gun: typeof m.gun === 'string' ? m.gun.slice(0, 24) : undefined }); break; }
       case 'pdhit': { const v = r.players.get(m.pid); if (v && v !== p) send(v, { t: 'pdhit', dmg: Math.min(200, +m.dmg || 0), from: p.id }); break; }
-      case 'pshot': case 'nade': case 'arrow': toRoom(r, Object.assign({}, m, { from: p.id }), p); break;
+      case 'pshot': case 'nade': case 'arrow': case 'tdspawn': case 'tdbuild': case 'tdrepair': case 'tdend': toRoom(r, Object.assign({}, m, { from: p.id }), p); break;
       case 'spot': case 'sig': for (const q of r.players.values()) if (q !== p && sameSide(r, p, q) && (p.squad && q.squad === p.squad || r.mode === 'tdm' || r.coop)) send(q, Object.assign({}, m, { from: p.id })); break;
       case 'ehit': case 'shot': case 'dhit': { const h = r.players.get(r.hostId); if (h && h !== p) send(h, Object.assign({}, m, { from: p.id })); break; }
       case 'estate': if (p.id === r.hostId) { r.estate = { e: m.e, ap: m.ap, dr: m.dr }; toRoom(r, m, p); } break;

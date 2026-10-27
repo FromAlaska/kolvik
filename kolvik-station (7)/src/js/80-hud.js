@@ -28,7 +28,7 @@ function updHUD(dt){
   else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; $('#weph').insertAdjacentHTML('beforeend',extra); }
   const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr; R.nearTree=(!R.invOpen&&!P.dead&&!c&&!dr)?nearTree():null;
   const rt=(!R.invOpen&&!R.rev)?reviveTarget():null; const rp=R.airMap?flyPrompt():R.sleds?ridePrompt():'';
-  $('#prompt').innerHTML=R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
+  const tdn=R.td&&!c?tdNear():null; $('#prompt').innerHTML=tdn?tdPrompt(tdn):R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
   let center='';
   if(R.exT>0) center=`<div class="big">Extracting ${((R.exNeed||7)-R.exT).toFixed(1)}</div>`;
   else if(R.heli&&R.heli.phase==='in') center=`<div style="color:var(--ok)">Inbound to ${esc((SK_LZ.find(l=>l.x===R.heli.lx)||{}).name||'the landing zone')} · ${Math.max(0,Math.ceil(R.heli.T-R.heli.t))} s · Space jumps out</div>`;
@@ -71,7 +71,7 @@ function revealTick(dt){ const t=R.lootTarget; if(!t) return; const next=t.cont.
 // endRaid never leaves you stuck: if anything in the bookkeeping fails, the raid is torn down anyway and you get home
 function endRaid(kind,detail){ if(!R||R.over) return; try{ endRaidInner(kind,detail); }catch(err){ console.error('endRaid',err); try{ logErr('endRaid: '+err.message,err.stack); }catch(e){} endRaidRescue(kind,detail); } }
 function endRaidRescue(kind,detail){
-  if(R&&R.dm&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
+  if(R&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
   try{ if(kind!=='extract'&&R&&!R.gearGone){ SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; } S.inRaid=false; saveGame(); }catch(e){}
   try{ if(NET.on) netLeave(); }catch(e){} try{ raidMusicStop(0.5); dronesStop(); windStop(); }catch(e){} try{ disposeScene(); }catch(e){}
   R=null; P=null; try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){}
@@ -85,9 +85,10 @@ function raidTeardown(){
   raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
   $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
   document.body.classList.remove('inraid');
-  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode'); for(const id of ['flashwhite','pdhud']){ const el=$('#'+id); if(el) el.hidden=true; } for(const id of ['sigs','spots']){ const el=$('#'+id); if(el) el.innerHTML=''; }
+  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode','tdmode'); for(const id of ['flashwhite','pdhud','tdhud']){ const el=$('#'+id); if(el) el.hidden=true; } for(const id of ['sigs','spots']){ const el=$('#'+id); if(el) el.innerHTML=''; }
 }
 function endRaidInner(kind,detail){
+  if(R.td) return tdFinish(kind);
   if(R.dm) return dmFinish(kind);
   R.over=true; if(document.pointerLockElement) document.exitPointerLock();
   try{ gaRaidEnd(kind); }catch(err){ console.warn('adaptive AI',err); } // score the enemies' behaviour genes (57-ai.js)

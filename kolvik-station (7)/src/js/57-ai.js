@@ -263,7 +263,7 @@ function aiSuppress(e,x,z){
   for(const t of R.tgts){ const px=t.x-mx, py=(t.eye-0.5)-my, pz=t.z-mz, along=px*_b.x+py*_b.y+pz*_b.z; if(along<0||along>(wall?wall.distance:dd+20)) continue;
     const off=Math.hypot(px-_b.x*along,py-_b.y*along,pz-_b.z*along); if(off>0.45) continue;
     if(Math.random()<0.3*e.k.acc*R.D.acc){ const am=ITEMS[e.gun.ammo], dmg=am.dmg*(R.D.dmg||1); e.dmgDone=(e.dmgDone||0)+dmg; R.lastShooter=e;
-      if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
+      if(t.id==='tower') towerHit(dmg); else if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
     else if(t.id==='me'){ sfxWhizz(); hitDir(e.pos.x,e.pos.z,true); } break; }
 }
 

@@ -60,6 +60,13 @@ function drawMapCard(cv,map){
     for(const pd of TD_PADS){ const [px,pz]=p(pd.x,pd.z); g.fillStyle=pd.ice?'#1f4050':pd.kind==='zone'?'#2a3d46':pd.kind==='out'?'#22313a':pd.kind==='spawn'?'#3a3a2a':'#1c3a2c'; g.beginPath(); g.arc(px,pz,Math.max(3,pd.r*sc),0,7); g.fill(); if(pd.kind==='zone'||pd.kind==='out'||pd.ice){ g.strokeStyle='#5b7581'; g.stroke(); } }
     for(const pd of TD_PADS){ const [px,pz]=p(pd.x,pd.z); if(pd.name){ g.fillStyle=pd.kind==='ex'?'#7cc9a4':'#9fb3bb'; g.textAlign='center'; g.fillText(pd.name.toUpperCase(),px,pz-(pd.r*sc)-4); } if(pd.kind==='spawn'){ g.fillStyle='#e8c55a'; g.fillRect(px-3,pz-2,6,4); } if(pd.kind==='ex'){ g.fillStyle='#7cc9a4'; g.beginPath(); g.arc(px,pz,4,0,7); g.fill(); } }
     g.textAlign='left'; const [bx,bz]=p(0,0); g.fillStyle='#e2574a'; g.fillText('✕ BOSS',bx-20,bz+4); g.fillStyle='#e8c55a'; g.textAlign='right'; g.fillText('SNOWMOBILE INSERTS',W-12,22); g.textAlign='left';
+  } else if(map==='holdout'){ const S2=H/150, ox=W/2, oy=H/2; const p=(x,z)=>[ox+x*S2, oy+z*S2];
+    g.fillStyle='#22313a'; for(const [x,z,w,d] of [[0,-38,5,52],[0,38,5,52],[-38,0,52,5],[38,0,52,5]]){ const [a,b]=p(x-w/2,z-d/2); g.fillRect(a,b,w*S2,d*S2); }
+    g.strokeStyle='#7a6a4a'; g.lineWidth=3; const [cx,cz]=p(0,0); g.beginPath(); g.arc(cx,cz,7.2*S2,0,7); g.stroke(); g.lineWidth=1;
+    g.fillStyle='#e2574a'; g.fillRect(cx-5,cz-5,10,10); for(const [x,z] of LL.pads){ const [a,b]=p(x,z); g.fillStyle='#e8c55a'; g.fillRect(a-4,b-4,8,8); }
+    g.font='600 12px "JetBrains Mono", monospace'; for(const [n,x,z] of [['Radio hut',-36,-36],['Fuel hut',36,36],['Generator',36,-36],['Bunker',-36,36]]){ const [a,b]=p(x-5,z-4); g.fillStyle='#2a3d46'; g.fillRect(a,b,10*S2,8*S2); g.fillStyle='#9fb3bb'; g.fillText(n.toUpperCase(),a,b-4); }
+    g.fillStyle='#e2574a'; for(const [x,z] of LL.lanes.slice(0,4)){ const [a,b]=p(x,z); g.beginPath(); g.moveTo(a,b-6); g.lineTo(a+6,b+5); g.lineTo(a-6,b+5); g.fill(); }
+    g.textAlign='right'; g.fillStyle='#e8c55a'; g.fillText('TOWER DEFENSE · CO-OP',W-12,22); g.textAlign='left';
   } else if(map==='skerries'){ const sc=H/3100, ox=W/2, oy=H/2; const p=(x,z)=>[ox+x*sc,oy+z*sc];
     g.fillStyle='#102a3d'; g.fillRect(0,0,W,H); g.font='600 12px "JetBrains Mono", monospace';
     for(const I of SJ_ISL){ const [px,pz]=p(I.x,I.z); g.fillStyle=I.base?'#2a3d46':'#22313a'; g.beginPath(); g.arc(px,pz,I.r*sc,0,7); g.fill(); g.strokeStyle='#5b7581'; g.stroke(); if(I.base){ g.fillStyle='#3a3a3a'; g.fillRect(px-2,pz-220*sc,4,440*sc); } g.fillStyle=I.base?'#e8c55a':'#9fb3bb'; g.textAlign='center'; g.fillText(I.name.toUpperCase(),px,pz-I.r*sc-4); }

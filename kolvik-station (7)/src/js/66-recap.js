@@ -40,6 +40,7 @@ function recapFallback(err){ console.error('death recap',err); try{ logErr('deat
   const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><h2 class="bad">Killed in action</h2><p class="muted" style="margin:0">${esc(R.cause||'')}.</p><div class="acts"><button class="btn" id="rcGo">Exit to main menu</button></div></div>`; $('#rcGo').onclick=recapExit; }
 // called from the main loop every frame while you're dead, even with the game paused, so the card always shows up
 function deathTick(dt){
+  if(R.td) return tdDeathTick(dt);
   if(R.dm) return dmDeathTick(dt);
   if(R.spec) return;
   if(R.deadT>0){ R.deadT-=dt; return; }
@@ -55,8 +56,8 @@ function recapClose(){ const el=$('#deathcard'); el.hidden=true; el.innerHTML=''
 function recapTick(dt){ const rc=R.recap; if(!rc||!rc.K.from) return; const K=rc.K; const e=K.enemy; if(e&&!e.dead){ K.from={x:e.pos.x,z:e.pos.z}; if(rc.ring) rc.ring.position.set(e.pos.x,(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.1,e.pos.z); }
   const want=Math.atan2(-(K.from.x-P.pos.x),-(K.from.z-P.pos.z)); P.yaw=lerpA(P.yaw,want,Math.min(1,dt*1.5)); P.pitch+=(-0.05-P.pitch)*Math.min(1,dt*1.5); if(rc.ring) rc.ring.rotation.z+=dt*1.5; }
 // keep the secure pouch in the save while you play (the raid-start save has your gear stripped out)
-function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.dm) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
+function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.realEq) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
   raidSave(); }
 // the save as it stands mid-raid: everything at risk is left out, so closing the tab counts as losing it
-function raidSave(){ if(R&&R.dm) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
+function raidSave(){ if(R&&R.realEq) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
 addEventListener('keydown',e=>{ if(R&&R.recap&&!$('#deathcard').hidden&&(e.key==='Enter'||e.key==='Escape')){ e.preventDefault(); e.stopImmediatePropagation(); const b=$('#rcGo'); if(b) b.click(); } },true);

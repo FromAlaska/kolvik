@@ -12,6 +12,7 @@ const EK={
  relay:{name:'Relay Chief Dahl',hp:220,head:42,acc:0.74,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x1f4a5a,call:40,loot:[2,3],cash:[1800,3600],special:['satphone','goldbar','sensor'],home:4},
  huskarl:{name:'Huskarl',hp:140,head:28,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
  harbor:{name:'Harbormaster Vinter',hp:240,head:42,acc:0.74,react:[0.28,0.48],guns:[['kestrel',1]],mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x2a3f5a,call:40,loot:[2,3],cash:[2500,5000],special:['satphone','meteorite'],home:6},
+ warlord:{name:'Warlord Skarde',hp:650,head:70,acc:0.74,react:[0.3,0.5],guns:[['jarlmg',1]],bp:0.8,armor:[['warden',1]],helm:[['glacier',1]],coat:0x2a1a1a,loot:[3,5],cash:[2000,4000],call:50,bonus:0.5},
  mguard:{name:'Mine guard',hp:125,head:28,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
 };
 const ELOOT=[['smokes',2],['handwarm',1.2],['tourniquet',0.8],['medal',0.4],['compass',0.3],['caviar',0.5],['lockpick',0.12],['bolts',2.5],['tape',2.5],['battery',2],['wire',2],['aquavit',1.5],['bandage',2.5],['thermos',2],['ifak',1.4],['watch',0.9],['notebook',0.8],['powder',1.2],['radio',0.5],['medsup',0.8],['fuel',0.4],['satphone',0.25],['fieldkit',0.35],['goldbar',0.12]];
@@ -83,6 +84,7 @@ function targets(){
   const airAlt=(x,z,y)=>y-Math.max(R.terrain?R.terrain(x,z):0,0);
   if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x+(P.leanX||0)*Math.cos(P.yaw),z:P.pos.z-(P.leanX||0)*Math.sin(P.yaw),eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
   if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,fresh:st.gf??1,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
+  { const tt=typeof tdTarget==='function'?tdTarget():null; if(tt) list.push(tt); } // the mast on Last Light (78-holdout.js)
   return list;
 }
 // how far out an enemy will shoot: no further than you could see it through the fog, and never past 55 m

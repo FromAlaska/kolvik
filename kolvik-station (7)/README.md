@@ -689,6 +689,27 @@ curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" http://<server>:8080/api/ad
 
 Season state and the hall of fame live in the database (`season` and `hall` in the `kv` table).
 
+## Last Light: tower defense
+
+A co-op map (solo or with friends, on the Deploy tab or in a lobby) where you defend a relay mast in the middle of the
+map against **ten waves** coming down four roads.
+
+- **The mast** has 4,000 HP and a bar at the top of the screen. Attackers shoot it when they can see it (bullets do
+  little to a steel mast, so it takes a crowd) and fight you when they see you.
+- **Waves** grow with the wave number, the number of players and the difficulty: scavs first, then raiders, then
+  Huskarls, and the **Warlord** (650 HP, machine gun, class-5 armor) on the last wave. There's a 45 s break before the
+  first wave and 30 s after each.
+- **Supply points:** 300 to start, 40 a kill, 150 for every wave the mast survives (each player has their own). Press
+  **E** at one of the four pads around the mast to build a **sentry gun** (300; shoots attackers within 45 m), or at
+  the mast's base to **repair** it (+400 HP for 150).
+- **The ammo crate** at the mast fills your guns and gives you two spare magazines (once every 30 s).
+- **Your gear is safe:** you play with a copy of your loadout (or a basic rifle kit if you bring no gun). Nothing you
+  use, lose or find in the match comes home. You're back at the mast 10 s after dying, as long as it stands, and
+  anyone can revive you before that.
+- **Pay:** $500 per wave held (more on harder difficulties), $60 a kill, and $5,000 for holding all ten. Your best is
+  kept as "Best ever".
+- Online, the host runs the attackers, the sentries and the mast; it can't be joined once the waves start.
+
 ## Team deathmatch and Free for all
 
 In a lobby, the leader picks the **Mode**: *Extraction raid* (the normal game), *Team deathmatch* or *Free for all*.
@@ -1105,7 +1126,7 @@ browsers still allow it, but a few do not.
     `22-tasks` · `23-seasons` · `24-save` · `25-goals` (goals, titles, collection log) · `30-music` · `31-sfx` · `32-music-slavic` (the Russian instruments and tracks) · `33-music-chant` (the church pieces) · `34-voices` (footsteps, voices, positional sound) · `35-raid-music` · `40-hub` · `41-deploy` (conditions rotation, Deploy tab, lobbies
     and teams) · `42-leaderboard-maps` (leaderboard, overview maps) · `50-engine` (renderer, textures, collision, building helpers) · `51-maps`
     (Kolvik, Whiteout, Vault, Skarsvik, Ironfjord, Ravnskar) · `52-helis-drops` · `53-enemies` · `54-nav` ·
-    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `47-melee` (branches, shivs, spears) · `48-year` (time of year) · `49-lean` (leaning, hearing other players' shots) · `75-grenades` · `76-bows` · `77-pdrone` (your own drone) · `70-hrimfell` (also the snowmobile physics and the
+    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `47-melee` (branches, shivs, spears) · `48-year` (time of year) · `49-lean` (leaning, hearing other players' shots) · `75-grenades` · `76-bows` · `77-pdrone` (your own drone) · `78-holdout` (Last Light, tower defense) · `70-hrimfell` (also the snowmobile physics and the
     world config) · `71-storvidda` · `72-skjaergard` (aircraft) · `73-boss` · `74-kaldfjord` (Kaldfjord Reach) · `80-hud` · `81-loop-input` · `90-net` ·
     `91-accounts` · `99-boot`
 - `build.js` – `node build.js` assembles `src/` into `game.html`, and checks it: a syntax error in a file is reported

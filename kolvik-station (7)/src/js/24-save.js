@@ -12,6 +12,6 @@ function newSave(){
   return s;
 }
 function worthOf(o){ let v=o.cash; for(const it of o.stash.items) v+=deepValue(it); for(const k in o.eq) if(o.eq[k]) v+=deepValue(o.eq[k]); return Math.round(v); }
-function saveGame(obj=S){ if(R&&R.dm&&R.realEq&&obj===S) obj=Object.assign({},S,{eq:R.realEq}); // deathmatch kit never reaches the save
+function saveGame(obj=S){ if(R&&R.realEq&&obj===S) obj=Object.assign({},S,{eq:R.realEq}); // deathmatch kit never reaches the save
   try{ obj.stats.worth=worthOf(obj); }catch(e){} try{ localStorage.setItem(KEY, JSON.stringify(obj)); }catch(e){} accPush(obj); }
 function loadGame(){ try{ const t=localStorage.getItem(KEY); if(t){ const o=JSON.parse(t); if(o&&o.v===2) return o; } }catch(e){} return null; }

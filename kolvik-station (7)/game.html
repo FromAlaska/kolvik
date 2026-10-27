@@ -502,6 +502,13 @@ body.dmmode #taskHud{display:none}
 #pdhud{position:absolute; left:50%; top:calc(60px + env(safe-area-inset-top,0px)); transform:translateX(-50%); background:rgba(11,18,21,.75); border:1px solid var(--line); padding:6px 12px; font-family:var(--mono); font-size:13px; text-align:center; pointer-events:none; white-space:nowrap}
 #pdhud small{display:block; color:var(--dim); font-size:11px} #pdhud b{color:#3cf07a} #pdhud.weak{animation:mkpulse .5s steps(2) infinite}
 #weph .nd{font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:2px} #weph .nd kbd{font-size:10px}
+
+/* Last Light */
+#tdhud{position:absolute; left:50%; top:calc(36px + env(safe-area-inset-top,0px)); transform:translateX(-50%); width:min(420px, calc(100% - 32px)); pointer-events:none; font-family:var(--mono); font-size:13px}
+#tdhud .tdl{display:flex; gap:10px; justify-content:center; align-items:baseline; text-shadow:0 1px 0 #000} #tdhud .tdl b{font-size:15px} #tdhud .pts{color:var(--cash)}
+.tdbar{position:relative; height:16px; background:rgba(11,18,21,.75); border:1px solid var(--line); margin-top:4px} .tdbar i{position:absolute; inset:0 auto 0 0; background:#c0392b; transition:width .3s}
+.tdbar span{position:relative; display:block; text-align:center; font-size:11px; line-height:16px} .tdbar.hit{border-color:#ff6a5a}
+body.tdmode #taskHud{display:none}
 </style>
 
 <div id="hub">
@@ -541,7 +548,7 @@ body.dmmode #taskHud{display:none}
   <div id="hud">
     <div id="compass"></div><div id="timer"></div><div id="exlist"></div><div id="log"></div>
     <div id="scope" hidden></div><div id="prismRing" hidden></div><div id="reticle" hidden></div>
-    <div id="mates"></div><div id="hitdirs"></div><div id="bossbar" hidden></div><div id="flashwhite" hidden></div><div id="pdhud" hidden></div><div id="dmhud" hidden></div><div id="racehud" hidden></div><div id="airhud" hidden></div><div id="tvhud" hidden></div><div id="aimdot" hidden></div><div id="cross"></div><div id="hitm"></div><div id="prompt"></div><div id="center"></div>
+    <div id="mates"></div><div id="hitdirs"></div><div id="bossbar" hidden></div><div id="flashwhite" hidden></div><div id="tdhud" hidden></div><div id="pdhud" hidden></div><div id="dmhud" hidden></div><div id="racehud" hidden></div><div id="airhud" hidden></div><div id="tvhud" hidden></div><div id="aimdot" hidden></div><div id="cross"></div><div id="hitm"></div><div id="prompt"></div><div id="center"></div>
     <div id="bodyhud"><div class="fig" id="fig"></div><div class="vit" id="vit"></div></div>
     <div id="weph"></div>
     <div id="taskHud"></div>
@@ -1339,7 +1346,7 @@ function newSave(){
   return s;
 }
 function worthOf(o){ let v=o.cash; for(const it of o.stash.items) v+=deepValue(it); for(const k in o.eq) if(o.eq[k]) v+=deepValue(o.eq[k]); return Math.round(v); }
-function saveGame(obj=S){ if(R&&R.dm&&R.realEq&&obj===S) obj=Object.assign({},S,{eq:R.realEq}); // deathmatch kit never reaches the save
+function saveGame(obj=S){ if(R&&R.realEq&&obj===S) obj=Object.assign({},S,{eq:R.realEq}); // deathmatch kit never reaches the save
   try{ obj.stats.worth=worthOf(obj); }catch(e){} try{ localStorage.setItem(KEY, JSON.stringify(obj)); }catch(e){} accPush(obj); }
 function loadGame(){ try{ const t=localStorage.getItem(KEY); if(t){ const o=JSON.parse(t); if(o&&o.v===2) return o; } }catch(e){} return null; }
 
@@ -2829,6 +2836,7 @@ const MAP_COND={
  storvidda:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['outage',1],['bounty',1.2]],hot:['Relay hall','Barracks','Garage','Bunker','Pump station'],boss:'Relay Chief Dahl'},
  skerries:{weather:[['clear',4],['overcast',3],['aurora',1.5],['blizzard',0.5],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',1.5],['outage',1]],hot:['Trading post',"Keeper's house","Hunters' camp",'Vestholm hangar','Austholm hangar']},
  vault:{weather:[['indoor',1]],mods:[['none',3],['bounty',1.5],['quiet',1]],boss:'Vault Warden Brekke'},
+ holdout:{weather:[['overcast',3],['clear',2],['aurora',2],['blizzard',1],['sleet',1],['icefog',0.6],['windstorm',1],['calm',1]],mods:[['none',1]]},
  kaldfjord:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2.5],['outage',1],['bounty',1.2]],hot:['Town hall','Police station','Harbor warehouse','Processing plant','Radar ops','Hangar','Research lab'],boss:'Harbormaster Vinter'},
  skarsvik:{weather:[['overcast',3],['clear',2],['blizzard',2],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['quiet',1],['bounty',1.2]],hot:['Church','Town hall','General store','Processing plant','Hangar','Harbor warehouse'],boss:'Mine Foreman Rask'},
 };
@@ -2854,6 +2862,7 @@ const MAPS={
  ironfjord:{name:'Ironfjord Depot',time:600,pvp:true,blurb:'A rail freight depot on a frozen fjord. PvP only, no AI at all: everyone in here is a player. Rich loot in the warehouse, the signal box and the boxcars, eight spread-out insertion points, and two of four extracts open each raid.',threat:'Players only'},
  storvidda:{name:'Storvidda',time:900,sleds:true,blurb:'A 1.3 km plateau of open tundra. Everyone inserts at the edge on a snowmobile; the Storvidda Relay, a fortified weather and radio station, sits 500 m away in the middle, with a hunting cabin, a pump station and a frozen lake on the way. Ride in, fight for the relay, ride out to an extract on the far edge. Hills block sight and bullets.',threat:'Raiders, scavs + relay chief'},
  skerries:{name:'Skjærgård',time:1200,teams:true,air:true,noDrop:true,blurb:'Air combat over a 3 km stretch of sea and islands. Two teams, each with a home island, a runway and a hangar full of aircraft: Skylark light planes (pilot plus a passenger with their own gun), Hauk fighters with twin machine guns, and Storm heavy bombers with three gun turrets and a bomb bay. AI pilots can fly for either side. Loot on the village, the lighthouse and the skerries; extract at your own pier.',threat:'Enemy aircraft + scavs'},
+ holdout:{name:'Last Light',time:2400,coop:true,td:true,noDrop:true,blurb:'Tower defense. Hold the relay mast against ten waves coming down four roads, solo or with friends. Build sentry guns and repair the mast with supply points from kills and waves. Your gear is safe: you play with a copy of it.',threat:'10 waves'},
  kaldfjord:{name:'Kaldfjord Reach',time:1800,sleds:true,blurb:'The big one: 2.2 km of hills, forest and a frozen fjord, about three times Storvidda. A town in the middle with a harbor on the ice (Harbormaster Vinter runs it), a mine in the north, a radar base in the east, a fishing village, an old airstrip, a research station across the fjord, and huts out in the hills. Insert on a snowmobile at the edge; three of six extracts open. Recon drones patrol it.',threat:'Scavs, raiders, guards, drones + boss'},
  vault:{name:'Black Ice Vault',time:360,fee:5000,blurb:'Nine rooms cut into the permafrost under the station. Pay $5,000 to go down. Vault safes hold bonds, diamonds and gold; the guards wear plates and the Warden waits in the middle. One lift out.',threat:'Vault guards + Warden'},
 };
@@ -3019,6 +3028,13 @@ function drawMapCard(cv,map){
     for(const pd of TD_PADS){ const [px,pz]=p(pd.x,pd.z); g.fillStyle=pd.ice?'#1f4050':pd.kind==='zone'?'#2a3d46':pd.kind==='out'?'#22313a':pd.kind==='spawn'?'#3a3a2a':'#1c3a2c'; g.beginPath(); g.arc(px,pz,Math.max(3,pd.r*sc),0,7); g.fill(); if(pd.kind==='zone'||pd.kind==='out'||pd.ice){ g.strokeStyle='#5b7581'; g.stroke(); } }
     for(const pd of TD_PADS){ const [px,pz]=p(pd.x,pd.z); if(pd.name){ g.fillStyle=pd.kind==='ex'?'#7cc9a4':'#9fb3bb'; g.textAlign='center'; g.fillText(pd.name.toUpperCase(),px,pz-(pd.r*sc)-4); } if(pd.kind==='spawn'){ g.fillStyle='#e8c55a'; g.fillRect(px-3,pz-2,6,4); } if(pd.kind==='ex'){ g.fillStyle='#7cc9a4'; g.beginPath(); g.arc(px,pz,4,0,7); g.fill(); } }
     g.textAlign='left'; const [bx,bz]=p(0,0); g.fillStyle='#e2574a'; g.fillText('✕ BOSS',bx-20,bz+4); g.fillStyle='#e8c55a'; g.textAlign='right'; g.fillText('SNOWMOBILE INSERTS',W-12,22); g.textAlign='left';
+  } else if(map==='holdout'){ const S2=H/150, ox=W/2, oy=H/2; const p=(x,z)=>[ox+x*S2, oy+z*S2];
+    g.fillStyle='#22313a'; for(const [x,z,w,d] of [[0,-38,5,52],[0,38,5,52],[-38,0,52,5],[38,0,52,5]]){ const [a,b]=p(x-w/2,z-d/2); g.fillRect(a,b,w*S2,d*S2); }
+    g.strokeStyle='#7a6a4a'; g.lineWidth=3; const [cx,cz]=p(0,0); g.beginPath(); g.arc(cx,cz,7.2*S2,0,7); g.stroke(); g.lineWidth=1;
+    g.fillStyle='#e2574a'; g.fillRect(cx-5,cz-5,10,10); for(const [x,z] of LL.pads){ const [a,b]=p(x,z); g.fillStyle='#e8c55a'; g.fillRect(a-4,b-4,8,8); }
+    g.font='600 12px "JetBrains Mono", monospace'; for(const [n,x,z] of [['Radio hut',-36,-36],['Fuel hut',36,36],['Generator',36,-36],['Bunker',-36,36]]){ const [a,b]=p(x-5,z-4); g.fillStyle='#2a3d46'; g.fillRect(a,b,10*S2,8*S2); g.fillStyle='#9fb3bb'; g.fillText(n.toUpperCase(),a,b-4); }
+    g.fillStyle='#e2574a'; for(const [x,z] of LL.lanes.slice(0,4)){ const [a,b]=p(x,z); g.beginPath(); g.moveTo(a,b-6); g.lineTo(a+6,b+5); g.lineTo(a-6,b+5); g.fill(); }
+    g.textAlign='right'; g.fillStyle='#e8c55a'; g.fillText('TOWER DEFENSE · CO-OP',W-12,22); g.textAlign='left';
   } else if(map==='skerries'){ const sc=H/3100, ox=W/2, oy=H/2; const p=(x,z)=>[ox+x*sc,oy+z*sc];
     g.fillStyle='#102a3d'; g.fillRect(0,0,W,H); g.font='600 12px "JetBrains Mono", monospace';
     for(const I of SJ_ISL){ const [px,pz]=p(I.x,I.z); g.fillStyle=I.base?'#2a3d46':'#22313a'; g.beginPath(); g.arc(px,pz,I.r*sc,0,7); g.fill(); g.strokeStyle='#5b7581'; g.stroke(); if(I.base){ g.fillStyle='#3a3a3a'; g.fillRect(px-2,pz-220*sc,4,440*sc); } g.fillStyle=I.base?'#e8c55a':'#9fb3bb'; g.textAlign='center'; g.fillText(I.name.toUpperCase(),px,pz-I.r*sc-4); }
@@ -3501,7 +3517,7 @@ function yearHtml(){ const Y=yearAt(Date.now()), N=YEAR[(yearIdx(Date.now())+1)%
 const LEAN={off:0.38, roll:0.16, rate:7, drop:0.05};
 function leanTick(dt){
   const k=P.keys, busy=P.dead||P.down||R.invOpen||R.ride||R.fly||(R.pd&&R.pd.ctl)||(R.gps&&R.gps.open);
-  let want=0; if(!busy){ if(k.KeyQ) want-=1; if(k.KeyE&&!R.near&&!R.nearDoor&&R.nearTree==null) want+=1; }
+  let want=0; if(!busy){ if(k.KeyQ) want-=1; if(k.KeyE&&!R.near&&!R.nearDoor&&R.nearTree==null&&!(R.td&&tdNear())) want+=1; }
   if(want) P.sprint=false;
   P.lean=(P.lean||0)+clamp(want-(P.lean||0),-LEAN.rate*dt,LEAN.rate*dt);
   // stop short of walls: walk the offset out in 8 cm steps and stop at the first box at head height
@@ -4092,6 +4108,7 @@ const EK={
  relay:{name:'Relay Chief Dahl',hp:220,head:42,acc:0.74,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x1f4a5a,call:40,loot:[2,3],cash:[1800,3600],special:['satphone','goldbar','sensor'],home:4},
  huskarl:{name:'Huskarl',hp:140,head:28,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
  harbor:{name:'Harbormaster Vinter',hp:240,head:42,acc:0.74,react:[0.28,0.48],guns:[['kestrel',1]],mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x2a3f5a,call:40,loot:[2,3],cash:[2500,5000],special:['satphone','meteorite'],home:6},
+ warlord:{name:'Warlord Skarde',hp:650,head:70,acc:0.74,react:[0.3,0.5],guns:[['jarlmg',1]],bp:0.8,armor:[['warden',1]],helm:[['glacier',1]],coat:0x2a1a1a,loot:[3,5],cash:[2000,4000],call:50,bonus:0.5},
  mguard:{name:'Mine guard',hp:125,head:28,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
 };
 const ELOOT=[['smokes',2],['handwarm',1.2],['tourniquet',0.8],['medal',0.4],['compass',0.3],['caviar',0.5],['lockpick',0.12],['bolts',2.5],['tape',2.5],['battery',2],['wire',2],['aquavit',1.5],['bandage',2.5],['thermos',2],['ifak',1.4],['watch',0.9],['notebook',0.8],['powder',1.2],['radio',0.5],['medsup',0.8],['fuel',0.4],['satphone',0.25],['fieldkit',0.35],['goldbar',0.12]];
@@ -4163,6 +4180,7 @@ function targets(){
   const airAlt=(x,z,y)=>y-Math.max(R.terrain?R.terrain(x,z):0,0);
   if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x+(P.leanX||0)*Math.cos(P.yaw),z:P.pos.z-(P.leanX||0)*Math.sin(P.yaw),eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
   if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,fresh:st.gf??1,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
+  { const tt=typeof tdTarget==='function'?tdTarget():null; if(tt) list.push(tt); } // the mast on Last Light (78-holdout.js)
   return list;
 }
 // how far out an enemy will shoot: no further than you could see it through the fog, and never past 55 m
@@ -4380,7 +4398,8 @@ function enemyShoot(e,t,dist){
   tracer(mx,my-0.05,mz,ex,ey,ez,0xffcf7a); R.shots.push([mx,mz,ex,ey,ez]);
   if(hits){ e.dmgDone=(e.dmgDone||0)+hits*am.dmg; R.lastShooter=e; }
   const dmg=am.dmg*(R.D.dmg||1);
-  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
+  if(t.id==='tower'){ if(hits) towerHit(dmg*hits); }
+  else if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
   else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
 function hearShot(x,z,radius){ radius*=Math.sqrt((R&&R.hear)||1); if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
@@ -4984,7 +5003,7 @@ function aiSuppress(e,x,z){
   for(const t of R.tgts){ const px=t.x-mx, py=(t.eye-0.5)-my, pz=t.z-mz, along=px*_b.x+py*_b.y+pz*_b.z; if(along<0||along>(wall?wall.distance:dd+20)) continue;
     const off=Math.hypot(px-_b.x*along,py-_b.y*along,pz-_b.z*along); if(off>0.45) continue;
     if(Math.random()<0.3*e.k.acc*R.D.acc){ const am=ITEMS[e.gun.ammo], dmg=am.dmg*(R.D.dmg||1); e.dmgDone=(e.dmgDone||0)+dmg; R.lastShooter=e;
-      if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
+      if(t.id==='tower') towerHit(dmg); else if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
     else if(t.id==='me'){ sfxWhizz(); hitDir(e.pos.x,e.pos.z,true); } break; }
 }
 
@@ -5514,7 +5533,7 @@ function startRaid(mapId,launch){
   S.lastKit=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; S.lastKit.push([it.id,1]); if(it.att) for(const k in it.att) if(it.att[k]) S.lastKit.push([it.att[k].id,1]); if(it.items) for(const x of it.items) S.lastKit.push([x.id,x.n||1]); }
   for(const x of S.eq.pockets.items) S.lastKit.push([x.id,x.n||1]);
   const dmMode=welcome&&DM_INFO[welcome.mode]?welcome.mode:null; // deathmatch: your gear stays home, so nothing is stripped (46-deathmatch.js)
-  if(dmMode){ saveGame(); accFlush(); } else { const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; saveGame(strip); accFlush(); }
+  if(dmMode||map.td){ saveGame(); accFlush(); } else { const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; saveGame(strip); accFlush(); }
   for(const s of [...SLOTS,'pockets','pouch']){ const it=S.eq[s]; if(it&&it.items) for(const x of it.items) delete x.hid; }
   scene=new THREE.Scene(); if(camera.far!==420){ camera.far=420; camera.updateProjectionMatrix(); }
   R={map:mapId,cols:[],ray:[],targets:[],indoor:[],bld:[],heaters:[],conts:[],enemies:[],extracts:[],fx:[],tr:[],aur:[],t:0,timeLeft:map.time,kills:0,invOpen:false,over:false,paused:true,lootTarget:null,msgs:[],startValue:carriedValue(),exT:0,bound:98,drain:0.32,lootMult:1,hudT:0,revealT:0,noLock:false,locked:false,dirty:false,shots:[],bodyN:0,tgts:[],chat:[],chatOpen:false,chatClosedAt:0,lastHitBy:null,lastHitT:0,ret:undefined};
@@ -5527,10 +5546,11 @@ function startRaid(mapId,launch){
   const seed=welcome?welcome.seed:(DBG.seed!=null?DBG.seed:(Math.random()*1e9)|0); R.seed=seed; const slot=welcome?welcome.slot:Math.floor(Math.random()*4);
   R.world=welcome&&welcome.world?welcome.world:WORLD; applyWorld(R.world);
   BUILD={n:0}; rand=mulberry32(seed);
-  const sps = mapId==='kolvik'?buildKolvik():mapId==='whiteout'?buildWhiteout():mapId==='skarsvik'?buildSkarsvik():mapId==='ironfjord'?buildIronfjord():mapId==='ravnskar'?buildRavnskar():mapId==='hrimfell'?buildHrimfell():mapId==='storvidda'?buildStorvidda():mapId==='kaldfjord'?buildKaldfjord():mapId==='skerries'?buildSkerries():buildVault();
+  const sps = mapId==='kolvik'?buildKolvik():mapId==='whiteout'?buildWhiteout():mapId==='skarsvik'?buildSkarsvik():mapId==='ironfjord'?buildIronfjord():mapId==='ravnskar'?buildRavnskar():mapId==='hrimfell'?buildHrimfell():mapId==='storvidda'?buildStorvidda():mapId==='kaldfjord'?buildKaldfjord():mapId==='skerries'?buildSkerries():mapId==='holdout'?buildHoldout():buildVault();
   addLockedRooms(mapId); applyMods(sps); diffExtras();
   rand=Math.random; BUILD=null;
   if(dmMode) dmSetup(dmMode,sps);
+  if(map.td) tdSetup(); // Last Light (78-holdout.js)
   let sps2=sps; if(map.teams){ const mine=sps.filter(q=>q.side===(R.side||1)); if(mine.length) sps2=mine; }
   const sp0=dmMode?dmStartSpawn():sps2[slot%sps2.length]; const mi=welcome&&welcome.mate||0; const sp={x:sp0.x+(mi?((mi%2)?1:-1)*Math.ceil(mi/2)*(map.heli?11:map.sleds?3.4:1.8):0),z:sp0.z,h:sp0.h}; { const v=new THREE.Vector3(sp.x,0,sp.z); resolve(v,0.4); sp.x=v.x; sp.z=v.z; }
   R.extracts.filter(e=>e.active).forEach(beacon);
@@ -5553,6 +5573,7 @@ function startRaid(mapId,launch){
   const b=$('#brief'); b.hidden=false;
   b.innerHTML=`<div class="card"><span class="lbl">${map.name} · ${R.D.name} · ${fmtTime(R.timeLeft)} left${welcome?` · online · ${others} other${others===1?'':'s'} in this raid`:' · solo'}</span><h2>Extract at ${esc(act)}</h2><div class="condline">${condHtml(R.cond)}</div><p class="muted" style="margin:0">${mapId==='vault'?'The lift is in a corner room. Guards patrol every room but yours.':mapId==='hrimfell'?'You start on a snowmobile at the summit. W throttle, S brake, A and D steer, mouse looks around. Hit a tree, rock or log fast, or fall into a crevasse, and you start again from the top; take the jumps fast enough to clear the crevasses. At the bottom, E gets off. Drivers can only use a sidearm; a squadmate can press E by your sled to ride on the back and shoot.':mapId==='skerries'?`You're on ${R.side===2?'Austholm':'Vestholm'}, the ${R.side===2?'eastern':'western'} island. The aircraft are lined up on the apron: walk up to one and press E. Pilot: W/S throttle, A/D steer on the ground and roll in the air, mouse steers in the air, click fires, G drops bombs, E gets out on the ground, X bails out with a parachute. Extra seats on the Skylark and the Storm are for a passenger or gunners. Loot on the islands in between; extract at your own pier.`:mapId==='kaldfjord'?'You start on a snowmobile at the edge of a 2.2 km map. W throttle, S brake, A and D steer, E gets off and back on. M opens the map and G plans a route to the nearest open extract. Watch the sky: recon drones call in what they see. Three of six extracts are open, all out at the edges.':mapId==='storvidda'?'You start on a snowmobile at the edge of the plateau, facing the relay 500 m away. W throttle, S brake, A and D steer. E gets off and back on; the sled stays where you leave it. Crashing into a tree, a rock or a steep bank throws you off and hurts. Drivers can only use a sidearm; a squadmate can ride on the back with a rifle. Extracts are back out on the edge, so keep your sled close.':mapId==='ravnskar'?'Co-op: everyone in this raid is on your side. Jarl Hrafn sleeps in the keep at the north end of the fort; his hoard opens when he dies. Watch the ground for red circles. Cliff road and Sea stairs are open the whole raid.':mapId==='ironfjord'?'No AI here. Every footstep and every shot is another player. Open extracts show a green beacon.':mapId==='skarsvik'?'A helicopter flies you in to a landing zone on the coast (Space jumps out early). Halfway through, an evac helicopter lands somewhere on the island and waits 100 seconds.':'Open extracts show a green beacon and appear top right with a distance and direction.'} Stand inside one for 7 seconds. ${welcome?'Other players are hostile and their bodies can be looted. Press Enter to chat.':'Stay warm, stay quiet, and don\'t get greedy.'}</p><div class="acts"><button class="btn" id="goBtn">Start raid</button></div></div>`;
   if(dmMode){ dmBrief(b); dmHud(); }
+  if(map.td){ const h=b.querySelector('h2'); if(h) h.textContent='Defend the mast'; const p=b.querySelector('p.muted'); if(p) p.textContent=`Ten waves come down the four roads. Keep the mast standing. Supply points (kills and waves) build sentry guns at the four pads (E) and repair the mast at its base; the ammo crate refills your guns. You play with a copy of your loadout, so nothing you own is at risk, and you're back at the mast 10 s after dying. First wave in ${LL.first} s.`; tdHud(); }
   $('#goBtn').onclick=()=>{ b.hidden=true; R.paused=false; lockPointer(); if(R.heli) msg('Inbound by helicopter. Space jumps out early.'); else if(R.dm) msg('Go. Three seconds before anyone can hurt you.'); else msg(`Deployed. ${SPAWN.grace} seconds of cover: move.`); if(R.cond.modText) msg(R.cond.modText); windStart(); };
 }
 function lockPointer(){ const cv=$('#cv'); try{ const p=cv.requestPointerLock(); if(p&&p.catch) p.catch(()=>{ R&&(R.noLock=true); }); }catch(e){ if(R) R.noLock=true; } }
@@ -5614,7 +5635,7 @@ function dmgPart(part,amt,cause){
 }
 function spread(amt,cause){ const alive=PARTS.filter(p=>P.hp[p]>0); if(!alive.length) return die(cause); const each=amt/alive.length; for(const p of alive){ P.hp[p]-=each; if(P.hp[p]<=0){ P.hp[p]=0; if(p==='head'||p==='thorax') return die(cause); } } }
 function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&othersUp()) return goDown(cause); reallyDie(cause); }
-function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { { const by=R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:(R.downBy||null); if(NET.on&&by) nsend({t:'pdied',by}); } if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
+function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm||R.td){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { { const by=R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:(R.downBy||null); if(NET.on&&by) nsend({t:'pdied',by}); } if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
 function myBodyItems(){ const out=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; if(it.items){ for(const x of it.items){ delete x.hid; out.push(x); } it.items=[]; } delete it.hid; out.push(it); } for(const x of S.eq.pockets.items){ delete x.hid; out.push(x); } return out.map(x=>reUid(JSON.parse(JSON.stringify(x)))); }
 function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
@@ -6289,6 +6310,7 @@ function recapFallback(err){ console.error('death recap',err); try{ logErr('deat
   const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><h2 class="bad">Killed in action</h2><p class="muted" style="margin:0">${esc(R.cause||'')}.</p><div class="acts"><button class="btn" id="rcGo">Exit to main menu</button></div></div>`; $('#rcGo').onclick=recapExit; }
 // called from the main loop every frame while you're dead, even with the game paused, so the card always shows up
 function deathTick(dt){
+  if(R.td) return tdDeathTick(dt);
   if(R.dm) return dmDeathTick(dt);
   if(R.spec) return;
   if(R.deadT>0){ R.deadT-=dt; return; }
@@ -6304,10 +6326,10 @@ function recapClose(){ const el=$('#deathcard'); el.hidden=true; el.innerHTML=''
 function recapTick(dt){ const rc=R.recap; if(!rc||!rc.K.from) return; const K=rc.K; const e=K.enemy; if(e&&!e.dead){ K.from={x:e.pos.x,z:e.pos.z}; if(rc.ring) rc.ring.position.set(e.pos.x,(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.1,e.pos.z); }
   const want=Math.atan2(-(K.from.x-P.pos.x),-(K.from.z-P.pos.z)); P.yaw=lerpA(P.yaw,want,Math.min(1,dt*1.5)); P.pitch+=(-0.05-P.pitch)*Math.min(1,dt*1.5); if(rc.ring) rc.ring.rotation.z+=dt*1.5; }
 // keep the secure pouch in the save while you play (the raid-start save has your gear stripped out)
-function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.dm) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
+function pouchSaveTick(){ if(!S||!S.eq.pouch||R.over||R.realEq) return; if(R.t<(R.pouchT||0)) return; R.pouchT=R.t+3; const now=JSON.stringify(S.eq.pouch.items); if(now===R.pouchLast) return; R.pouchLast=now;
   raidSave(); }
 // the save as it stands mid-raid: everything at risk is left out, so closing the tab counts as losing it
-function raidSave(){ if(R&&R.dm) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
+function raidSave(){ if(R&&R.realEq) return saveGame(); try{ const strip=JSON.parse(JSON.stringify(S)); SLOTS.forEach(k=>strip.eq[k]=null); strip.eq.pockets.items=[]; strip.inRaid=true; if(strip.eq.pouch) for(const it of strip.eq.pouch.items) delete it.hid; saveGame(strip); }catch(e){} }
 addEventListener('keydown',e=>{ if(R&&R.recap&&!$('#deathcard').hidden&&(e.key==='Enter'||e.key==='Escape')){ e.preventDefault(); e.stopImmediatePropagation(); const b=$('#rcGo'); if(b) b.click(); } },true);
 
 /* 67-spawn: a fair start
@@ -6320,7 +6342,7 @@ const SPAWN={grace:30, fade:25, clear:60};
 // 0 right after your cover ends, rising to 1: how far enemies can spot you (half range at first)
 const freshness=()=>!P||P.grace>0?0:clamp((R.t-(P.graceEnd??-99))/SPAWN.fade,0,1);
 function spawnCover(sps){
-  if(!sps||!sps.length||R.airMap||R.race||R.map==='vault') return;
+  if(!sps||!sps.length||R.airMap||R.race||R.map==='vault'||R.noCover) return;
   const wall=M('concrete');
   for(const sp of sps){
     // face into the map: the spawn's heading if it has one, else toward the middle
@@ -7695,6 +7717,135 @@ function pdRemoteTick(){ for(const id in NET.players){ const q=NET.players[id], 
   if(pd&&!st.dead){ if(!q.pdG){ q.pdG=pdMesh(); q.pdG.traverse(o=>{ if(o.isMesh){ o.userData={pdrone:id,part:'drone'}; R.targets.push(o); } }); } const g=q.pdG; g.position.x+=(pd[0]-g.position.x)*0.3; g.position.y+=(pd[1]-g.position.y)*0.3; g.position.z+=(pd[2]-g.position.z)*0.3; g.rotation.y=pd[3]; for(const r of g.userData.rot) r.rotation.y+=0.9; }
   else if(q.pdG){ const gone=q.pdG; R.targets=R.targets.filter(m=>m.userData.pdrone!==id); scene.remove(gone); q.pdG=null; } } }
 
+/* 78-holdout: Last Light, a tower defense map
+   Defend the relay mast in the middle of the map against ten waves of attackers, solo or with friends (co-op: everyone
+   on the same side). The mast has 4,000 HP; attackers shoot it when they can see it (bullets do little to a steel
+   mast, so it takes a crowd) and fight you when they see you. Between waves there's a break (45 s before the first,
+   30 s after each) to build and resupply:
+   - Supply points: you start with 300 and earn 40 a kill and 150 for every wave the mast survives (each player has
+     their own). Spend them at the four sentry pads around the mast (a sentry gun for 300 that shoots attackers within
+     45 m) and at the mast's base (repairs: 400 HP for 150).
+   - The ammo crate at the mast refills your guns and gives you two spare magazines (once every 30 s).
+   - Your gear is safe: you play with a copy of your loadout (or a basic rifle kit if you bring no gun), and you're back
+     at the mast 10 s after dying, as long as it stands.
+   Waves grow with the wave number, the number of players and the difficulty: scavs first, then raiders, then Huskarls,
+   and the Warlord on the last wave. Clear wave 10 to win; lose the mast and it's over. Pay: $500 per wave survived
+   (more on harder difficulties), $60 a kill, and $5,000 for holding to the end.
+   Online, the host runs the attackers, the sentries and the mast; spawns, builds, repairs and the result are sent to
+   everyone (tdspawn, tdbuild, tdrepair, tdend, and the mast's state in estate). It can't be joined once it starts. */
+const LL={waves:10, hp:4000, mul:0.12, first:45, brk:30, respawn:10, pts0:300, ptsKill:40, ptsWave:150,
+  sentry:{cost:300,range:45,rate:0.3,dmg:36,acc:0.5}, repair:{cost:150,hp:400}, ammoCD:30,
+  pads:[[-11,-11],[11,-11],[11,11],[-11,11]], crate:[3.2,3.2], lanes:[[0,-62],[62,0],[0,62],[-62,0],[-48,-48],[48,48]]};
+function buildHoldout(){
+  scene.background=new THREE.Color(0x2a2f3e); scene.fog=new THREE.FogExp2(0x2a2f3e,0.016);
+  scene.add(new THREE.HemisphereLight(0xb8c4dc,0x3a4048,0.9)); const sun=new THREE.DirectionalLight(0xffb888,0.4); sun.position.set(-40,20,30); scene.add(sun);
+  ground(300); perimeter(70); aurora(); R.bound=68; R.drain=0.22; R.decor=[]; R.noCover=true;
+  const steel=MC(0x6a737a), dark=MC(0x2c3034), red=M('metalRed'), conc=M('concrete'), wood=M('wood'), grey=M('metalGrey');
+  // the mast: a plinth you can stand on, a lattice to 20 m and a light on top. Bullets pass through the lattice (los:false)
+  solid(0,0.5,0,4.4,1,4.4,conc,{ts:2});
+  for(const [sx,sz] of [[-1,-1],[1,-1],[1,1],[-1,1]]) solid(sx*1.4,10.5,sz*1.4,0.32,19,0.32,steel,{los:false});
+  for(let y=3;y<=18;y+=3){ solid(0,y+1,-1.4,2.8,0.12,0.12,steel,{col:false,los:false}); solid(0,y+1,1.4,2.8,0.12,0.12,steel,{col:false,los:false}); solid(-1.4,y+1,0,0.12,0.12,2.8,steel,{col:false,los:false}); solid(1.4,y+1,0,0.12,0.12,2.8,steel,{col:false,los:false}); }
+  solid(0,13,0,3.6,0.3,3.6,dark,{col:false,los:false}); solid(0,21.5,0,0.18,5,0.18,steel,{col:false,los:false});
+  const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5),MB(0xff3a2a)); lamp.position.set(0,24.2,0); scene.add(lamp); R.tdLamp=lamp;
+  for(const [x,z,w,d] of [[-1.6,2.2,0.5,0.6],[1.6,2.2,0.5,0.6]]) solid(x,1.4,z,w,0.8,d,grey,{col:false});
+  // the sandbag ring, with four gaps for the roads
+  const bag=MC(0x7a6a4a); for(let i=0;i<24;i++){ const a=i/24*Math.PI*2; if(Math.abs(Math.sin(a*2))<0.32) continue; const x=Math.cos(a)*7.2, z=Math.sin(a)*7.2; const m=solid(x,0.5,z,2,1,0.8,bag,{ts:1}); m.rotation.y=-a+Math.PI/2; }
+  // ammo crate and sentry pads
+  solid(LL.crate[0],0.45,LL.crate[1],1.2,0.9,0.8,MC(0x3e4a34),{ts:1}); const tag=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.12,0.02),MB(0xffc070)); tag.position.set(LL.crate[0],0.75,LL.crate[1]+0.41); scene.add(tag);
+  R.tdPadM=[]; for(const [x,z] of LL.pads){ floorPlane(x,z,2.6,2.6,0.03,'road',2,2); const ring=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.06,2.6),MB(0x2a3d46)); ring.position.set(x,0.03,z); scene.add(ring); R.tdPadM.push(ring); }
+  // four roads in from the edges, with cover along them
+  floorPlane(0,-38,5,52,0.01,'road',2,3); floorPlane(0,38,5,52,0.01,'road',2,3); floorPlane(-38,0,52,5,0.01,'road',2,3); floorPlane(38,0,52,5,0.01,'road',2,3);
+  for(const [x,z,ax,m] of [[-7,-28,'z',red],[7,-40,'z',grey],[28,-7,'x',grey],[42,8,'x',red],[-6,30,'z',grey],[8,44,'z',red],[-30,7,'x',red],[-44,-6,'x',grey]]) shipc(x,z,ax,m);
+  building(-36,-36,10,8,3.2,{mat:wood,doors:{s:[[5,1.6]],e:[[4,1.6]]},name:'Radio hut'}); container('desk',-38,-38.5,1); container('med',-33.6,-38.6,1); container('locker',-40.4,-34,1);
+  building(36,36,10,8,3.2,{mat:wood,doors:{n:[[5,1.6]],w:[[4,1.6]]},name:'Fuel hut'}); container('tool',38,38.5,1); container('crate',34,38.6,1); container('drum',39,33.6);
+  building(36,-36,8,8,3.2,{mat:grey,doors:{w:[[4,1.6]],s:[[4,1.6]]},name:'Generator'}); container('tool',37.6,-38.4,1); container('crate',38.2,-34,1);
+  building(-36,36,8,8,3.2,{mat:grey,doors:{e:[[4,1.6]],n:[[4,1.6]]},name:'Bunker'}); container('vlocker',-38.4,37.6,1); container('med',-38.4,34,1);
+  for(const [x,z,s] of [[-16,-22,1.4],[18,-24,1.2],[22,16,1.6],[-20,20,1.1],[-52,14,1.8],[52,-14,1.5],[12,54,1.3],[-14,-54,1.4],[30,0,0.9],[-30,-2,1.0]]) rock(x,z,s);
+  for(let i=0;i<26;i++){ const a=Math.random()*6.28, d=16+Math.random()*48, x=Math.cos(a)*d, z=Math.sin(a)*d; if(Math.abs(x)<4||Math.abs(z)<4||R.bld.some(b=>x>b.x0-3&&x<b.x1+3&&z>b.z0-3&&z<b.z1+3)) continue; drift(x,z,1+Math.random()*2); }
+  R.extracts=[]; R.tdTower={x:0,z:0};
+  return [{x:-3.6,z:-4.6,h:Math.PI*0.75},{x:3.6,z:-4.6,h:-Math.PI*0.75},{x:3.6,z:4.6,h:-Math.PI*0.25},{x:-3.6,z:4.6,h:Math.PI*0.25}];
+}
+// a match: called from startRaid once the map is built
+function tdSetup(){ R.td={wave:0,state:'break',t:LL.first,hp:LL.hp,max:LL.hp,queue:[],alive:0,pads:[],over:false,spent:0,waveDone:0};
+  R.realEq=S.eq; R.tdKit=JSON.parse(JSON.stringify(S.eq)); if(!R.tdKit.primary&&!R.tdKit.secondary){ const k=dmKit(); R.tdKit.primary=k.primary; R.tdKit.secondary=k.secondary; R.tdKit.rig=R.tdKit.rig||k.rig; }
+  tdFillAmmo(R.tdKit); S.eq=JSON.parse(JSON.stringify(R.tdKit)); R.ammoT=-99; buildNav(); document.body.classList.add('tdmode'); $('#tdhud').hidden=false; }
+// guns full and two spare magazines for each
+function tdFillAmmo(eq){ for(const sl of ['primary','secondary']){ const w=eq[sl]; if(!w) continue; const d=ITEMS[w.id]; const am=w.ammo&&ITEMS[w.ammo]&&ITEMS[w.ammo].cal===d.cal?w.ammo:CALS[d.cal][0]; w.ammo=am; w.mag=wstats(w).magSize;
+    let need=wstats(w).magSize*2; for(const c of ['rig','pockets','pack'].map(k=>eq[k]).filter(Boolean)) for(const it of c.items||[]) if(it.id===am) need-=it.n;
+    while(need>0){ const n=Math.min(need,ITEMS[am].stack); const it=mk(am,{n}); let ok=false; for(const k of ['rig','pockets','pack']){ const c=eq[k]; if(c&&place(contOf(c),it)){ ok=true; break; } } if(!ok) break; need-=n; } } }
+const tdPts=()=>R.td?LL.pts0+R.kills*LL.ptsKill+R.td.waveDone*LL.ptsWave-R.td.spent:0;
+const tdAuth=()=>!NET.on||NET.host;
+// the mast as something attackers can see and shoot at
+function tdTarget(){ return R.td&&!R.td.over?{id:'tower',x:0,z:0,eye:3.5,crouch:false,sneak:false,sprint:false,moving:false,vel:0,fresh:1,grace:false,jam:false,ride:false}:null; }
+function towerHit(dmg){ if(!R.td||R.td.over) return; R.td.hp-=dmg*LL.mul; R.td.hitT=R.t; if(R.td.hp<=0&&tdAuth()) tdEnd(false); }
+function tdRepair(){ if(!R.td||R.td.over) return; if(tdPts()<LL.repair.cost){ msg(`Repairs cost ${LL.repair.cost} supply points.`); return; } if(R.td.hp>=R.td.max-20){ msg('The mast is in one piece.'); return; }
+  R.td.spent+=LL.repair.cost; if(tdAuth()) R.td.hp=Math.min(R.td.max,R.td.hp+LL.repair.hp); nsend({t:'tdrepair'}); sfxNoise(0.4,600,0.2); msg(`Mast patched up (+${LL.repair.hp}).`); }
+function tdBuild(i){ if(!R.td||R.td.pads[i]) return; if(tdPts()<LL.sentry.cost){ msg(`A sentry costs ${LL.sentry.cost} supply points.`); return; } R.td.spent+=LL.sentry.cost; tdPlaceSentry(i); nsend({t:'tdbuild',i}); msg('Sentry gun up.'); }
+function tdPlaceSentry(i){ if(R.td.pads[i]) return; const [x,z]=LL.pads[i]; const g=new THREE.Group(); const legs=MC(0x2c3034), body=MC(0x4a5236);
+  for(const a of [0,2.1,4.2]){ const l=new THREE.Mesh(new THREE.BoxGeometry(0.06,1.1,0.06),legs); l.position.set(Math.cos(a)*0.3,0.5,Math.sin(a)*0.3); l.rotation.set(Math.sin(a)*0.25,0,-Math.cos(a)*0.25); g.add(l); }
+  const head=new THREE.Group(); head.position.y=1.15; g.add(head); const box=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.6),body); head.add(box); const brl=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.07,0.6),legs); brl.position.set(0,0.02,-0.55); head.add(brl);
+  const eye=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.06,0.02),MB(0xff3a2a)); eye.position.set(0,0.1,-0.31); head.add(eye);
+  g.position.set(x,0,z); scene.add(g); R.td.pads[i]={x,z,g,head,cool:0,tgt:null}; sfxNoise(0.3,900,0.15); }
+// attackers arrive in groups down the roads, spread over the first part of the wave
+function tdStartWave(){ const T=R.td; T.wave++; T.state='wave'; const n=T.wave, pl=1+(NET.on?Object.keys(NET.players).length:0);
+  const count=Math.round((4+n*2.3)*(1+0.5*(pl-1))*(R.D.count||1)); const kinds=[]; for(let i=0;i<count;i++){ const r=Math.random(); kinds.push(n<=2?'scav':n<=4?(r<0.6?'scav':'raider'):n<=7?(r<0.25?'scav':r<0.8?'raider':'huskarl'):(r<0.5?'raider':'huskarl')); }
+  if(n===LL.waves) kinds.push('warlord');
+  const lanes=LL.lanes.slice(0,n<3?4:6); T.queue=kinds.map((k,i)=>{ const L=lanes[i%lanes.length]; return {t:R.t+Math.floor(i/lanes.length)*(n<5?4:3)+Math.random()*1.5,k,x:L[0]+rr(-5,5),z:L[1]+rr(-5,5)}; });
+  T.waveIdx0=R.enemies.length; msg(`Wave ${n} of ${LL.waves}: ${count+(n===LL.waves?1:0)} attackers.`); sfxBeep(); setTimeout(sfxBeep,200); }
+function tdSpawn(k,x,z,gun){ const n0=R.enemies.length; spawnEnemy(x,z,k); const e=R.enemies[n0]; if(!e) return null; if(gun&&ITEMS[gun]&&ITEMS[gun].type==='weapon'){ e.gun=mk(gun,{mag:ITEMS[gun].magSize,ammo:CALS[ITEMS[gun].cal][0]}); setHeldGun(e.rig,gun); }
+  e.home={x:rr(-8,8),z:rr(-8,8)}; e.state='patrol'; e.td=true; return e; }
+function tdNet(m){ if(!R||!R.td) return;
+  if(m.t==='tdspawn'){ tdSpawn(m.k,+m.x,+m.z,m.g); }
+  else if(m.t==='tdbuild'){ tdPlaceSentry(m.i|0); }
+  else if(m.t==='tdrepair'){ if(tdAuth()) R.td.hp=Math.min(R.td.max,R.td.hp+LL.repair.hp); }
+  else if(m.t==='tdend'){ tdShowEnd(!!m.win,m.wave|0); } }
+function tdState(){ const T=R.td; return [Math.round(T.hp),T.wave,T.state==='wave'?1:0,Math.max(0,Math.round(T.t)),T.waveDone]; }
+function tdApply(a){ if(!R.td||!a) return; const T=R.td; T.hp=a[0]; if(a[1]>T.wave){ T.wave=a[1]; msg(`Wave ${T.wave} of ${LL.waves}.`); } const was=T.state; T.state=a[2]?'wave':'break'; T.t=a[3]; if(a[4]>T.waveDone){ T.waveDone=a[4]; } if(was==='wave'&&T.state==='break') msg(`Wave cleared. +${LL.ptsWave} supply points.`); }
+function tdTick(dt){ const T=R.td; if(!T||T.over) return;
+  if(R.tdLamp) R.tdLamp.visible=(R.t%1.2)<0.6;
+  if(tdAuth()){
+    if(T.state==='break'){ T.t-=dt; if(T.t<=0) tdStartWave(); }
+    else { for(const q of T.queue) if(!q.done&&R.t>=q.t){ q.done=true; const e=tdSpawn(q.k,q.x,q.z); if(e&&NET.on) nsend({t:'tdspawn',k:q.k,x:+q.x.toFixed(1),z:+q.z.toFixed(1),g:e.gun.id}); }
+      const left=T.queue.some(q=>!q.done)||R.enemies.slice(T.waveIdx0||0).some(e=>!e.dead);
+      if(!left){ T.waveDone=T.wave; if(T.wave>=LL.waves) return tdEnd(true); T.state='break'; T.t=LL.brk; msg(`Wave ${T.wave} cleared. +${LL.ptsWave} supply points. Next wave in ${LL.brk} s.`); sfxExtracted(); } }
+    // sentries
+    for(const s of T.pads){ if(!s) continue; s.cool-=dt; if(s.cool>0) continue; s.cool=LL.sentry.rate; let best=null, bd=LL.sentry.range;
+      for(const e of R.enemies){ if(e.dead) continue; const d=Math.hypot(e.pos.x-s.x,e.pos.z-s.z); if(d<bd&&!smokeBlocks(s.x,1.3,s.z,e.pos.x,e.pos.y+1.2,e.pos.z)&&los(s.x,1.3,s.z,e.pos.x,e.pos.y+1.2,e.pos.z)){ bd=d; best=e; } }
+      s.tgt=best; if(!best) continue; const hit=Math.random()<LL.sentry.acc*(1-bd/LL.sentry.range*0.5); const ex=best.pos.x+(hit?0:rr(-1,1)), ey=best.pos.y+1.2, ez=best.pos.z+(hit?0:rr(-1,1));
+      tracer(s.x,1.3,s.z,ex,ey,ez,0xffcf7a); R.shots.push([s.x,s.z,ex,ey,ez]); sfxShotAt('vintik',Math.hypot(s.x-P.pos.x,s.z-P.pos.z));
+      if(hit) hitEnemy(best,'thorax',{dmg:LL.sentry.dmg,pen:30,id:'sentry'},new THREE.Vector3(ex,ey,ez),'sentry'); }
+  } else if(T.state==='break') T.t-=dt;
+  // sentry heads turn toward their target (everyone works this out for themselves: it's only for looks)
+  for(const s of T.pads){ if(!s) continue; let t=s.tgt; if(!tdAuth()){ let bd=LL.sentry.range; t=null; for(const e of R.enemies){ if(e.dead) continue; const d=Math.hypot(e.pos.x-s.x,e.pos.z-s.z); if(d<bd){ bd=d; t=e; } } }
+    if(t) s.head.rotation.y=lerpA(s.head.rotation.y,Math.atan2(-(t.pos.x-s.x),-(t.pos.z-s.z)),Math.min(1,dt*8)); }
+  tdHud(); }
+function tdNear(){ if(!R.td||P.dead||P.down||R.invOpen) return null; const px=P.pos.x, pz=P.pos.z;
+  for(let i=0;i<LL.pads.length;i++){ const [x,z]=LL.pads[i]; if(Math.hypot(px-x,pz-z)<2.2) return R.td.pads[i]?null:{k:'pad',i}; }
+  if(Math.hypot(px-LL.crate[0],pz-LL.crate[1])<2) return {k:'ammo'}; if(Math.hypot(px,pz)<3.6) return {k:'repair'}; return null; }
+function tdUse(n){ if(n.k==='pad') tdBuild(n.i); else if(n.k==='repair') tdRepair();
+  else if(n.k==='ammo'){ if(R.t<R.ammoT+LL.ammoCD){ msg(`The crate is restocking: ${Math.ceil(R.ammoT+LL.ammoCD-R.t)} s.`); return; } R.ammoT=R.t; tdFillAmmo(S.eq); sfxPickup(); msg('Guns full, two spare magazines each.'); if(R.invOpen) R.dirty=true; } }
+function tdPrompt(n){ return n.k==='pad'?`<kbd>E</kbd>Build a sentry gun · ${LL.sentry.cost} supply`:n.k==='repair'?`<kbd>E</kbd>Repair the mast +${LL.repair.hp} · ${LL.repair.cost} supply`:`<kbd>E</kbd>Ammo: fill your guns and two spare magazines`; }
+function tdHud(){ const el=$('#tdhud'); if(!el||!R.td) return; const T=R.td; const alive=R.enemies.filter(e=>!e.dead&&e.td).length; const pct=Math.max(0,T.hp/T.max*100);
+  const txt=`<div class="tdl"><b>${T.state==='wave'?`Wave ${T.wave}/${LL.waves}`:T.wave?`Break · wave ${T.wave+1} in ${Math.ceil(Math.max(0,T.t))} s`:`First wave in ${Math.ceil(Math.max(0,T.t))} s`}</b>${T.state==='wave'?`<span>${alive} attackers</span>`:''}<span class="pts">${tdPts()} supply</span></div><div class="tdbar${R.t-(T.hitT||-9)<0.4?' hit':''}"><i style="width:${pct.toFixed(1)}%"></i><span>Mast ${Math.max(0,Math.round(T.hp))} / ${T.max}</span></div>`;
+  if(el._t!==txt){ el._t=txt; el.innerHTML=txt; } }
+function tdEnd(win){ const T=R.td; if(!T||T.over) return; T.over=true; nsend({t:'tdend',win,wave:T.waveDone}); tdShowEnd(win,T.waveDone); }
+function tdShowEnd(win,waves){ const T=R.td; if(!T) return; T.over=true; T.win=win; T.waveDone=Math.max(T.waveDone,waves); if(document.pointerLockElement) document.exitPointerLock();
+  const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><span class="lbl">Last Light</span><h2 class="${win?'ok':'bad'}">${win?'The mast holds':'The mast is down'}</h2><p class="muted" style="margin:0">${win?`All ${LL.waves} waves beaten.`:`You held ${T.waveDone} of ${LL.waves} waves.`} Back to the hideout in a few seconds.</p><div class="acts"><button class="btn" id="tdGo">Leave now</button></div></div>`;
+  $('#tdGo').onclick=()=>endRaid('td'); win?sfxExtracted():stinger('down'); setTimeout(()=>{ if(R&&R.td&&R.td.over) endRaid('td'); },7000); }
+// dying: back at the mast after 10 s while it stands
+function tdDeathTick(dt){ if(R.deadT>0){ R.deadT-=dt; if(R.deadT<=0){ R.respawnT=LL.respawn; const el=$('#deathcard'); el.hidden=false; el.innerHTML=`<div class="card"><span class="lbl">Last Light</span><h2 class="bad">Down</h2><p class="muted" style="margin:0">${esc(R.cause||'')}.</p><p class="dmresp">Back at the mast in <b id="dmCount">${LL.respawn}</b></p><div class="acts"><button class="btn ghost" id="tdLeave">Leave the match</button></div></div>`; $('#tdLeave').onclick=()=>endRaid('td'); } return; }
+  if(R.paused||R.menu){ R.paused=false; R.menu=false; $('#pause').hidden=true; } if(R.td.over) return; R.respawnT-=dt; const c=$('#dmCount'); if(c) c.textContent=Math.max(1,Math.ceil(R.respawnT));
+  if(R.respawnT<=0){ $('#deathcard').hidden=true; $('#deathfade').style.opacity=0; const a=Math.random()*6.28;
+    Object.assign(P,{dead:false,down:null,hp:{...MAXHP},bleed:{},frac:{},temp:100,stam:100,hurt:0,vx:0,vz:0,vy:0,reloadT:0,using:null,trigger:false,adsHeld:false,adsT:0,grace:4});
+    P.pos.set(Math.cos(a)*4.5,0,Math.sin(a)*4.5); resolve(P.pos,0.4); P.y=groundAt(P.pos.x,P.pos.z,3); S.eq=JSON.parse(JSON.stringify(R.tdKit)); P.slot=S.eq.primary?'primary':S.eq.secondary?'secondary':'fists'; vmUid=null; syncVM(); R.deadT=0; R.cause=null; R.hits=[]; if(!R.noLock) lockPointer(); msg('Back at the mast.'); } }
+// the end: your own gear back, paid by waves, kills and the result
+function tdFinish(kind){ R.over=true; if(document.pointerLockElement) document.exitPointerLock(); if(NET.on) netLeave(); const T=R.td||{waveDone:0};
+  if(R.realEq) S.eq=R.realEq; S.inRaid=false; const cm=(R.D&&R.D.cash)||1; const kills=R.kills; const pay=Math.round((T.waveDone*500*cm+kills*60+(T.win?5000*cm:0))/10)*10; S.cash+=pay; S.stats.holdBest=Math.max(S.stats.holdBest||0,T.waveDone);
+  const time=R.t, win=!!T.win; saveGame(); accFlush(); raidTeardown(); document.body.classList.remove('tdmode');
+  const r=$('#result'); r.hidden=false; r.innerHTML=`<div class="card"><span class="lbl">Last Light · ${fmtTime(time)}</span><h2 class="${win?'ok':'bad'}">${win?'The mast holds':'The mast is down'}</h2><p class="muted" style="margin:0">Your own gear was never at risk and is back in your loadout.</p>
+    <dl class="stats"><dt>Waves held</dt><dd>${T.waveDone} / ${LL.waves}</dd><dt>Your kills</dt><dd>${kills}</dd><dt>Paid</dt><dd class="cash">+${fmt$(pay)}</dd><dt>Best ever</dt><dd>${S.stats.holdBest} waves</dd><dt>Balance</dt><dd class="cash">${fmt$(S.cash)}</dd></dl>
+    <div class="acts"><button class="btn" id="backBtn">Back to the hideout</button></div></div>`; $('#backBtn').onclick=goHub; }
+
 /* 80-hud: HUD, raid inventory, end of raid */
 /* ---- HUD ---- */
 const FIG={head:[23,0,16,16],thorax:[17,18,28,24],stomach:[17,43,28,16],larm:[4,18,11,38],rarm:[47,18,11,38],lleg:[18,61,12,48],rleg:[32,61,12,48]};
@@ -7725,7 +7876,7 @@ function updHUD(dt){
   else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; $('#weph').insertAdjacentHTML('beforeend',extra); }
   const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr; R.nearTree=(!R.invOpen&&!P.dead&&!c&&!dr)?nearTree():null;
   const rt=(!R.invOpen&&!R.rev)?reviveTarget():null; const rp=R.airMap?flyPrompt():R.sleds?ridePrompt():'';
-  $('#prompt').innerHTML=R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
+  const tdn=R.td&&!c?tdNear():null; $('#prompt').innerHTML=tdn?tdPrompt(tdn):R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
   let center='';
   if(R.exT>0) center=`<div class="big">Extracting ${((R.exNeed||7)-R.exT).toFixed(1)}</div>`;
   else if(R.heli&&R.heli.phase==='in') center=`<div style="color:var(--ok)">Inbound to ${esc((SK_LZ.find(l=>l.x===R.heli.lx)||{}).name||'the landing zone')} · ${Math.max(0,Math.ceil(R.heli.T-R.heli.t))} s · Space jumps out</div>`;
@@ -7768,7 +7919,7 @@ function revealTick(dt){ const t=R.lootTarget; if(!t) return; const next=t.cont.
 // endRaid never leaves you stuck: if anything in the bookkeeping fails, the raid is torn down anyway and you get home
 function endRaid(kind,detail){ if(!R||R.over) return; try{ endRaidInner(kind,detail); }catch(err){ console.error('endRaid',err); try{ logErr('endRaid: '+err.message,err.stack); }catch(e){} endRaidRescue(kind,detail); } }
 function endRaidRescue(kind,detail){
-  if(R&&R.dm&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
+  if(R&&R.realEq){ S.eq=R.realEq; R.gearGone=true; kind='extract'; }
   try{ if(kind!=='extract'&&R&&!R.gearGone){ SLOTS.forEach(k=>S.eq[k]=null); S.eq.pockets.items=[]; } S.inRaid=false; saveGame(); }catch(e){}
   try{ if(NET.on) netLeave(); }catch(e){} try{ raidMusicStop(0.5); dronesStop(); windStop(); }catch(e){} try{ disposeScene(); }catch(e){}
   R=null; P=null; try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){}
@@ -7782,9 +7933,10 @@ function raidTeardown(){
   raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
   $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
   document.body.classList.remove('inraid');
-  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode'); for(const id of ['flashwhite','pdhud']){ const el=$('#'+id); if(el) el.hidden=true; } for(const id of ['sigs','spots']){ const el=$('#'+id); if(el) el.innerHTML=''; }
+  const dh=$('#dmhud'); if(dh) dh.hidden=true; document.body.classList.remove('dmmode','tdmode'); for(const id of ['flashwhite','pdhud','tdhud']){ const el=$('#'+id); if(el) el.hidden=true; } for(const id of ['sigs','spots']){ const el=$('#'+id); if(el) el.innerHTML=''; }
 }
 function endRaidInner(kind,detail){
+  if(R.td) return tdFinish(kind);
   if(R.dm) return dmFinish(kind);
   R.over=true; if(document.pointerLockElement) document.exitPointerLock();
   try{ gaRaidEnd(kind); }catch(err){ console.warn('adaptive AI',err); } // score the enemies' behaviour genes (57-ai.js)
@@ -7846,7 +7998,7 @@ function loop(now){
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
     for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
-    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; pdTick(dt); pdCamera(); grenadesTick(dt); arrowTick(dt); pdRemoteTick(); spotsTick(); doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
+    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; pdTick(dt); pdCamera(); if(R.td) tdTick(dt); grenadesTick(dt); arrowTick(dt); pdRemoteTick(); spotsTick(); doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);
     updFx(dt); updSnow(dt); updCulling(dt); updExtract(dt); if(!R||R.over) return;
     if(R.invOpen){ revealTick(dt); if(R.dirty&&!drag){ R.dirty=false; renderRaidInv(); } }
@@ -7890,7 +8042,7 @@ addEventListener('keydown',e=>{
     case 'KeyV': if(R.airMap&&R.fly){ OPTS.chase=!OPTS.chase; saveOpts(); R.stick={x:0,y:0}; if(R.fly.seat===0){ const pl=R.planes[R.fly.i]; if(pl){ planeAxes(pl); P.yaw=Math.atan2(-_pf.x,-_pf.z); P.pitch=Math.asin(clamp(_pf.y,-1,1)); } } msg(OPTS.chase?'Chase camera: the plane flies toward where you point. V for the cockpit.':'Cockpit: the mouse is your stick, A/D rudder. V for the chase camera.'); } break;
     case 'Space': if(P.crouch) P.crouch=false; else P.jumpReq=true; break;
     case 'KeyX': if(R.airMap&&R.fly&&R.planes[R.fly.i]&&!R.planes[R.fly.i].onG) bailOut(); break;
-    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; if(!R.near&&!R.nearDoor&&R.nearTree!=null){ startCut(R.nearTree); break; } if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
+    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; { const tn=R.td?tdNear():null; if(tn&&!R.near){ tdUse(tn); break; } } if(!R.near&&!R.nearDoor&&R.nearTree!=null){ startCut(R.nearTree); break; } if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
     case 'Digit4': if(R.airMap&&R.fly){ seatSwap(3); break; } hotUse(d=>d.med==='bandage'); break;
     case 'Digit5': if(R.airMap&&R.fly){ seatSwap(4); break; } hotUse(d=>d.med==='splint'); break;
     case 'Digit6': hotUse(d=>d.med==='heal'); break;
@@ -8075,7 +8227,7 @@ function netApplyWelcome(m){
   if(m.estate){ applyEstate(m.estate,true); }
   for(const p of m.players) if(p.id!==NET.id&&p.st) NET.players[p.id].st=p.st;
 }
-function applyEstate(m,snap){
+function applyEstate(m,snap){ if(m.td&&R.td) tdApply(m.td);
   if(!R) return;
   (m.e||[]).forEach((a,i)=>{ const e=R.enemies[i]; if(!e) return; e.nx=a[0]; e.nz=a[1]; e.nyaw=a[2]; e.hp=a[3]; e.headHp=a[4]; e.moving=!!a[6]; e.np={b:a[7]||0,aim:a[8]||0}; if(snap){ e.pos.x=a[0]; e.pos.z=a[1]; e.yaw=a[2]; } if(a[5]&&!e.dead){ e.dead=true; e.deathT=snap?1:0; if(snap){ bodySnapDead(e.rig,1); e.g.position.y=(R.terrain?R.terrain(e.pos.x,e.pos.z):0)+0.18; } R.targets=R.targets.filter(x=>!e.parts.includes(x)); } });
   if(m.ap&&R.airMap) airApplyEstate(m.ap,snap);
@@ -8117,7 +8269,8 @@ function netMsg(m){
     case 'dhit': { if(!NET.host) break; const d=R.drones&&R.drones[m.i]; if(d&&!d.dead) droneHit(d,{dmg:Math.min(200,+m.dmg||0)},{x:d.x,y:d.y,z:d.z},true); break; }
     case 'kcredit': { const e=R.enemies[m.i]; R.kills++; qKill(e||{kind:m.kind,pos:P.pos},m.head,m.w); goalKill(e||{kind:m.kind},m.head); break; }
     case 'dmscore': case 'dmend': dmNet(m); break;
-    case 'end': if(R&&R.dm){ endRaid('dm'); break; } endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
+    case 'tdspawn': case 'tdbuild': case 'tdrepair': case 'tdend': tdNet(m); break;
+    case 'end': if(R&&R.td){ endRaid('td'); break; } if(R&&R.dm){ endRaid('dm'); break; } endRaid(P&&P.dead?'kia':'mia',P&&P.dead?R.cause:'The raid timer ran out'); break;
   }
 }
 function netTick(dt){
@@ -8125,7 +8278,7 @@ function netTick(dt){
   NET.sendT-=dt; if(NET.sendT<=0){ NET.sendT=0.07; if(R.lkBase==null) R.lkBase=lookStr(); { const st={t:'state',pd:R.pd?[+R.pd.x.toFixed(1),+R.pd.y.toFixed(1),+R.pd.z.toFixed(1),+R.pd.yaw.toFixed(2)]:0,gw:(curW()||{}).id||'',ln:+(P.lean||0).toFixed(2),rd:R.ride?(R.ride.mode==='drive'?1:2):0,sh:R.sled?+R.sled.h.toFixed(2):0,sa:R.ride&&R.sled?[+(R.sled.pitch||0).toFixed(2),+(R.sled.roll||0).toFixed(2)]:0,cr:R.crashes||0,ps:(R.sled&&!R.ride)?[+R.sled.x.toFixed(1),+R.sled.y.toFixed(1),+R.sled.z.toFixed(1),+R.sled.h.toFixed(2)]:0,lk:R.lkBase+'|'+gearLook(),y:+P.y.toFixed(2),p:+P.pitch.toFixed(2),down:P.down?1:0,dt:P.down?Math.ceil(P.down.t):0,hp:Math.round(totalHP()),heli:(R.heli&&R.heli.phase==='in')?[+R.heli.g.position.x.toFixed(1),+R.heli.g.position.y.toFixed(1),+R.heli.g.position.z.toFixed(1),+R.heli.yaw.toFixed(2)]:0,grace:P.grace>0,x:+P.pos.x.toFixed(2),z:+P.pos.z.toFixed(2),yaw:+P.yaw.toFixed(3),crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,dead:P.dead,ti:(S.goals&&S.goals.title)||'',jam:myJammer(),gf:+freshness().toFixed(2)}; if(R.airMap) airState(st); nsend(st); } }
   if(R.airMap) airRemoteBegin();
   for(const id in NET.players){ const p=NET.players[id]; if(!p.st) continue; if(p.g&&(p.st.lk||'')!==p.lk){ const pos=p.g.position.clone(), ry=p.g.rotation.y; scene.remove(p.g); R.targets=R.targets.filter(m=>!p.parts.includes(m)); p.g=null; ensureRemote(id); if(p.g){ p.g.position.copy(pos); p.g.rotation.y=ry; } } ensureRemote(id); if(!p.g) continue; if(p.rig&&p.st.gw!=null&&p.st.gw!==(p.rig.gunId||'')) setHeldGun(p.rig,p.st.gw); if(Math.hypot(p.st.x-p.g.position.x,p.st.z-p.g.position.z)>15){ p.g.position.x=p.st.x; p.g.position.z=p.st.z; } remoteHeli(p,dt); p.g.visible=!p.st.dead&&!p.st.heli&&!(R.spec&&R.spec.id===id); const k=Math.min(1,dt*12); p.g.position.x+=(p.st.x-p.g.position.x)*k; p.g.position.z+=(p.st.z-p.g.position.z)*k; p.g.position.y+=(((p.st.y||0)+(p.st.down?0.22:0)+(p.st.rd?0.42:0))-p.g.position.y)*k; if(R.sleds) remoteSled(p,k); if(R.airMap) airRemote(id,p); p.g.rotation.x+=((p.st.down?-1.35:0)-p.g.rotation.x)*k; if(p.st.down){ const db=R.conts.find(c=>c.cid==='d'+id); if(db){ db.x=p.g.position.x; db.z=p.g.position.z; } } p.g.rotation.y=lerpA(p.g.rotation.y,p.st.yaw,k); if(p.g.visible) remotePose(p,dt); }
-  if(NET.host){ NET.estT-=dt; if(NET.estT<=0){ NET.estT=0.1; nsend({t:'estate',e:R.enemies.map(e=>[+e.pos.x.toFixed(2),+e.pos.z.toFixed(2),+e.yaw.toFixed(2),Math.round(e.hp),Math.round(e.headHp),e.dead?1:0,e.moving?1:0,enemyPoseBits(e),e.rig?Math.round(e.rig.s.aimP*100)/100:0]),shots:R.shots,dr:R.drones&&R.drones.length?droneState():undefined,bs:R.boss?[R.boss.maxHp,R.boss.phase,R.boss.awake?1:0]:undefined,ap:R.airMap?airEstate():undefined}); R.shots=[]; } }
+  if(NET.host){ NET.estT-=dt; if(NET.estT<=0){ NET.estT=0.1; nsend({t:'estate',td:R.td?tdState():undefined,e:R.enemies.map(e=>[+e.pos.x.toFixed(2),+e.pos.z.toFixed(2),+e.yaw.toFixed(2),Math.round(e.hp),Math.round(e.headHp),e.dead?1:0,e.moving?1:0,enemyPoseBits(e),e.rig?Math.round(e.rig.s.aimP*100)/100:0]),shots:R.shots,dr:R.drones&&R.drones.length?droneState():undefined,bs:R.boss?[R.boss.maxHp,R.boss.phase,R.boss.awake?1:0]:undefined,ap:R.airMap?airEstate():undefined}); R.shots=[]; } }
 }
 
 /* 91-accounts: server accounts */
