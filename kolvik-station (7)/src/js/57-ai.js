@@ -204,7 +204,7 @@ function aiThink(e){
   else {
     // a squad splits the work: one keeps the angle covered, one lays down fire, the rest go after you
     const doing=m=>R.enemies.filter(o=>o!==e&&!o.dead&&o.tid===e.tid&&o.grp===e.grp&&o.mode===m).length;
-    if(lost<1.4&&e.gun.mag>3&&b.lastSeen>0) S.suppress=G.suppress*1.15*(1-lost/1.4)-doing('suppress')*0.5;
+    if(lost<1.4&&e.gun.mag>3&&b.lastSeen>0&&b.est&&Math.hypot(b.est.x-e.pos.x,b.est.z-e.pos.z)<eEngage(e)) S.suppress=G.suppress*1.15*(1-lost/1.4)-doing('suppress')*0.5;
     const hold=0.8+G.patience*6; if(lost<hold&&b.lastSeen>0) S.hold=0.55+G.patience*0.5-lost/hold*0.4-doing('hold')*0.45;
     if(lost>0.4&&!e.k.home&&(allies>=1||G.flank>0.75)&&b.est&&Math.hypot(b.est.x-e.pos.x,b.est.z-e.pos.z)<40) S.flank=G.flank*0.95+(e.role==='rush'?0.15:0)-(e.flankFail?0.6:0)-doing('flank')*0.25;
     S.search=0.45+Math.min(1,lost/5)*0.55+(e.role==='rush'?0.15:0)+(allies&&doing('hold')?0.15:0);
@@ -255,15 +255,15 @@ function aiAct(e,dt){
 function aiSuppress(e,x,z){
   const d=ITEMS[e.gun.id]; e.gun.mag--; e.cool=60/d.rpm*(d.auto?1.6:2.2)+0.15+Math.random()*0.35;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, my=e.pos.y+eGunY(e), ty=(R.terrain?R.terrain(x,z):0)+1.1+_gauss()*0.4, ex=x+_gauss()*1.2, ez=z+_gauss()*1.2;
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
   _a.set(mx,my,mz); _b.set(ex-mx,ty-my,ez-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd+20;
   const wall=ray.intersectObjects(R.ray,false)[0]; const end=wall?wall.point:{x:mx+_b.x*(dd+20),y:my+_b.y*(dd+20),z:mz+_b.z*(dd+20)};
   tracer(mx,my-0.05,mz,end.x,end.y,end.z,0xffcf7a); R.shots.push([mx,mz,end.x,end.y,end.z]); if(wall) puff(wall.point,0xc9d2d6,3,1.4);
   // does the line pass through a real player before it hits anything?
   for(const t of R.tgts){ const px=t.x-mx, py=(t.eye-0.5)-my, pz=t.z-mz, along=px*_b.x+py*_b.y+pz*_b.z; if(along<0||along>(wall?wall.distance:dd+20)) continue;
     const off=Math.hypot(px-_b.x*along,py-_b.y*along,pz-_b.z*along); if(off>0.45) continue;
-    if(Math.random()<0.3*e.k.acc){ const am=ITEMS[e.gun.ammo]; e.dmgDone=(e.dmgDone||0)+am.dmg; R.lastShooter=e;
-      if(t.id==='me') playerHit(am.dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg:am.dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z}); }
+    if(Math.random()<0.3*e.k.acc*R.D.acc){ const am=ITEMS[e.gun.ammo], dmg=am.dmg*(R.D.dmg||1); e.dmgDone=(e.dmgDone||0)+dmg; R.lastShooter=e;
+      if(t.id==='me') playerHit(dmg,am.pen,e.k.name,null,e.pos); else nsend({t:'eshot',pid:t.id,hits:1,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id}); }
     else if(t.id==='me'){ sfxWhizz(); hitDir(e.pos.x,e.pos.z,true); } break; }
 }
 

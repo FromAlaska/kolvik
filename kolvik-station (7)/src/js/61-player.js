@@ -5,11 +5,12 @@ function playerHit(dmg,pen,src,part,from){
   // inside an aircraft the bullet hits the airframe first (the Skylark passenger sits in the open and is fair game)
   if(R&&R.fly&&!R.fly.hand){ const pl=R.planes[R.fly.i]; if(pl&&!pl.dead){ planeDamage(pl,dmg*0.6,R.lastHitBy&&R.t-R.lastHitT<0.2?R.lastHitBy:null); P.hurt=Math.min(1,P.hurt+0.1); return; } }
   if(P.dead||DBG.god) return;
-  if(P.down){ P.down.hp-=dmg*(part==='head'?2:1); P.hurt=Math.min(1,P.hurt+0.4); sfxGrunt(0.45,90); if(P.down.hp<=0) reallyDie(`Finished off by ${src}`); return; }
+  if(P.down){ recordHit(src,part||'thorax',dmg*(part==='head'?2:1),from,true); P.down.hp-=dmg*(part==='head'?2:1); P.hurt=Math.min(1,P.hurt+0.4); sfxGrunt(0.45,90); if(P.down.hp<=0) reallyDie(`Finished off by ${src}`); return; }
   part=part||wpick([['head',0.08],['thorax',0.27],['stomach',0.2],['larm',0.11],['rarm',0.11],['lleg',0.115],['rleg',0.115]]);
   const gear=part==='head'?S.eq.helmet:(part==='thorax'||part==='stomach')?S.eq.armor:null;
   let d=dmg, through=true;
   if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,pen); d=r.d; through=r.pen; }
+  recordHit(src,part,d,from,through);
   dmgPart(part,d,`Shot in the ${PART_NAME[part]} by ${src}`);
   if(through && part!=='head' && rand()<0.28) P.bleed[part]=true;
   if(through && (part==='lleg'||part==='rleg') && rand()<0.18 && !P.frac[part]){ P.frac[part]=true; P.newFrac=true; }
@@ -195,7 +196,7 @@ function updatePlayer(dt){
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
   const zoom=ws2&&ws2.zoom>1.2?ws2.zoom:0; P.sprB+=((P.sprint&&Math.hypot(P.vx,P.vz)>4?1:0)-P.sprB)*Math.min(1,dt*4); const fovT=72+((zoom?72/zoom:54)-72)*P.adsT+PMOVE.sprintFov*P.sprB*(1-P.adsT); if(Math.abs(fovT-P.fov)>0.05){ P.fov=fovT; camera.fov=fovT; camera.updateProjectionMatrix(); }
-  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0) msg('The station knows you are here.'); }
+  if(P.grace>0){ P.grace-=dt; if(P.trigger&&!P.semiLock&&P.grace>0.5) P.grace=0.5; if(P.grace<=0){ P.graceEnd=R.t; msg('Your cover is gone. Keep your head down for a bit: they are slow to notice you at first.'); } }
   P.kick=Math.max(0,P.kick-dt*9); P.punchT=Math.max(0,(P.punchT||0)-dt*5); P.hurt=Math.max(0,P.hurt-dt*0.9); P.shake=Math.max(0,(P.shake||0)-dt);
   // camera
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
@@ -203,7 +204,7 @@ function updatePlayer(dt){
   const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch;
   const sh=(P.shake||0)*0.06;
   camera.position.set(P.pos.x+C.x*Math.cos(P.yaw),P.y+P.eye+C.y,P.pos.z-C.x*Math.sin(P.yaw));
-  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?0.6:P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll));
+  camera.rotation.set(P.pitch+swy+P.kick*0.012+(rand()-0.5)*sh+(R.ride&&R.ride.mode==='drive'?R.sled.pitch*0.3:0),P.yaw+sway+(rand()-0.5)*sh,P.dead?(R.recap?0.15:0.6):P.down?0.35:(R.ride&&R.ride.mode==='drive'?R.sled.roll*0.25:C.roll));
   if(R.fly&&!P.dead) flyCam();
   // viewmodel pose
   syncVM();
@@ -214,8 +215,9 @@ function updatePlayer(dt){
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
         reload:P.reloadT>0?{t:(P.reloadTot||d.reload)-P.reloadT,total:P.reloadTot||d.reload,empty:!!P.reloadEmpty,shells:P.reloadShells}:null,
         using:P.using?{t:P.using.total-P.using.t,total:P.using.total,id:P.using.it.id}:null,cool:P.cool,coolTot:60/d.rpm},dt,vmScene); } }
-  if(P.dead&&!R.spec){ R.deadT-=dt; if(R.deadT<=0&&!startSpectate()) endRaid('kia',R.cause); }
-  if(R.spec) specCam(dt);
+  if(P.dead&&!R.spec){ R.deadT-=dt; if(R.deadT<=0&&!R.recap) showRecap(); if(R&&R.recap) recapTick(dt); }
+  if(R&&R.spec) specCam(dt);
+  if(R&&!P.dead) pouchSaveTick();
 }
 function updExtract(dt){
   if(P.dead||R.fly) return; let inside=null;

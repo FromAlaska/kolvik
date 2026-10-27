@@ -186,7 +186,7 @@ function rideStep(dt,can){
     if(sl.contact&&Math.abs(info.side)>0.75){ sl.tipT=(sl.tipT||0)+sub; if(sl.tipT>0.5){ sledCrash('Rolled the sled on the sidehill'); return; } } else sl.tipT=Math.max(0,(sl.tipT||0)-sub*(sl.contact?2:0.5));
     if(sl.y<R.terrainBase(sl.z)-2.5){ sledCrash('Fell into a crevasse'); return; }
   }
-  const spd=Math.hypot(sl.u,sl.w); sl.speed=sl.u; sl.air=!sl.contact;
+  const spd=Math.hypot(sl.u,sl.w); sl.speed=sl.u; sl.air=!sl.contact; sledRunOver(sl,spd);
   { const L=R.bound-2; if(sl.z<-L){ sl.z=-L; sl.u=Math.max(0,sl.u); } if(sl.z>L){ sl.z=L; sl.u=Math.min(0,sl.u); } if(sl.x<-L){ sl.x=-L; sl.u*=0.3; } if(sl.x>L){ sl.x=L; sl.u*=0.3; } }
   // obstacles: fast means crash, slow means bump
   for(const o of R.hrT.obs){ if(Math.abs(o.z-sl.z)>4) continue; let hit=false;

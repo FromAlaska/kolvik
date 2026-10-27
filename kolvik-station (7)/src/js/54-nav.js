@@ -74,10 +74,11 @@ function updEnemy(e,dt){
     if(t){
       const dx=t.x-e.pos.x, dz=t.z-e.pos.z, dist=Math.hypot(dx,dz)||0.01;
       e.yaw=lerpA(e.yaw,Math.atan2(-dx,-dz),Math.min(1,dt*8)); e.react-=dt; e.aimT=(e.aimT||0)+dt;
-      if(e.react<=0 && e.cool<=0 && e.reloadT<=0){ if(e.gun.mag>0) enemyShoot(e,t,dist); else e.reloadT=ITEMS[e.gun.id].reload+0.4; }
+      // they only open fire inside the range you could see them at; further out they close in first
+      if(e.react<=0 && e.cool<=0 && e.reloadT<=0 && dist<=eEngage(e)){ if(e.gun.mag>0) enemyShoot(e,t,dist); else e.reloadT=ITEMS[e.gun.id].reload+0.4; }
       e.strafeT-=dt; if(e.strafeT<=0){ e.strafeT=1+rand()*1.6; e.strafeS=rand()<0.5?-1:1; }
       const fx=dx/dist, fz=dz/dist; let mx=-fz*e.strafeS*0.8, mz=fx*e.strafeS*0.8;
-      if(dist>e.pref){ mx+=fx; mz+=fz; } else if(dist<5){ mx-=fx; mz-=fz; }
+      if(dist>Math.min(e.pref,eEngage(e)-4)){ mx+=fx; mz+=fz; } else if(dist<5){ mx-=fx; mz-=fz; }
       // the plan is cover (hurt, reloading, or a peeker): head for it while still shooting back
       if(e.mode==='cover'&&e.goal){ const gx=e.goal.x-e.pos.x, gz=e.goal.z-e.pos.z, gd=Math.hypot(gx,gz); if(gd>0.6){ mx=gx/gd; mz=gz/gd; } else { mx=0; mz=0; } }
       if(e.k.home && Math.hypot(e.pos.x-e.home.x,e.pos.z-e.home.z)>e.k.home+4){ mx=e.home.x-e.pos.x; mz=e.home.z-e.pos.z; }
@@ -118,7 +119,7 @@ function enemyShoot(e,t,dist){
   const d=ITEMS[e.gun.id], am=ITEMS[e.gun.ammo]; e.gun.mag--;
   e.cool=60/d.rpm*(d.auto?1:1.4)+(d.auto?0:rand()*0.5); e.burst--; if(e.burst<=0){ e.burst=d.auto?(e.k.boss?8+Math.floor(rand()*8):3+Math.floor(rand()*4)):1; e.cool+=e.k.boss?0.7+rand()*0.6:0.45+rand()*0.8; } if(e.enraged) e.cool*=0.7;
   const mx=e.pos.x-Math.sin(e.yaw)*0.7, mz=e.pos.z-Math.cos(e.yaw)*0.7, ty=t.eye-0.35, my=e.pos.y+eGunY(e); e.shotT=R.t; bodyKick(e.rig);
-  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); sfxShot(e.gun.id,myD);
+  const myD=Math.hypot(e.pos.x-P.pos.x,e.pos.z-P.pos.z); flashAt(mx,my,mz); muzzleSpark(mx,my,mz,myD); sfxShot(e.gun.id,myD);
   // the bullet has to actually get there: anything solid in the way eats it
   _a.set(mx,my,mz); _b.set(t.x-mx,ty-my,t.z-mz); const dd=_b.length(); _b.divideScalar(dd); ray.set(_a,_b); ray.far=dd-0.2;
   const wall=ray.intersectObjects(R.ray,false)[0];
@@ -126,21 +127,22 @@ function enemyShoot(e,t,dist){
   // hit chance per bullet: falls off hard with range, and starts low while they're still settling their aim
   // (settling takes longer at range; harder difficulties settle faster)
   const settle=(0.9+dist/30)*R.D.react, aim=0.35+0.65*Math.min(1,(e.aimT||0)/settle);
-  let p=e.k.acc*Math.max(0.04,1-dist/62)*aim; if(t.vel>4.5) p*=0.62; else if(t.vel>1) p*=0.82; if(t.crouch) p*=0.86; if(e.first){ p*=0.7; e.first=false; } p=Math.min(0.95,p*R.D.acc);
+  let p=e.k.acc*Math.max(0.04,1-dist/50)*aim; if(t.vel>4.5) p*=0.62; else if(t.vel>1) p*=0.82; if(t.crouch) p*=0.86; if(e.first){ p*=0.7; e.first=false; } p=Math.min(0.95,p*R.D.acc);
   const pel=d.pellets||1; let hits=0; for(let i=0;i<pel;i++){ const pp=pel>1?p*Math.max(0,1-dist/30)*0.6:p; if(rand()<pp) hits++; }
   const ex=t.x+(hits?0:rr(-1.2,1.2)), ey=ty+rr(-0.3,0.4), ez=t.z+(hits?0:rr(-1.2,1.2));
   tracer(mx,my-0.05,mz,ex,ey,ez,0xffcf7a); R.shots.push([mx,mz,ex,ey,ez]);
   if(hits){ e.dmgDone=(e.dmgDone||0)+hits*am.dmg; R.lastShooter=e; }
-  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(am.dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
-  else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg:am.dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z});
+  const dmg=am.dmg*(R.D.dmg||1);
+  if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
+  else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
 function hearShot(x,z,radius){ if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
 function armorRes(a,dmg,pen){ const d=ITEMS[a.id]; const ratio=a.dur/d.dur; const eff=d.cls*10*(0.5+0.5*ratio); const chance=pen>=eff?0.92:Math.pow(pen/eff,2.2)*0.85; const through=rand()<chance; a.dur=Math.max(0,a.dur-(pen/10+(through?0.6:1.4))*(dmg/40)); return through?{d:dmg*(1-0.07*d.cls),pen:true}:{d:dmg*0.12+2,pen:false}; }
 function hitEnemy(e,part,am,pt,by){
   { const sh=by?R.tgts.find(t=>t.id===by):null; e.lastHitFrom=sh?{x:sh.x,z:sh.z}:{x:P.pos.x,z:P.pos.z}; bodyHit(e.rig,e.lastHitFrom.x,e.lastHitFrom.z,part); }
-  if(NET.on&&!NET.host){ puff(pt,0x8a1010,6,1.5); hitmark(part==='head'); nsend({t:'ehit',i:e.idx,part,ammo:am.id||'fist',px:pt.x,py:pt.y,pz:pt.z,w:curW()?curW().id:'fists'}); return; }
+  if(NET.on&&!NET.host){ puff(pt,0x8a1010,6,1.5); hitmark(part==='head'); nsend({t:'ehit',i:e.idx,part,ammo:am.id||'fist',dmg:am.id==='sled'?am.dmg:undefined,px:pt.x,py:pt.y,pz:pt.z,w:curW()?curW().id:'fists'}); return; }
   let dmg=am.dmg; const gear=part==='head'?e.helm:(part==='thorax'?e.armor:null);
-  if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,am.pen); dmg=r.d; if(!r.pen){ puff(pt,0xffe08a,4,2); if(!by) sfxPlink(); } }
+  if(gear&&gear.dur>0){ const r=armorRes(gear,dmg,am.pen); dmg=r.d; if(!r.pen){ if(part==='head') dmg=am.dmg*0.32+4; puff(pt,0xffe08a,4,2); if(!by) sfxPlink(); } } // a stopped headshot still rings their bell
   if(part==='legs') dmg*=0.65; if(part==='arm') dmg*=0.7;
   puff(pt,0x8a1010,6,1.5);
   if(e.k.boss){ e.hp-=dmg*(part==='head'?1.8:1)*e.k.dr; } else if(part==='head') e.headHp-=dmg; else e.hp-=dmg;

@@ -15,6 +15,7 @@ const GOALS=[
  {id:'collector',name:'Collector',stat:'valuables',unit:'different valuables brought home',tiers:[[10,{cash:3000}],[25,{caches:2}],[0,{cos:'w_starfall',title:'Curator'}]],of:()=>COLLECT.loot().length},
  {id:'haul',name:'Big haul',stat:'haul',unit:'best single haul',money:true,tiers:[[25000,{cash:2500}],[75000,{caches:1}],[200000,{caches:3,title:'Tycoon'}]]},
  {id:'drones',name:'Drone hunter',stat:'drones',unit:'drones shot down',tiers:[[1,{cash:2000}],[10,{caches:1,items:[['jammer']]}],[40,{caches:2,title:'Swatter'}]]},
+ {id:'roadkill',name:'Road warrior',stat:'roadkill',unit:'enemies run down',tiers:[[1,{cash:1500}],[10,{caches:1}],[40,{caches:2,title:'Road warrior'}]]},
  {id:'searched',name:'Rummager',stat:'searched',unit:'containers and bodies searched',tiers:[[50,{cash:1000}],[300,{caches:1}],[1500,{scrip:150,title:'Scrounger'}]]},
  {id:'ghost',name:'Ghost',stat:'ghost',unit:'extracts without firing a shot',tiers:[[1,{cash:1500}],[10,{caches:1}],[30,{cos:'m_ghost',title:'Ghost'}]]},
  {id:'storm',name:'Storm walker',stat:'storm',unit:'extracts in a blizzard',tiers:[[1,{cash:2000}],[5,{caches:1}],[15,{title:'Stormborn',caches:1}]]},

@@ -96,3 +96,8 @@ const RETICLES={
 function scopeSvg(){ let dots=''; for(const v of [-24,-16,-8,8,16,24]) dots+=`<circle cx="${v}" cy="0" r=".9"/><circle cx="0" cy="${v}" r=".9"/>`; return `<svg viewBox="-100 -100 200 200" class="scopesvg"><g fill="none" stroke="#000"><path d="M-100 0H100M0 -100V100" stroke-width=".35"/><path d="M-100 0H-32M32 0H100M0 32V100M0 -100V-32" stroke-width="2.4"/></g><g fill="#000">${dots}</g><circle r=".7" fill="#d4241c"/></svg>`; }
 function setReticle(kind){ if(!R||R.ret===kind) return; R.ret=kind; const el=$('#reticle'); el.hidden=!kind; el.innerHTML=kind?RETICLES[kind]:''; $('#prismRing').hidden=kind!=='prism'; }
 function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists')+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
+
+// an enemy's muzzle flash as a bright point that shows through fog, so you can see where shots come from
+const SPARKS=[]; let _sparkMat=null;
+function muzzleSpark(x,y,z,dist){ if(!scene) return; if(!_sparkMat) _sparkMat=new THREE.SpriteMaterial({color:0xffe0a0,fog:false,transparent:true,depthWrite:false});
+  let s=SPARKS.find(q=>!q.parent); if(!s){ s=new THREE.Sprite(_sparkMat); SPARKS.push(s); } const k=Math.max(0.35,dist*0.012)*(OPTS.flash==='off'?0.6:1); s.scale.set(k,k,1); s.position.set(x,y,z); scene.add(s); setTimeout(()=>{ if(s.parent) s.parent.remove(s); },70); }

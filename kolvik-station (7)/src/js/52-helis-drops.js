@@ -34,7 +34,7 @@ function heliSeat(){ const h=R.heli; h.g.updateMatrixWorld(true); _a.set(0.75,1.
 function updHelis(dt){
   const h=R.heli;
   if(h&&h.phase!=='gone'){ heliStep(h,dt);
-    if(h.phase!=='in'&&!h.landed){ h.landed=true; if(R.fogBase){ scene.fog.density=R.fogBase; R.viewDist=Math.min(320,2.5/R.fogBase); } const side=h.yaw+Math.PI/2; P.pos.set(h.lx-Math.sin(side)*4,0,h.lz-Math.cos(side)*4); resolve(P.pos,0.35); P.grace=10; P.yaw=h.yaw; P.pitch=0; msg('Boots on the ground. Ten seconds of cover.'); sfxBeep(); } }
+    if(h.phase!=='in'&&!h.landed){ h.landed=true; if(R.fogBase){ scene.fog.density=R.fogBase; R.viewDist=Math.min(320,2.5/R.fogBase); } const side=h.yaw+Math.PI/2; P.pos.set(h.lx-Math.sin(side)*4,0,h.lz-Math.cos(side)*4); resolve(P.pos,0.35); P.grace=SPAWN.grace; P.yaw=h.yaw; P.pitch=0; msg(`Boots on the ground. ${SPAWN.grace} seconds of cover.`); sfxBeep(); } }
 }
 function dropPlaneModel(){ const g=new THREE.Group(); const m=MC(0x6a7276); const B=(w,h,d,x,y,z)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); g.add(b); }; B(16,2.6,2.6,0,0,0); B(4,0.4,24,1,0.2,0); B(2.4,3,0.3,-7.4,2,0); B(3,0.3,7,-7.2,0.6,0); return g; }
 function updEvents(dt){

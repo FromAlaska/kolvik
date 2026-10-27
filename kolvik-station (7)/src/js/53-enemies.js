@@ -1,18 +1,18 @@
 /* 53-enemies: enemy kinds, spawning, AI behaviour, shooting, damage, loot */
 /* ---- enemies ---- */
 const EK={
- scav:{name:'Scav',hp:100,head:35,acc:0.58,react:[0.45,0.8],guns:[['makar',3],['vintik',3],['tundra',2],['akr',1.6],['nord',0.5]],armor:[[null,4],['vest',4],['aramid',2]],helm:[[null,5],['hardhat',4],['bastion',0.6]],coat:0x5d5a3c,loot:[1,3],cash:[80,400],call:22,bonus:0.05},
- raider:{name:'Raider',hp:120,head:35,acc:0.7,react:[0.32,0.58],guns:[['akr',4],['vintik',1.5],['nord',1],['tundra',1],['kestrel',0.4]],bp:0.4,mods:0.35,armor:[['aramid',3],['plate',3],['vest',1]],helm:[[null,1],['hardhat',1],['bastion',3],['glacier',0.4]],coat:0xc7cdd0,loot:[2,4],cash:[250,900],call:32,bonus:0.15},
- guard:{name:"Chief's guard",hp:120,head:35,acc:0.68,react:[0.35,0.6],guns:[['akr',1]],bp:0.5,mods:0.3,armor:[['aramid',1],['plate',1]],helm:[['hardhat',1],['bastion',1]],coat:0x2f3b45,loot:[1,3],cash:[300,800],home:4,call:32,bonus:0.2},
+ scav:{name:'Scav',hp:100,head:28,acc:0.58,react:[0.45,0.8],guns:[['makar',3],['vintik',3],['tundra',2],['akr',1.6],['nord',0.5]],armor:[[null,4],['vest',4],['aramid',2]],helm:[[null,5],['hardhat',4],['bastion',0.6]],coat:0x5d5a3c,loot:[1,3],cash:[80,400],call:22,bonus:0.05},
+ raider:{name:'Raider',hp:120,head:28,acc:0.7,react:[0.32,0.58],guns:[['akr',4],['vintik',1.5],['nord',1],['tundra',1],['kestrel',0.4]],bp:0.4,mods:0.35,armor:[['aramid',3],['plate',3],['vest',1]],helm:[[null,1],['hardhat',1],['bastion',3],['glacier',0.4]],coat:0xc7cdd0,loot:[2,4],cash:[250,900],call:32,bonus:0.15},
+ guard:{name:"Chief's guard",hp:120,head:28,acc:0.68,react:[0.35,0.6],guns:[['akr',1]],bp:0.5,mods:0.3,armor:[['aramid',1],['plate',1]],helm:[['hardhat',1],['bastion',1]],coat:0x2f3b45,loot:[1,3],cash:[300,800],home:4,call:32,bonus:0.2},
  chief:{name:'Station Chief Halvorsen',hp:200,head:40,acc:0.76,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x8a221b,call:40,loot:[2,3],cash:[1500,3000],special:['satphone','goldbar'],trophy:'tr_chief',home:3},
- vguard:{name:'Vault guard',hp:130,head:35,acc:0.72,react:[0.3,0.55],mods:0.4,call:30,bonus:0.25,guns:[['akr',3],['tundra',1],['kestrel',1]],ammo:'a545bp',armor:[['plate',3],['warden',1]],helm:[['bastion',3],['glacier',1]],coat:0x1f2a33,loot:[1,3],cash:[400,1200],home:7},
+ vguard:{name:'Vault guard',hp:130,head:28,acc:0.72,react:[0.3,0.55],mods:0.4,call:30,bonus:0.25,guns:[['akr',3],['tundra',1],['kestrel',1]],ammo:'a545bp',armor:[['plate',3],['warden',1]],helm:[['bastion',3],['glacier',1]],coat:0x1f2a33,loot:[1,3],cash:[400,1200],home:7},
  warden:{name:'Vault Warden Brekke',hp:260,head:45,acc:0.8,react:[0.25,0.42],mods:1,call:40,guns:[['kestrel',1]],armor:[['warden',1]],helm:[['glacier',1]],coat:0x5a1a6b,loot:[2,3],cash:[3000,6000],special:['blackbox','bearer'],trophy:'tr_warden',home:5},
  foreman:{name:'Mine Foreman Rask',hp:230,head:42,acc:0.74,react:[0.28,0.48],call:40,guns:[['tundra',1]],armor:[['plate',1]],helm:[['bastion',1]],coat:0x8a6a1a,loot:[2,3],cash:[2000,4000],special:['goldbar','sensor'],trophy:'tr_foreman',home:6},
  jarl:{name:'Jarl Hrafn',hp:2600,head:99999,acc:0.3,react:[0.25,0.4],guns:[['jarlmg',1]],ammo:'a762',armor:[['warden',1]],helm:[['glacier',1]],coat:0x3a1414,loot:[3,4],cash:[8000,15000],special:['goldbar','diamond','cryocell','cryocell'],boss:true,home:20,call:60,dr:0.6},
  relay:{name:'Relay Chief Dahl',hp:220,head:42,acc:0.74,react:[0.28,0.48],guns:[['akr',1]],ammo:'a545bp',mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x1f4a5a,call:40,loot:[2,3],cash:[1800,3600],special:['satphone','goldbar','sensor'],home:4},
- huskarl:{name:'Huskarl',hp:140,head:35,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
+ huskarl:{name:'Huskarl',hp:140,head:28,acc:0.7,react:[0.3,0.55],guns:[['akr',3],['kestrel',1],['tundra',1]],bp:0.6,mods:0.5,armor:[['plate',2],['warden',0.6]],helm:[['bastion',2],['glacier',1]],coat:0x4a2420,loot:[1,3],cash:[300,900],call:40,bonus:0.3},
  harbor:{name:'Harbormaster Vinter',hp:240,head:42,acc:0.74,react:[0.28,0.48],guns:[['kestrel',1]],mods:1,armor:[['plate',1]],helm:[['bastion',1]],coat:0x2a3f5a,call:40,loot:[2,3],cash:[2500,5000],special:['satphone','meteorite'],home:6},
- mguard:{name:'Mine guard',hp:125,head:35,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
+ mguard:{name:'Mine guard',hp:125,head:28,acc:0.66,react:[0.35,0.6],bp:0.3,mods:0.3,call:32,bonus:0.2,guns:[['akr',2],['vintik',1]],armor:[['aramid',1],['plate',0.5]],helm:[['hardhat',1]],coat:0x4a4030,loot:[1,2],cash:[200,600],home:8},
 };
 const ELOOT=[['smokes',2],['handwarm',1.2],['tourniquet',0.8],['medal',0.4],['compass',0.3],['caviar',0.5],['lockpick',0.12],['bolts',2.5],['tape',2.5],['battery',2],['wire',2],['aquavit',1.5],['bandage',2.5],['thermos',2],['ifak',1.4],['watch',0.9],['notebook',0.8],['powder',1.2],['radio',0.5],['medsup',0.8],['fuel',0.4],['satphone',0.25],['fieldkit',0.35],['goldbar',0.12]];
 // a lucky extra: rolled on top of normal loot (rare find in containers, bonus on tougher bodies)
@@ -44,7 +44,9 @@ function humanoid(o){
   const la=arm(-1), ra=arm(1);
   const head=new THREE.Group(); head.position.set(0,1.52-0.9,0); spine.add(head);
   const Bh=(w,h,d,x,y,z,m,part)=>B(w,h,d,x,y,z,m,part,head,1.52);
-  Bh(0.28,0.3,0.29,0,1.7,0,mask,'head'); if(o.hat) Bh(0.3,0.08,0.3,0,1.66,-0.01,MC(0x7a5a3a),null);
+  Bh(0.28,0.3,0.29,0,1.7,0,mask,'head');
+  // a forgiving head hitbox: an invisible box a little bigger than the head and helmet, so headshots land when they look like they should
+  { const hb=Bh(0.46,0.46,0.46,0,1.74,0,HITBOX,'head'); hb.visible=false; } if(o.hat) Bh(0.3,0.08,0.3,0,1.66,-0.01,MC(0x7a5a3a),null);
   if(o.helm!=null){ Bh(0.33,0.15,0.34,0,1.87,0,MC(o.helm),'head'); if(o.hv>=6) Bh(0.3,0.09,0.03,0,1.73,-0.16,MC(0x1a3a46),null); } else if(o.hg) addHeadgear(Bh,o.hg); else Bh(0.3,0.12,0.3,0,1.88,0,coat,'head');
   const gun=B(0.06,0.09,0.7,0,1.4,-0.57,MC(0x222426),null,aim,1.42); gun.userData.z0=gun.position.z; // the gun, held between the two hands
   if(o.armor!=null) Bs(0.6,0.5,0.4,0,1.22,0,MC(o.armor),'thorax');
@@ -52,6 +54,7 @@ function humanoid(o){
   return {g,lp:ll.hip,rp:rl.hip,la,ra,head,parts,rig};
 }
 const ARM_PITCH=Math.PI-1.6, ARM_IN=0.5;
+const HITBOX=new THREE.MeshBasicMaterial({visible:false});
 function spawnEnemy(x,z,kind){
   if(kind==='scav'&&R.cond&&R.cond.mod==='quiet'&&rand()<0.4) return;
   const k=EK[kind]; const gunId=wpick(k.guns); const gd=ITEMS[gunId];
@@ -77,16 +80,20 @@ function targets(){
   const list=[];
   // someone in an aircraft is a target only while it's low and slow enough for a rifleman: the airframe takes the hits (see playerHit)
   const airAlt=(x,z,y)=>y-Math.max(R.terrain?R.terrain(x,z):0,0);
-  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,id:'me',grace:P.grace>0,x:P.pos.x,z:P.pos.z,eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
-  if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
+  if(P&&!P.dead&&!P.down&&!(R.fly&&airAlt(P.pos.x,P.pos.z,P.y)>35)) list.push({jam:myJammer(),ride:!!R.ride,fresh:freshness(),id:'me',grace:P.grace>0,x:P.pos.x,z:P.pos.z,eye:P.y+P.eye,crouch:P.crouch,sneak:P.sneak,sprint:P.sprint,moving:Math.hypot(P.vx,P.vz)>0.6,vel:Math.hypot(P.vx,P.vz)});
+  if(NET.on) for(const id in NET.players){ const st=NET.players[id].st; if(st&&!st.dead&&!st.down&&!((st.pl||st.gs)&&airAlt(st.x,st.z,st.y||0)>35)) list.push({id,ride:!!st.rd,jam:!!st.jam,fresh:st.gf??1,grace:!!st.grace,x:st.x,z:st.z,eye:(st.y||0)+(st.crouch?1.08:1.62),crouch:st.crouch,sneak:st.sneak,sprint:st.sprint,moving:st.moving,vel:st.sprint?5:(st.moving?3:0)}); }
   return list;
 }
+// how far out an enemy will shoot: no further than you could see it through the fog, and never past 55 m
+// (75 m with a scope), so you aren't hit by someone you have no way to see
+function eEngage(e){ const fog=scene.fog&&scene.fog.density?Math.max(20,0.85/scene.fog.density):120; const g=ITEMS[e.gun.id], sc=g.zoom||(e.gun.att&&e.gun.att.optic&&ITEMS[e.gun.att.optic.id].zoom>2); return Math.min(fog,sc?75:55)*(e.k.boss?1.15:1); }
 function canSeeT(e,t,dist){
   if(t.grace) return false;
   let range=(R.map==='whiteout'?40:R.map==='vault'?34:R.map==='skarsvik'?80:70)*(R.sight||1); if(t.crouch) range*=0.72; if(t.sneak) range*=0.8;
   // fair sight: nobody spots you deeper into the fog than you could spot them (fog factor about 0.3)
   if(scene.fog&&scene.fog.density) range=Math.min(range,1.1/scene.fog.density);
-  if(e.aware>R.t) range*=1.15;  // warned on the radio or spooked: looking harder
+  if(e.aware>R.t) range*=1.15;
+  if(t.fresh<1) range*=0.5+0.5*t.fresh;  // just out of insertion cover: they're slow to pick you out  // warned on the radio or spooked: looking harder
   if(dist>range) return false;
   if(Math.abs(t.eye-e.pos.y)>30) return false; // nobody on foot picks out someone that far above them
   if(e.state!=='combat' && dist>5){ const fx=-Math.sin(e.yaw), fz=-Math.cos(e.yaw); const dx=(t.x-e.pos.x)/dist, dz=(t.z-e.pos.z)/dist; if(fx*dx+fz*dz<(e.aware>R.t?-0.25:0.15)) return false; }

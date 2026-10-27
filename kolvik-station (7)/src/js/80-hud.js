@@ -35,7 +35,7 @@ function updHUD(dt){
   else if(P.using) center=`<div>${esc(ITEMS[P.using.it.id].name)}</div><div class="bar"><i style="width:${(1-P.using.t/P.using.total)*100}%"></i></div>`;
   else if(P.reloadT>0&&w) center=`<div>Reloading</div><div class="bar"><i style="width:${(1-P.reloadT/ITEMS[w.id].reload)*100}%"></i></div>`;
   else if(P.temp<20) center=`<div style="color:var(--bad)">Freezing. Get indoors or near a heater.</div>`;
-  else if(P.dead&&!R.spec) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
+  else if(P.dead&&!R.spec&&!R.recap) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
   if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. A squadmate can hold F to revive you.'}</div>`;
   if(R.rev&&NET.players[R.rev.id]) center=`<div>Reviving ${esc(NET.players[R.rev.id].name)}</div><div class="bar"><i style="width:${R.rev.t/REVIVE_TIME*100}%"></i></div>`;
   $('#center').innerHTML=center;
@@ -90,7 +90,7 @@ function endRaid(kind,detail){
   const qlog=R.qlog||[];
   S.inRaid=false; saveGame(); accFlush();
   raidMusicStop(0.5); dronesStop(); windStop(); $('#gpsmap').hidden=true; $('#minimap').hidden=true; $('#gpsline').hidden=true; for(const snd of (R.sounds||[])) rotorStop(snd); for(const id in NET.players) NET.players[id].sledM=null; disposeScene(); R=null; P=null;
-  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
+  $('#cross').classList.remove('sight'); $('#aimdot').hidden=true; $('#tvhud').hidden=true; $('#cv').classList.remove('thermal'); document.body.classList.remove('tvmode'); camera.layers.set(0); $('#raid').hidden=true; $('#rinv').hidden=true; $('#pause').hidden=true; $('#brief').hidden=true; $('#deathfade').style.opacity=0; $('#spec').hidden=true; $('#deathcard').hidden=true; $('#deathcard').innerHTML=''; $('#mates').innerHTML=''; $('#hitdirs').innerHTML=''; document.body.classList.remove('spectating'); $('#scope').hidden=true; $('#reticle').hidden=true; $('#prismRing').hidden=true;
   document.body.classList.remove('inraid');
   const title=kind==='extract'?['ok','Extracted']:kind==='kia'?['bad','Killed in action']:['mia','Missing in action'];
   const sub=kind==='extract'?`Out through ${detail}.`:kind==='kia'?`${detail}.`:(detail||'The raid timer ran out.')+'.';
