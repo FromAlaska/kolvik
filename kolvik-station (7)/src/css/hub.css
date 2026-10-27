@@ -296,3 +296,10 @@ kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line); borde
 @media (max-width:640px){ .tabtip{flex-wrap:wrap} .tabtip .lbl{width:100%} }
 
 .btn.warnbtn{color:var(--bad); border-color:rgba(226,87,74,.5)}
+
+/* time of year */
+.yearbar{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; background:var(--panel); border:1px solid var(--line); border-left:3px solid #7fb6e8; padding:10px 12px; margin:0 0 14px}
+.yearbar b{font-family:var(--display); font-size:22px; letter-spacing:.03em} .yearbar .muted{flex:1 1 320px; font-size:14px}
+.yearbar.yr-polar{border-left-color:#6d5ab8} .yearbar.yr-thaw{border-left-color:#7cc9a4} .yearbar.yr-sun{border-left-color:#e8c55a} .yearbar.yr-storm{border-left-color:#e2574a}
+.condline .yr-polar{background:#2c2550} .condline .yr-thaw{background:#21433a} .condline .yr-sun{background:#5e4518} .condline .yr-storm{background:#4a1f1a}
+.condline .wx-sleet{background:#34505a} .condline .wx-icefog{background:#3e4a52} .condline .wx-windstorm{background:#4a3a2a} .condline .wx-calm{background:#2a3e4a}

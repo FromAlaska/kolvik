@@ -281,7 +281,7 @@ function buildHrimfell(){
   { const fr=mulberry32(7); const rk=[]; for(let k=0;k<3000&&rk.length<420;k++){ const x=(fr()*2-1)*200, z=-880+fr()*1040; const d=hrFree(x,z); if(d<3||d>45) continue; const y=hrMeshY(x,z), sl=Math.abs(hrMeshY(x+2,z)-y)+Math.abs(hrMeshY(x,z+2)-y); if(sl<0.9||sl>2.2) continue; rk.push([x,y,z,0.9+fr()*1.6]); }
     const im=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1,0),MC(0x5b636b),rk.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
     rk.forEach(([x,y,z,s0],i)=>{ e.set(fr()*3,fr()*3,fr()*3); q.setFromEuler(e); sc.set(s0*1.3,s0*0.8,s0); ps.set(x,y-s0*0.4,z); m4.compose(ps,q,sc); im.setMatrixAt(i,m4); }); im.frustumCulled=false; scene.add(im); }
-  const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
+  R.treePts=trees; const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
   trees.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); });
   for(const im of [tM,cM,c2M]){ im.frustumCulled=false; scene.add(im); } R.ray.push(tM);
   // start gate at the summit

@@ -272,7 +272,7 @@ function applyMods(sps){
   if(R.map==='skarsvik'){ const z=SK_EVAC[Math.floor(rand()*SK_EVAC.length)]; R.evac={t:MAPS.skarsvik.time*rr(0.45,0.6),x:z.x,z:z.z,name:z.name,dur:100,state:'pending'}; R.evacEx={name:'Helicopter evac',x:z.x,z:z.z,r:7,active:false,time:5,evac:true}; R.extracts.push(R.evacEx); }
 }
 function applyWeather(){
-  const W=R.cond.W; R.sight=W.sight;
+  const W=R.cond.W; R.sight=W.sight; R.slip=W.slip||1; R.hear=W.hear||1; R.windy=!!W.wind; // 48-year.js: slippery ground, how far sound carries, gusts
   if(scene.fog) scene.fog.density=Math.min(0.075,scene.fog.density*W.fog);
   R.drain*=W.cold;
   scene.traverse(o=>{ if(o.isHemisphereLight||o.isDirectionalLight) o.intensity*=W.light; });

@@ -38,7 +38,7 @@ function startRaid(mapId,launch){
   const sp0=dmMode?dmStartSpawn():sps2[slot%sps2.length]; const mi=welcome&&welcome.mate||0; const sp={x:sp0.x+(mi?((mi%2)?1:-1)*Math.ceil(mi/2)*(map.heli?11:map.sleds?3.4:1.8):0),z:sp0.z,h:sp0.h}; { const v=new THREE.Vector3(sp.x,0,sp.z); resolve(v,0.4); sp.x=v.x; sp.z=v.z; }
   R.extracts.filter(e=>e.active).forEach(beacon);
   flash=new THREE.PointLight(0xffc070,0,14); scene.add(flash);
-  snow=makeSnow(Math.round((mapId==='whiteout'?1800:mapId==='vault'?0:1100)*R.cond.W.snow),(mapId==='whiteout'?3.2:1.6)*(R.cond.weather==='blizzard'?1.8:1));
+  snow=makeSnow(Math.round((mapId==='whiteout'?1800:mapId==='vault'?0:1100)*R.cond.W.snow),(mapId==='whiteout'?3.2:1.6)*(R.cond.weather==='blizzard'||R.cond.weather==='windstorm'?1.8:R.cond.weather==='sleet'?2.4:1));
   R.targets=R.ray.concat(...R.enemies.map(e=>e.parts));
   spawnCover(sps); applyWeather(); setupCulling(); if(R.enemies.length) buildNav(); if((!welcome||welcome.hostId===welcome.id)&&!dmMode) spawnDrones(mapId);
   P={pos:new THREE.Vector3(sp.x,0,sp.z),yaw:Math.atan2(sp.x,sp.z),pitch:0,vx:0,vz:0,eye:1.62,crouch:false,sprint:false,stam:100,hp:{...MAXHP},bleed:{},frac:{},temp:100,adsHeld:false,adsT:0,trigger:false,semiLock:false,cool:0,reloadT:0,reloadType:null,using:null,auto:true,keys:{},bob:0,kick:0,hurt:0,dead:false,slot:S.eq.primary?'primary':S.eq.secondary?'secondary':'fists',fov:72,sneak:false,punchT:0,grace:SPAWN.grace,stepT:0,shiverT:0,y:0,vy:0,down:null,cam:pmCam(),foot:0,bobW:0,landT:0,fat:0,sprB:0};

@@ -103,6 +103,7 @@ function renderInfo(el){
   if(d.hp) st.push(['Charge',`${Math.ceil(it.hp)}/${d.hp} HP`]);
   if(d.type==='key'){ const L=LOCKS[d.room]; st.push(['Opens',L?`${L.name} · ${MAPS[L.map].name}`:'?'],['Uses left',`${it.uses??d.uses}/${d.uses}`]); }
   if(d.type==='pick') st.push(['Picks left',`${it.uses??d.uses}/${d.uses}`]);
+  if(d.type==='melee') st.push(['Damage',d.dmg],['Reach',`${d.reach} m`],['Wear',`${it.wear??d.wear}/${d.wear} hits left`]);
   st.push(['Size',`${d.w}×${d.h}`]);
   el.innerHTML=`<span class="rtag r${d.rar}">${RAR[d.rar]}</span><h3>${esc(d.name)}</h3><p class="desc">${esc(d.desc)}</p><dl class="stats">${st.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl><div class="acts" id="acts"></div>`;
   const acts=el.querySelector('#acts');
@@ -124,6 +125,7 @@ function renderInfo(el){
     if(it.items && it.items.length && loc && loc.key==='stash') btn('Empty into stash',()=>{ const left=[]; for(const s of it.items.slice()){ if(!place(S.stash,s)) left.push(s); } it.items.length=0; it.items.push(...left); if(left.length) toast('Some items did not fit.'); afterChange(); },'btn ghost sm');
   }
   if(d.type==='weapon' && loc && !(R&&loc.key==='loot'&&R.lootTarget&&R.lootTarget.mate)) el.appendChild(attBox(it));
+  if(it.id==='branch' && loc && loc.key!=='loot') el.appendChild(craftBox(it));
 }
 /* attachments: fit, swap or take off optics, muzzles and magazines, in the hideout (from your stash) and in a raid
    (from anything you carry or the container you have open). Dragging an attachment onto a gun does the same. */

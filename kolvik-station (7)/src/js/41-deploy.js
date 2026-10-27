@@ -8,6 +8,10 @@ const WEATHER={
  blizzard:{name:'Blizzard',fog:1.8,cold:1.7,snow:3,sight:0.65,light:0.85},
  aurora:{name:'Aurora night',fog:0.85,cold:1.25,snow:0.4,sight:0.8,light:0.5,dark:true},
  indoor:{name:'Underground',fog:1,cold:1,snow:0,sight:1,light:1},
+ sleet:{name:'Freezing sleet',fog:1.3,cold:1.45,snow:1.8,sight:0.8,light:0.85,slip:0.6,hear:0.8},
+ icefog:{name:'Ice fog',fog:2.4,cold:1.2,snow:0.15,sight:0.5,light:0.95,hear:1.3},
+ windstorm:{name:'Windstorm',fog:1.25,cold:1.6,snow:2.2,sight:0.85,light:0.9,hear:0.55,wind:1},
+ calm:{name:'Still frost',fog:0.45,cold:1.35,snow:0,sight:1.25,light:1.1,hear:1.4},
 };
 const RMODS={
  none:{name:'',desc:()=>''},
@@ -19,26 +23,28 @@ const RMODS={
  bounty:{name:'Bounty',desc:b=>`Bounty: $5,000 on ${b}`},
 };
 const MAP_COND={
- kolvik:{weather:[['overcast',4],['clear',2],['blizzard',2],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['outage',1.5],['drop',1.5],['quiet',1],['bounty',1.2]],hot:['Comms','Barracks','Lab','Garage','Warehouse','Boathouse'],boss:'Station Chief Halvorsen'},
- whiteout:{weather:[['overcast',3],['blizzard',2]],mods:[['none',2],['raiders',2],['drop',2],['quiet',1]]},
- hrimfell:{weather:[['overcast',3],['clear',2],['blizzard',1],['aurora',1.5]],mods:[['none',3],['hotzone',1.5]],hot:['Lodge','Lift station','Garage','Ski shed','Fuel hut']},
- ravnskar:{weather:[['overcast',3],['blizzard',1.5],['aurora',2],['clear',1]],mods:[['none',4],['drop',1.5],['outage',1],['raiders',1]]},
- ironfjord:{weather:[['overcast',3],['clear',2],['blizzard',1.5],['aurora',2]],mods:[['none',3],['hotzone',2.5],['drop',2],['outage',1]],hot:['Warehouse','Signal box','Bunkhouse','Mess hall','Boathouse','Pump house']},
- storvidda:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['outage',1],['bounty',1.2]],hot:['Relay hall','Barracks','Garage','Bunker','Pump station'],boss:'Relay Chief Dahl'},
- skerries:{weather:[['clear',4],['overcast',3],['aurora',1.5],['blizzard',0.5]],mods:[['none',3],['hotzone',1.5],['outage',1]],hot:['Trading post',"Keeper's house","Hunters' camp",'Vestholm hangar','Austholm hangar']},
+ kolvik:{weather:[['overcast',4],['clear',2],['blizzard',2],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['outage',1.5],['drop',1.5],['quiet',1],['bounty',1.2]],hot:['Comms','Barracks','Lab','Garage','Warehouse','Boathouse'],boss:'Station Chief Halvorsen'},
+ whiteout:{weather:[['overcast',3],['blizzard',2],['sleet',1],['icefog',1.5],['windstorm',1.2]],mods:[['none',2],['raiders',2],['drop',2],['quiet',1]]},
+ hrimfell:{weather:[['overcast',3],['clear',2],['blizzard',1],['aurora',1.5],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',1.5]],hot:['Lodge','Lift station','Garage','Ski shed','Fuel hut']},
+ ravnskar:{weather:[['overcast',3],['blizzard',1.5],['aurora',2],['clear',1],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',4],['drop',1.5],['outage',1],['raiders',1]]},
+ ironfjord:{weather:[['overcast',3],['clear',2],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',2.5],['drop',2],['outage',1]],hot:['Warehouse','Signal box','Bunkhouse','Mess hall','Boathouse','Pump house']},
+ storvidda:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['outage',1],['bounty',1.2]],hot:['Relay hall','Barracks','Garage','Bunker','Pump station'],boss:'Relay Chief Dahl'},
+ skerries:{weather:[['clear',4],['overcast',3],['aurora',1.5],['blizzard',0.5],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',1.5],['outage',1]],hot:['Trading post',"Keeper's house","Hunters' camp",'Vestholm hangar','Austholm hangar']},
  vault:{weather:[['indoor',1]],mods:[['none',3],['bounty',1.5],['quiet',1]],boss:'Vault Warden Brekke'},
- kaldfjord:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2.5],['outage',1],['bounty',1.2]],hot:['Town hall','Police station','Harbor warehouse','Processing plant','Radar ops','Hangar','Research lab'],boss:'Harbormaster Vinter'},
- skarsvik:{weather:[['overcast',3],['clear',2],['blizzard',2],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['quiet',1],['bounty',1.2]],hot:['Church','Town hall','General store','Processing plant','Hangar','Harbor warehouse'],boss:'Mine Foreman Rask'},
+ kaldfjord:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2.5],['outage',1],['bounty',1.2]],hot:['Town hall','Police station','Harbor warehouse','Processing plant','Radar ops','Hangar','Research lab'],boss:'Harbormaster Vinter'},
+ skarsvik:{weather:[['overcast',3],['clear',2],['blizzard',2],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['quiet',1],['bounty',1.2]],hot:['Church','Town hall','General store','Processing plant','Hangar','Harbor warehouse'],boss:'Mine Foreman Rask'},
 };
 function hashStr(str){ let h=2166136261; for(const c of str) h=Math.imul(h^c.charCodeAt(0),16777619); return h>>>0; }
 function conditions(mapId,slot=condSlot()){
   const mc=MAP_COND[mapId]; const r=mulberry32(hashStr(mapId+':'+slot)); r();
-  const weather=wpick(mc.weather,r), mod=wpick(mc.mods,r);
+  // the time of year (48-year.js) shifts the weather odds and its effects; worked out from the slot so everyone agrees
+  const Y=yearAt(slot*COND_SLOT_MS); const weather=wpick(mc.weather.map(([k,w])=>[k,w*((Y.wx||{})[k]||1)]),r), mod=wpick(mc.mods,r);
   const hot=mod==='hotzone'?mc.hot[Math.floor(r()*mc.hot.length)]:null;
-  return {slot,weather,mod,hot,W:WEATHER[weather],label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)};
+  const W=Object.assign({},WEATHER[weather]); if(weather!=='indoor'){ W.cold*=Y.cold; W.light*=Y.light; W.sight*=Y.sight; W.fog*=Y.fog; W.slip=(W.slip||1)*(Y.slip||1); W.hear=(W.hear||1)*(Y.hear||1); if(Y.dark) W.dark=true; }
+  return {slot,weather,mod,hot,W,year:weather==='indoor'?null:Y,label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)};
 }
 function rotateIn(){ const ms=(condSlot()+1)*COND_SLOT_MS-Date.now(); const h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60; return h?`${h} h ${m} min`:`${m} min`; }
-function condHtml(c){ return `<span class="wx wx-${c.weather}">${esc(c.label)}</span>${c.modText?`<span class="md">${esc(c.modText)}</span>`:''}`; }
+function condHtml(c){ return `${c.year?`<span class="wx yr yr-${c.year.id}">${esc(c.year.name)}</span>`:''}<span class="wx wx-${c.weather}">${esc(c.label)}</span>${c.modText?`<span class="md">${esc(c.modText)}</span>`:''}`; }
 const KV_POI=[['Comms',0,0,20,14],['Barracks',-55,-50,30,10],['Lab',55,-50,20,18],['Garage',-55,45,26,16],['Warehouse',-78,0,14,22],['Pump hut',50,55,7,6],['Boathouse',84,-8,9,10],['Hut',-20,72,7,6],['Hut',25,-78,7,6],['Hut',-82,75,8,7]];
 const KV_EX=[['Helipad',-85,-85],['North gate',0,-94],['Ice road',-5,94],['Pier boat',95,22]];
 const MAPS={
@@ -63,10 +69,11 @@ function renderDeploy(body){
    <section class="online"><div class="col" id="lobbyArea"></div>
     <div class="chatbox col"><div class="colhead"><h2 class="h2">Radio</h2><span class="lbl" id="chatHint"></span></div><div class="chatlog" id="chatLog" aria-live="polite"></div>
      <form class="chatform" id="chatForm" autocomplete="off"><select id="chatCh" aria-label="Channel"><option value="squad">Squad</option><option value="lobby">Lobby</option><option value="global">Everyone</option></select><input id="chatIn" maxlength="200" aria-label="Message" placeholder="Message"><button class="btn sm" type="submit">Send</button></form></div></section>`:''}
+   ${yearHtml()}
    <div class="colhead" style="margin-block:${online?'28px':'0'} 14px"><h2 class="h2">${online?'Maps':'Choose a raid'}</h2><span class="lbl">Conditions change in ${rotateIn()}</span><span class="lbl">Loadout worth ${fmt$(carriedValue())} · you lose it all if you die</span></div>
    <div class="diffbar"><span class="lbl">Difficulty</span><div class="seg" role="radiogroup">${Object.entries(DIFF).map(([k,d])=>`<button type="button" role="radio" data-diff="${k}" aria-checked="${(OPTS.diff||'normal')===k}">${d.name}</button>`).join('')}</div><div class="seg" role="radiogroup" style="margin-left:12px" title="AI planes on Skjærgård">${[['0','No AI planes'],['1','2 AI planes a side'],['2','4 AI planes a side']].map(([k,n])=>`<button type="button" role="radio" data-air="${k}" aria-checked="${String(OPTS.air??1)===k}">${n}</button>`).join('')}</div><small>${esc(DIFF[OPTS.diff||'normal'].desc)} ${online?'Used for your solo raids and lobbies you host; the lobby leader can change it.':''}</small></div>
    <div class="maps">${Object.entries(MAPS).map(([k,m])=>{ const fee=m.fee||0; return `<div class="mapc"><canvas data-map="${k}" width="640" height="400"></canvas><div class="bodyc"><h3>${m.name}</h3><p class="muted" style="margin:0">${m.blurb}</p><div class="kv"><span>Raid <b>${m.time/60} min</b></span><span>Threat <b>${m.threat}</b></span><span>Cold <b>${k==='whiteout'?'Severe':k==='vault'?'None':k==='skarsvik'?'Harsh, long':'Harsh'}</b></span>${fee?`<span>Entry <b class="cash">${fmt$(fee)}</b></span>`:''}</div><div class="condline">${condHtml(conditions(k))}</div><div class="acts">${m.coop?`<button class="btn" data-go="${k}">Solo raid</button>${online?`<button class="btn ghost" data-host="${k}">Host lobby</button>`:''}<span class="lbl coopnote">Co-op boss</span>`:m.pvp?(online?`<button class="btn" data-host="${k}">Host lobby</button><span class="lbl pvpnote">PvP only · needs 2+ sides</span>`:'<span class="lbl pvpnote">PvP only · play it on your server</span>'):`<button class="btn" data-go="${k}" ${S.cash<fee?'disabled':''}>Solo raid</button>${online?`<button class="btn ghost" data-host="${k}">Host lobby</button>`:''}`}</div></div></div>`; }).join('')}</div>
-   <div class="controls">${[['WASD','Move'],['Shift','Sprint'],['Ctrl','Sneak (toggle)'],['C','Crouch'],['Space','Jump · onto crates and low walls'],['F (hold)','Revive a downed squadmate'],['Mouse L','Fire / punch'],['Mouse R','Aim / scope'],['R','Reload'],['I','Inspect your weapon'],['1 · 2 · 3','Primary · sidearm · fists'],['B','Fire mode'],['E','Search / loot'],['Tab','Inventory'],['4','Bandage'],['5','Splint'],['6','Medkit'],['7','Cocoa'],['Enter','Chat · Tab switches · @name DMs a friend'],['Esc','Pause']].map(([k,v])=>`<div><kbd>${k}</kbd>${v}</div>`).join('')}</div>
+   <div class="controls">${[['WASD','Move'],['Shift','Sprint'],['Ctrl','Sneak (toggle)'],['C','Crouch'],['Space','Jump · onto crates and low walls'],['F (hold)','Revive a downed player (a stranger costs a med kit)'],['Mouse L','Fire / punch'],['Mouse R','Aim / scope'],['R','Reload'],['I','Inspect your weapon'],['1 · 2 · 3','Primary · sidearm · fists'],['B','Fire mode'],['E','Search / loot'],['Tab','Inventory'],['4','Bandage'],['5','Splint'],['6','Medkit'],['7','Cocoa'],['Enter','Chat · Tab switches · @name DMs a friend'],['Esc','Pause']].map(([k,v])=>`<div><kbd>${k}</kbd>${v}</div>`).join('')}</div>
    <p class="muted" style="max-width:70ch">Find an active extract and stand in it for 7 seconds to get out with everything you carry. Body heat drops outside; get indoors or near a heater. Sneaking keeps you quiet; sprinting is heard from 14 m. Bring cash bundles home and they go straight into your balance.</p>`;
   body.querySelectorAll('canvas[data-map]').forEach(c=>drawMapCard(c,c.dataset.map));
   body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>startRaid(b.dataset.go,null));
@@ -90,6 +97,7 @@ function renderLobbyArea(){
   if(l){
     const me=l.members.find(m=>m.id===NET.id)||{}; const owner=l.owner===NET.id; const nReady=l.members.filter(m=>m.ready).length; const allReady=nReady===l.members.length; const sides=new Set(l.members.map(m=>m.squad?'s'+m.squad:m.id)).size; const dm=!!DM_INFO[l.mode]; const teams=!!MAPS[l.map].teams||l.mode==='tdm'; const pvpShort=dm?l.members.length<2:(!!MAPS[l.map].pvp&&sides<2);
     const fee=MAPS[l.map].fee||0; const broke=S.cash<fee; const waiting=l.state==='waiting';
+    if(waiting&&broke&&me.ready&&!NET.feeUnready){ NET.feeUnready=true; wsend({t:'lready',ready:false}); toast(`Un-readied: you can't pay the ${fmt$(fee)} entry for ${MAPS[l.map].name}.`); setTimeout(()=>NET.feeUnready=false,1500); }
     el.innerHTML=`<div class="colhead"><h2 class="h2">${esc(l.name)}</h2><span class="lbl">${waiting?(allReady?'Everyone is ready':`${nReady} of ${l.members.length} ready`):`In raid · ${fmtTime(lobbyTL(l))} left`}</span></div>
      <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyMode">Mode</label><select id="lobbyMode">${[['raid','Extraction raid'],['tdm','Team deathmatch'],['ffa','Free for all']].map(([k,n])=>`<option value="${k}" ${k===(l.mode||'raid')?'selected':''}>${n}</option>`).join('')}</select>`:`<span class="lbl">Mode</span><b>${dm?esc(DM_INFO[l.mode].name):'Extraction raid'}</b>`}</div>
      ${dm?`<p class="muted" style="margin:0;font-size:13px">${esc(DM_INFO[l.mode].how)} No AI, 10 minutes, respawns, the same kit for everyone. Your own gear stays home. $${DM_PAY.kill} a kill, $${DM_PAY.win.toLocaleString()} for the win.</p>`:''}

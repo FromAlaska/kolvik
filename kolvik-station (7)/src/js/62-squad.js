@@ -5,12 +5,17 @@ const mateIds=()=>NET.on?Object.keys(NET.players).filter(id=>isMate(id)&&NET.pla
 // squadmates in this raid who are up (not dead, not down) and could pick you up
 const matesUp=()=>mateIds().some(id=>{ const st=NET.players[id].st; return !st.dead&&!st.down; });
 const DOWN_TIME=60, REVIVE_TIME=4;
+// online, anyone else in the raid who's up could come and get you back on your feet, squad or not (not in deathmatch)
+const othersUp=()=>NET.on&&!(R&&R.dm)&&Object.keys(NET.players).some(id=>{ const st=NET.players[id].st; return st&&!st.dead&&!st.down; });
+// reviving someone outside your squad costs a med kit: the cheapest IFAK, combat medkit or field kit you carry
+function reviveKit(){ let best=null, bc=null; for(const c of playerConts()) for(const it of c.items){ const d=ITEMS[it.id]; if(d.med==='heal'&&(!best||d.value<ITEMS[best.id].value)){ best=it; bc=c; } } return best?{it:best,c:bc}:null; }
 function goDown(cause){
+  R.downBy=R.lastHitBy&&R.t-R.lastHitT<5?R.lastHitBy:null; // whoever put you down gets the kill if you bleed out
   P.down={t:DOWN_TIME,hp:150,cause,by:null}; P.trigger=false; P.adsHeld=false; P.reloadT=0; P.using=null; P.crouch=false; P.sprint=false; P.bleed={}; P.vy=Math.min(P.vy,0);
   if(P.hp.head<=0) P.hp.head=1; if(P.hp.thorax<=0) P.hp.thorax=1;
   if(R.invOpen) closeInv(true); sfxGrunt(0.6,80); P.hurt=1;
   nsend({t:'dbox',cid:'d'+NET.id,x:P.pos.x,z:P.pos.z,name:S.name||'Nomad',items:JSON.parse(JSON.stringify(downItems()))});
-  nsend({t:'msg',text:`${S.name||'Nomad'} is down`}); msg(`You are down. A squadmate has ${DOWN_TIME} s to revive you.`);
+  nsend({t:'msg',text:`${S.name||'Nomad'} is down`}); msg(`You are down. Anyone can get you up in the next ${DOWN_TIME} s (a stranger needs a med kit). Hold G to give up.`);
 }
 // what a squadmate can take from you while you are down: your guns, helmet, armor and whatever is in your pockets, rig and pack
 function downItems(){ const out=[]; for(const sl of ['primary','secondary','helmet','armor']) if(S.eq[sl]) out.push(S.eq[sl]); for(const sl of ['pockets','rig','pack']){ const c=S.eq[sl]; if(c) for(const x of c.items) out.push(x); } return out.map(x=>{ const c=JSON.parse(JSON.stringify(x)); delete c.hid; return c; }); }
@@ -23,17 +28,19 @@ function takeMine(uid,from){
 function revived(from){
   if(!P.down) return; P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id});
   for(const p of PARTS) P.hp[p]=Math.max(P.hp[p],Math.round(MAXHP[p]*0.3)); P.bleed={}; P.hurt=0.3;
-  const who=NET.players[from]?NET.players[from].name:'A squadmate'; msg(`${who} got you back up`); nsend({t:'msg',text:`${S.name||'Nomad'} is back up`}); sfxExtracted();
+  const who=NET.players[from]?NET.players[from].name:'Someone'; msg(`${who} got you back up${NET.players[from]&&!isMate(from)?' (a stranger, with their own med kit)':''}`); nsend({t:'msg',text:`${S.name||'Nomad'} is back up`}); sfxExtracted();
 }
 function reviveTarget(){
   if(!NET.on||P.dead||P.down) return null; let best=null,bd=2.3;
-  for(const id of mateIds()){ const q=NET.players[id], st=q.st; if(!st.down||st.dead) continue; const gp=q.g?q.g.position:st; const d=Math.hypot(gp.x-P.pos.x,gp.z-P.pos.z); if(d<bd){ bd=d; best=id; } }
+  for(const id in NET.players){ const q=NET.players[id], st=q.st; if(!st||!st.down||st.dead) continue; const gp=q.g?q.g.position:st; const d=Math.hypot(gp.x-P.pos.x,gp.z-P.pos.z); if(d<bd){ bd=d; best=id; } }
   return best;
 }
 function updRevive(dt){
-  const t=reviveTarget(); const holding=P.keys.KeyF&&!R.invOpen&&t;
+  // hold G while down to give up
+  if(P.down&&P.keys.KeyG){ R.giveUpT=(R.giveUpT||0)+dt; if(R.giveUpT>1.5){ R.giveUpT=0; reallyDie(P.down.cause||'Gave up'); return; } } else R.giveUpT=0;
+  const t0=reviveTarget(); const t=t0&&(isMate(t0)||reviveKit())?t0:null; const holding=P.keys.KeyF&&!R.invOpen&&t;
   if(holding){ if(!R.rev||R.rev.id!==t){ if(R.rev) nsend({t:'reviving',pid:R.rev.id,on:false}); R.rev={id:t,t:0}; nsend({t:'reviving',pid:t,on:true}); }
-    R.rev.t+=dt; if(R.rev.t>=REVIVE_TIME){ nsend({t:'revive',pid:t}); msg(`You got ${NET.players[t].name} back up`); R.rev=null; P.keys.KeyF=false; } }
+    R.rev.t+=dt; if(R.rev.t>=REVIVE_TIME){ let used=''; if(!isMate(t)){ const k=reviveKit(); if(!k){ R.rev=null; return; } used=ITEMS[k.it.id].name; k.c.items.splice(k.c.items.indexOf(k.it),1); } nsend({t:'revive',pid:t}); msg(`You got ${NET.players[t].name} back up${used?` (used your ${used})`:''}`); R.rev=null; P.keys.KeyF=false; } }
   else if(R.rev){ nsend({t:'reviving',pid:R.rev.id,on:false}); R.rev=null; }
 }
 function addDbox(m,from){

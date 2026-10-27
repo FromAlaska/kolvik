@@ -100,7 +100,7 @@ function canSeeT(e,t,dist){
   if(e.state!=='combat' && dist>5){ const fx=-Math.sin(e.yaw), fz=-Math.cos(e.yaw); const dx=(t.x-e.pos.x)/dist, dz=(t.z-e.pos.z)/dist; if(fx*dx+fz*dz<(e.aware>R.t?-0.25:0.15)) return false; }
   return los(e.pos.x,e.pos.y+eEye(e),e.pos.z,t.x,t.eye,t.z);
 }
-function noiseR(t){ if(t.grace) return 0; if(t.sprint) return 14; if(!t.moving) return 0; if(t.sneak) return 1.2; if(t.crouch) return 2.5; return 6; }
+function noiseR(t){ if(t.grace) return 0; const h=(R&&R.hear)||1; if(t.sprint) return 14*h; if(!t.moving) return 0; if(t.sneak) return 1.2*h; if(t.crouch) return 2.5*h; return 6*h; }
 function bldAt(x,z){ for(const b of R.bld) if(x>b.x0-0.2&&x<b.x1+0.2&&z>b.z0-0.2&&z<b.z1+0.2) return b; return null; }
 // route through a doorway when the enemy and its goal are on different sides of a wall
 function routeVia(e,tx,tz){

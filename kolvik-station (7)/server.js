@@ -464,11 +464,11 @@ wss.on('connection', ws => {
         if (q.room && l.room === q.room) return sys(p, `${q.name} is in the raid; you can kick them once they're back.`);
         (l.banned = l.banned || new Set()).add(q.account || q.id); leaveLobby(q); sys(q, `${p.name} removed you from the lobby.`); sys(p, `${q.name} was removed from the lobby.`); return; }
       case 'lready': { const l = p.lobby; if (l && l.state === 'waiting') { const me = l.members.get(p.id); if (me) { me.ready = !!m.ready; lobbiesChanged(); } } return; }
-      case 'ldiff': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DIFFS.has(m.diff)) { l.diff = m.diff; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
-      case 'lmode': { const l = p.lobby; const mode = DM_MODES[m.mode] ? m.mode : 'raid'; if (l && l.owner === p.id && l.state === 'waiting') { l.mode = mode; if (mode !== 'raid' && !DM_MAPS.has(l.map)) l.map = 'ironfjord'; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
-      case 'lmap': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DUR[m.map] && (!l.mode || l.mode === 'raid' || DM_MAPS.has(m.map))) { l.map = m.map; for (const x of l.members.values()) { x.ready = false; x.side = 0; } if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
-      case 'lside': { const l = p.lobby; if (l && l.state === 'waiting' && teamMode(l)) { const me = l.members.get(p.id); if (me) { me.side = me.side === 1 ? 2 : 1; me.ready = false; lobbiesChanged(); } } return; }
-      case 'lair': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && [0, 1, 2].includes(m.air)) { l.air = m.air; for (const x of l.members.values()) x.ready = false; lobbiesChanged(); } return; }
+      case 'ldiff': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DIFFS.has(m.diff)) { l.diff = m.diff; lobbiesChanged(); } return; }
+      case 'lmode': { const l = p.lobby; const mode = DM_MODES[m.mode] ? m.mode : 'raid'; if (l && l.owner === p.id && l.state === 'waiting') { l.mode = mode; if (mode !== 'raid' && !DM_MAPS.has(l.map)) l.map = 'ironfjord'; for (const x of l.members.values()) x.side = 0; if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
+      case 'lmap': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && DUR[m.map] && (!l.mode || l.mode === 'raid' || DM_MAPS.has(m.map))) { l.map = m.map; for (const x of l.members.values()) x.side = 0; if (teamMode(l)) for (const id of l.members.keys()) { const q = conns.get(id); if (q) l.members.get(id).side = pickSide(q, l); } lobbiesChanged(); } return; }
+      case 'lside': { const l = p.lobby; if (l && l.state === 'waiting' && teamMode(l)) { const me = l.members.get(p.id); if (me) { me.side = me.side === 1 ? 2 : 1; lobbiesChanged(); } } return; }
+      case 'lair': { const l = p.lobby; if (l && l.owner === p.id && l.state === 'waiting' && [0, 1, 2].includes(m.air)) { l.air = m.air; lobbiesChanged(); } return; }
       case 'lstart': {
         const l = p.lobby; if (!l || l.owner !== p.id || l.state !== 'waiting') return;
         if (![...l.members.values()].every(x => x.ready)) return send(p, { t: 'sys', text: 'Not everyone is ready.' });
@@ -633,7 +633,7 @@ wss.on('connection', ws => {
       // squad-only: going down, being looted while down, revives
       case 'dbox': if ((p.squad || r.coop || p.side) && Array.isArray(m.items) && m.items.length <= 80) for (const q of r.players.values()) if (q !== p && (r.coop || q.squad === p.squad)) send(q, { t: 'dbox', cid: 'd' + p.id, x: +m.x || 0, z: +m.z || 0, name: p.name, items: m.items, from: p.id }); break;
       case 'dboxgone': toRoom(r, { t: 'dboxgone', cid: 'd' + p.id }, p); break;
-      case 'reviving': case 'revive': { const v = r.players.get(m.pid); if (v && v !== p && (r.coop || (p.squad && v.squad === p.squad))) send(v, { t: m.t, on: !!m.on, from: p.id }); break; }
+      case 'reviving': case 'revive': { const v = r.players.get(m.pid); if (v && v !== p) send(v, { t: m.t, on: !!m.on, from: p.id }); break; }
       // boss fight events come from whoever runs the AI; lasting ones are kept for players who join late
       case 'boss': if (p.id === r.hostId && typeof m.k === 'string') { const ev = { t: 'boss', k: m.k, x: +m.x || 0, z: +m.z || 0, p: m.p | 0, d: +m.d || 0, list: Array.isArray(m.list) ? m.list.slice(0, 16) : undefined }; if (ev.k !== 'mortar' && r.events.length < 40) r.events.push(ev); toRoom(r, ev, p); } break;
       case 'kcredit': { const v = r.players.get(m.pid); if (v && p.id === r.hostId) send(v, { t: 'kcredit', i: m.i, kind: m.kind, head: !!m.head, w: m.w }); break; }

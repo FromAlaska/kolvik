@@ -63,7 +63,7 @@ function buildKaldfjord(){
   const trees=[]; { const fr=mulberry32(77); for(let k=0;k<70000&&trees.length<9500;k++){ const x=(fr()*2-1)*(KF.B-8), z=(fr()*2-1)*(KF.B-8); const dens=fbm(x/200+4,z/200,3); if(fr()>(dens+0.3)) continue; if(!padOk(x,z,7)) continue;
       const y=kfTerrain(x,z), sl=Math.abs(kfTerrain(x+2,z)-y)+Math.abs(kfTerrain(x,z+2)-y); if(sl>1.6) continue; const s0=0.8+fr()*0.7; trees.push([x,y-0.2,z,s0]); T.obs.push({x,z,r:0.45,y,h:6,name:'a tree'}); R.cols.push({x0:x-0.35,x1:x+0.35,z0:z-0.35,z1:z+0.35,y0:y,y1:y+6,terrain:true}); } }
   { const trunkG=new THREE.CylinderGeometry(0.22,0.3,2.2,6), coneG=new THREE.ConeGeometry(1.5,3.2,7), cone2=new THREE.ConeGeometry(1.1,2.4,7); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
-    const made=kfChunked(trees,240,pts=>{ const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),pts.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),pts.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),pts.length);
+    R.treePts=trees; const made=kfChunked(trees,240,pts=>{ const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),pts.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),pts.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),pts.length);
       pts.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); }); tM.userData.trunk=true; return [tM,cM,c2M]; });
     for(const m of made) if(m.userData.trunk) R.ray.push(m); }
   // boulders

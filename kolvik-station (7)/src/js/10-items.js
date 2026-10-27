@@ -38,6 +38,9 @@ const ITEMS = {
  scrap:{name:'Scrap metal',short:'SCRAP',type:'loot',w:2,h:1,value:130,rar:0,desc:'Sells for cash. Workbench material.'},
  wire:{name:'Copper wire',short:'WIRE',type:'loot',w:1,h:1,value:320,rar:0,desc:'Sells for cash.'},
  battery:{name:'Lantern battery',short:'BATT',type:'loot',w:1,h:1,value:280,rar:0,desc:'Sells for cash.'},
+ branch:{name:'Spruce branch',short:'BRNCH',type:'craft',w:1,h:3,value:15,rar:0,desc:'Cut from a tree in a raid (E at a tree). Carve one into a shiv, or two into a spear.'},
+ shiv:{name:'Wooden shiv',short:'SHIV',type:'melee',w:1,h:2,value:60,rar:0,dmg:52,pen:5,reach:1.7,rate:0.42,wear:15,desc:'A sharpened spruce stake. Quick and quiet. Breaks after about 15 hits. Carried anywhere, it replaces your fists (key 3).'},
+ spear:{name:'Spruce spear',short:'SPEAR',type:'melee',w:1,h:4,value:160,rar:0,dmg:78,pen:9,reach:2.7,rate:0.85,wear:25,desc:'Two branches lashed together and fire-hardened. Long reach, slow thrust. Breaks after about 25 hits. Carried anywhere, it replaces your fists (key 3).'},
  powder:{name:'Gunpowder tin',short:'POWDR',type:'loot',w:1,h:1,value:220,rar:1,desc:'Workbench material.'},
  medsup:{name:'Medical supplies',short:'MEDSUP',type:'loot',w:2,h:1,value:500,rar:1,desc:'Med station material.'},
  aquavit:{name:'Aquavit bottle',short:'AQVT',type:'loot',w:1,h:2,value:600,rar:1,desc:'Caraway spirit. Trades well.'},
@@ -126,7 +129,7 @@ function fixMag(w){ const m=wstats(w).magSize; if(w.mag>m){ const back=mk(w.ammo
 for(const k in ITEMS) ITEMS[k].id=k;
 for(const k of ['reddot','holo','prism','scope4','suppr','brake']) ITEMS[k].fits.push('nordlys','jarlmg');
 const RAR=['Common','Uncommon','Rare','Very rare','Legendary'];
-const GLYPH={jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
+const GLYPH={craft:'≡',melee:'†',jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
 const CALS={'9x18':['a918'],'5.45':['a545','a545bp'],'7.62R':['a762'],'12g':['a12']};
 const SLOTS=['primary','secondary','helmet','armor','rig','pack'];
 const SLOT_NAME={primary:'Primary',secondary:'Sidearm',helmet:'Helmet',armor:'Body armor',rig:'Rig',pack:'Backpack',pockets:'Pockets',pouch:'Secure pouch'};
@@ -141,6 +144,7 @@ function mk(id, o={}){
   if(d.grid) it.items=[];
   if(d.hp) it.hp=d.hp;
   if(d.uses) it.uses=d.uses;
+  if(d.wear) it.wear=d.wear;
   return Object.assign(it,o);
 }
 const dims = it => { const d=ITEMS[it.id]; return it.r?[d.h,d.w]:[d.w,d.h]; };
@@ -156,7 +160,7 @@ function place(c,it){
   return false;
 }
 function itemAt(c,cx,cy){ for(const it of c.items){ const [w,h]=dims(it); if(cx>=it.x&&cx<it.x+w&&cy>=it.y&&cy<it.y+h) return it; } return null; }
-function valueOf(it){ const d=ITEMS[it.id]; let v=d.value*(d.stack?it.n:1); if(d.dur) v*=0.35+0.65*(it.dur/d.dur); if(d.hp) v*=0.3+0.7*(it.hp/d.hp); if(d.uses&&it.uses!=null) v*=0.3+0.7*(it.uses/d.uses); if(d.type==='weapon'&&it.mag) v+=ITEMS[it.ammo].value*it.mag; if(it.att) for(const k in it.att) if(it.att[k]) v+=ITEMS[it.att[k].id].value; return v; }
+function valueOf(it){ const d=ITEMS[it.id]; let v=d.value*(d.stack?it.n:1); if(d.dur) v*=0.35+0.65*(it.dur/d.dur); if(d.hp) v*=0.3+0.7*(it.hp/d.hp); if(d.uses&&it.uses!=null) v*=0.3+0.7*(it.uses/d.uses); if(d.wear&&it.wear!=null) v*=0.3+0.7*(it.wear/d.wear); if(d.type==='weapon'&&it.mag) v+=ITEMS[it.ammo].value*it.mag; if(it.att) for(const k in it.att) if(it.att[k]) v+=ITEMS[it.att[k].id].value; return v; }
 function deepValue(it){ let v=valueOf(it); if(it.items) for(const s of it.items) v+=deepValue(s); return v; }
 const sellPrice = it => it.id==='cash' ? it.n : Math.max(1, Math.round(valueOf(it)*0.6));
 const buyPrice = id => { const d=ITEMS[id]; return Math.max(5, Math.round(d.value*(d.stack?d.stack:1)*1.25/5)*5); };

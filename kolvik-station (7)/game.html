@@ -302,6 +302,13 @@ kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line); borde
 
 .btn.warnbtn{color:var(--bad); border-color:rgba(226,87,74,.5)}
 
+/* time of year */
+.yearbar{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; background:var(--panel); border:1px solid var(--line); border-left:3px solid #7fb6e8; padding:10px 12px; margin:0 0 14px}
+.yearbar b{font-family:var(--display); font-size:22px; letter-spacing:.03em} .yearbar .muted{flex:1 1 320px; font-size:14px}
+.yearbar.yr-polar{border-left-color:#6d5ab8} .yearbar.yr-thaw{border-left-color:#7cc9a4} .yearbar.yr-sun{border-left-color:#e8c55a} .yearbar.yr-storm{border-left-color:#e2574a}
+.condline .yr-polar{background:#2c2550} .condline .yr-thaw{background:#21433a} .condline .yr-sun{background:#5e4518} .condline .yr-storm{background:#4a1f1a}
+.condline .wx-sleet{background:#34505a} .condline .wx-icefog{background:#3e4a52} .condline .wx-windstorm{background:#4a3a2a} .condline .wx-calm{background:#2a3e4a}
+
 /* ---------- raid ---------- */
 #raid{position:fixed; inset:0; background:#000; z-index:50}
 #cv{position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; display:block; cursor:crosshair}
@@ -603,6 +610,9 @@ const ITEMS = {
  scrap:{name:'Scrap metal',short:'SCRAP',type:'loot',w:2,h:1,value:130,rar:0,desc:'Sells for cash. Workbench material.'},
  wire:{name:'Copper wire',short:'WIRE',type:'loot',w:1,h:1,value:320,rar:0,desc:'Sells for cash.'},
  battery:{name:'Lantern battery',short:'BATT',type:'loot',w:1,h:1,value:280,rar:0,desc:'Sells for cash.'},
+ branch:{name:'Spruce branch',short:'BRNCH',type:'craft',w:1,h:3,value:15,rar:0,desc:'Cut from a tree in a raid (E at a tree). Carve one into a shiv, or two into a spear.'},
+ shiv:{name:'Wooden shiv',short:'SHIV',type:'melee',w:1,h:2,value:60,rar:0,dmg:52,pen:5,reach:1.7,rate:0.42,wear:15,desc:'A sharpened spruce stake. Quick and quiet. Breaks after about 15 hits. Carried anywhere, it replaces your fists (key 3).'},
+ spear:{name:'Spruce spear',short:'SPEAR',type:'melee',w:1,h:4,value:160,rar:0,dmg:78,pen:9,reach:2.7,rate:0.85,wear:25,desc:'Two branches lashed together and fire-hardened. Long reach, slow thrust. Breaks after about 25 hits. Carried anywhere, it replaces your fists (key 3).'},
  powder:{name:'Gunpowder tin',short:'POWDR',type:'loot',w:1,h:1,value:220,rar:1,desc:'Workbench material.'},
  medsup:{name:'Medical supplies',short:'MEDSUP',type:'loot',w:2,h:1,value:500,rar:1,desc:'Med station material.'},
  aquavit:{name:'Aquavit bottle',short:'AQVT',type:'loot',w:1,h:2,value:600,rar:1,desc:'Caraway spirit. Trades well.'},
@@ -691,7 +701,7 @@ function fixMag(w){ const m=wstats(w).magSize; if(w.mag>m){ const back=mk(w.ammo
 for(const k in ITEMS) ITEMS[k].id=k;
 for(const k of ['reddot','holo','prism','scope4','suppr','brake']) ITEMS[k].fits.push('nordlys','jarlmg');
 const RAR=['Common','Uncommon','Rare','Very rare','Legendary'];
-const GLYPH={jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
+const GLYPH={craft:'≡',melee:'†',jam:'≋',key:'⚿',pick:'⚒',relic:'★',cache:'▩',weapon:'⌐',ammo:'•',armor:'▣',helmet:'◓',rig:'▦',pack:'▤',med:'✚',warm:'♨',loot:'◆',cash:'$',pouch:'■',pockets:'■',att:'⊕'};
 const CALS={'9x18':['a918'],'5.45':['a545','a545bp'],'7.62R':['a762'],'12g':['a12']};
 const SLOTS=['primary','secondary','helmet','armor','rig','pack'];
 const SLOT_NAME={primary:'Primary',secondary:'Sidearm',helmet:'Helmet',armor:'Body armor',rig:'Rig',pack:'Backpack',pockets:'Pockets',pouch:'Secure pouch'};
@@ -706,6 +716,7 @@ function mk(id, o={}){
   if(d.grid) it.items=[];
   if(d.hp) it.hp=d.hp;
   if(d.uses) it.uses=d.uses;
+  if(d.wear) it.wear=d.wear;
   return Object.assign(it,o);
 }
 const dims = it => { const d=ITEMS[it.id]; return it.r?[d.h,d.w]:[d.w,d.h]; };
@@ -721,7 +732,7 @@ function place(c,it){
   return false;
 }
 function itemAt(c,cx,cy){ for(const it of c.items){ const [w,h]=dims(it); if(cx>=it.x&&cx<it.x+w&&cy>=it.y&&cy<it.y+h) return it; } return null; }
-function valueOf(it){ const d=ITEMS[it.id]; let v=d.value*(d.stack?it.n:1); if(d.dur) v*=0.35+0.65*(it.dur/d.dur); if(d.hp) v*=0.3+0.7*(it.hp/d.hp); if(d.uses&&it.uses!=null) v*=0.3+0.7*(it.uses/d.uses); if(d.type==='weapon'&&it.mag) v+=ITEMS[it.ammo].value*it.mag; if(it.att) for(const k in it.att) if(it.att[k]) v+=ITEMS[it.att[k].id].value; return v; }
+function valueOf(it){ const d=ITEMS[it.id]; let v=d.value*(d.stack?it.n:1); if(d.dur) v*=0.35+0.65*(it.dur/d.dur); if(d.hp) v*=0.3+0.7*(it.hp/d.hp); if(d.uses&&it.uses!=null) v*=0.3+0.7*(it.uses/d.uses); if(d.wear&&it.wear!=null) v*=0.3+0.7*(it.wear/d.wear); if(d.type==='weapon'&&it.mag) v+=ITEMS[it.ammo].value*it.mag; if(it.att) for(const k in it.att) if(it.att[k]) v+=ITEMS[it.att[k].id].value; return v; }
 function deepValue(it){ let v=valueOf(it); if(it.items) for(const s of it.items) v+=deepValue(s); return v; }
 const sellPrice = it => it.id==='cash' ? it.n : Math.max(1, Math.round(valueOf(it)*0.6));
 const buyPrice = id => { const d=ITEMS[id]; return Math.max(5, Math.round(d.value*(d.stack?d.stack:1)*1.25/5)*5); };
@@ -735,6 +746,9 @@ function iconFor(id){
   const dk='#1b1d20', st='#8d949a', wd='#7a4b26', wh='#e6e9ea', rd='#c0392b', gn='#4f8a4a', ye='#d6b24a', bl='#3d6fb3', gy='#555b60';
   const t=d.type;
   const XI={
+   branch:()=>{ F(14,2,4,28,'#5a3a22'); F(15,2,2,28,'#7a5032'); F(8,8,6,3,'#2f5a3a'); F(18,14,7,3,'#2f5a3a'); F(9,21,5,3,'#2f5a3a'); F(20,24,5,2,'#36583e'); },
+   shiv:()=>{ F(14,14,4,16,'#4a3424'); F(13,22,6,2,'#2a2018'); F(15,3,2,11,'#c8a676'); F(14,8,4,6,'#a8865a'); F(15,2,2,2,'#e8d4a8'); },
+   spear:()=>{ F(15,6,2,25,'#7a5032'); F(14,6,4,2,'#3a2a1a'); F(14,18,4,2,'#3a2a1a'); F(15,1,2,6,'#c8a676'); F(14,3,4,3,'#a8865a'); },
    jarlmg:()=>{ F(2,15,8,5,dk); F(10,13,14,6,dk); F(24,15,7,2,st); F(14,19,6,6,'#4a5236'); F(12,10,8,3,dk); F(4,16,4,2,'#b8402d'); },
    nordlys:()=>{ F(2,15,8,4,'#c9d1d4'); F(10,13,13,5,'#c9d1d4'); F(23,14,8,2,dk); F(13,18,4,7,dk); F(11,11,10,2,dk); F(12,15,9,1,'#3cf0c0'); F(4,16,4,1,'#3cf0c0'); },
    wraith:()=>{ F(8,9,16,5,'#222a32'); F(6,14,20,9,'#222a32'); F(10,5,12,4,'#222a32'); F(8,15,16,4,'#5fe0ff'); F(9,15,14,1,'#e0faff'); },
@@ -2467,6 +2481,7 @@ function renderInfo(el){
   if(d.hp) st.push(['Charge',`${Math.ceil(it.hp)}/${d.hp} HP`]);
   if(d.type==='key'){ const L=LOCKS[d.room]; st.push(['Opens',L?`${L.name} · ${MAPS[L.map].name}`:'?'],['Uses left',`${it.uses??d.uses}/${d.uses}`]); }
   if(d.type==='pick') st.push(['Picks left',`${it.uses??d.uses}/${d.uses}`]);
+  if(d.type==='melee') st.push(['Damage',d.dmg],['Reach',`${d.reach} m`],['Wear',`${it.wear??d.wear}/${d.wear} hits left`]);
   st.push(['Size',`${d.w}×${d.h}`]);
   el.innerHTML=`<span class="rtag r${d.rar}">${RAR[d.rar]}</span><h3>${esc(d.name)}</h3><p class="desc">${esc(d.desc)}</p><dl class="stats">${st.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl><div class="acts" id="acts"></div>`;
   const acts=el.querySelector('#acts');
@@ -2488,6 +2503,7 @@ function renderInfo(el){
     if(it.items && it.items.length && loc && loc.key==='stash') btn('Empty into stash',()=>{ const left=[]; for(const s of it.items.slice()){ if(!place(S.stash,s)) left.push(s); } it.items.length=0; it.items.push(...left); if(left.length) toast('Some items did not fit.'); afterChange(); },'btn ghost sm');
   }
   if(d.type==='weapon' && loc && !(R&&loc.key==='loot'&&R.lootTarget&&R.lootTarget.mate)) el.appendChild(attBox(it));
+  if(it.id==='branch' && loc && loc.key!=='loot') el.appendChild(craftBox(it));
 }
 /* attachments: fit, swap or take off optics, muzzles and magazines, in the hideout (from your stash) and in a raid
    (from anything you carry or the container you have open). Dragging an attachment onto a gun does the same. */
@@ -2761,6 +2777,10 @@ const WEATHER={
  blizzard:{name:'Blizzard',fog:1.8,cold:1.7,snow:3,sight:0.65,light:0.85},
  aurora:{name:'Aurora night',fog:0.85,cold:1.25,snow:0.4,sight:0.8,light:0.5,dark:true},
  indoor:{name:'Underground',fog:1,cold:1,snow:0,sight:1,light:1},
+ sleet:{name:'Freezing sleet',fog:1.3,cold:1.45,snow:1.8,sight:0.8,light:0.85,slip:0.6,hear:0.8},
+ icefog:{name:'Ice fog',fog:2.4,cold:1.2,snow:0.15,sight:0.5,light:0.95,hear:1.3},
+ windstorm:{name:'Windstorm',fog:1.25,cold:1.6,snow:2.2,sight:0.85,light:0.9,hear:0.55,wind:1},
+ calm:{name:'Still frost',fog:0.45,cold:1.35,snow:0,sight:1.25,light:1.1,hear:1.4},
 };
 const RMODS={
  none:{name:'',desc:()=>''},
@@ -2772,26 +2792,28 @@ const RMODS={
  bounty:{name:'Bounty',desc:b=>`Bounty: $5,000 on ${b}`},
 };
 const MAP_COND={
- kolvik:{weather:[['overcast',4],['clear',2],['blizzard',2],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['outage',1.5],['drop',1.5],['quiet',1],['bounty',1.2]],hot:['Comms','Barracks','Lab','Garage','Warehouse','Boathouse'],boss:'Station Chief Halvorsen'},
- whiteout:{weather:[['overcast',3],['blizzard',2]],mods:[['none',2],['raiders',2],['drop',2],['quiet',1]]},
- hrimfell:{weather:[['overcast',3],['clear',2],['blizzard',1],['aurora',1.5]],mods:[['none',3],['hotzone',1.5]],hot:['Lodge','Lift station','Garage','Ski shed','Fuel hut']},
- ravnskar:{weather:[['overcast',3],['blizzard',1.5],['aurora',2],['clear',1]],mods:[['none',4],['drop',1.5],['outage',1],['raiders',1]]},
- ironfjord:{weather:[['overcast',3],['clear',2],['blizzard',1.5],['aurora',2]],mods:[['none',3],['hotzone',2.5],['drop',2],['outage',1]],hot:['Warehouse','Signal box','Bunkhouse','Mess hall','Boathouse','Pump house']},
- storvidda:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['outage',1],['bounty',1.2]],hot:['Relay hall','Barracks','Garage','Bunker','Pump station'],boss:'Relay Chief Dahl'},
- skerries:{weather:[['clear',4],['overcast',3],['aurora',1.5],['blizzard',0.5]],mods:[['none',3],['hotzone',1.5],['outage',1]],hot:['Trading post',"Keeper's house","Hunters' camp",'Vestholm hangar','Austholm hangar']},
+ kolvik:{weather:[['overcast',4],['clear',2],['blizzard',2],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['outage',1.5],['drop',1.5],['quiet',1],['bounty',1.2]],hot:['Comms','Barracks','Lab','Garage','Warehouse','Boathouse'],boss:'Station Chief Halvorsen'},
+ whiteout:{weather:[['overcast',3],['blizzard',2],['sleet',1],['icefog',1.5],['windstorm',1.2]],mods:[['none',2],['raiders',2],['drop',2],['quiet',1]]},
+ hrimfell:{weather:[['overcast',3],['clear',2],['blizzard',1],['aurora',1.5],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',1.5]],hot:['Lodge','Lift station','Garage','Ski shed','Fuel hut']},
+ ravnskar:{weather:[['overcast',3],['blizzard',1.5],['aurora',2],['clear',1],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',4],['drop',1.5],['outage',1],['raiders',1]]},
+ ironfjord:{weather:[['overcast',3],['clear',2],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',2.5],['drop',2],['outage',1]],hot:['Warehouse','Signal box','Bunkhouse','Mess hall','Boathouse','Pump house']},
+ storvidda:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['outage',1],['bounty',1.2]],hot:['Relay hall','Barracks','Garage','Bunker','Pump station'],boss:'Relay Chief Dahl'},
+ skerries:{weather:[['clear',4],['overcast',3],['aurora',1.5],['blizzard',0.5],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',3],['hotzone',1.5],['outage',1]],hot:['Trading post',"Keeper's house","Hunters' camp",'Vestholm hangar','Austholm hangar']},
  vault:{weather:[['indoor',1]],mods:[['none',3],['bounty',1.5],['quiet',1]],boss:'Vault Warden Brekke'},
- kaldfjord:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2.5],['outage',1],['bounty',1.2]],hot:['Town hall','Police station','Harbor warehouse','Processing plant','Radar ops','Hangar','Research lab'],boss:'Harbormaster Vinter'},
- skarsvik:{weather:[['overcast',3],['clear',2],['blizzard',2],['aurora',2]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['quiet',1],['bounty',1.2]],hot:['Church','Town hall','General store','Processing plant','Hangar','Harbor warehouse'],boss:'Mine Foreman Rask'},
+ kaldfjord:{weather:[['overcast',3],['clear',3],['blizzard',1.5],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2.5],['outage',1],['bounty',1.2]],hot:['Town hall','Police station','Harbor warehouse','Processing plant','Radar ops','Hangar','Research lab'],boss:'Harbormaster Vinter'},
+ skarsvik:{weather:[['overcast',3],['clear',2],['blizzard',2],['aurora',2],['sleet',1],['icefog',0.8],['windstorm',1],['calm',1]],mods:[['none',2],['hotzone',2],['raiders',1.5],['drop',2],['quiet',1],['bounty',1.2]],hot:['Church','Town hall','General store','Processing plant','Hangar','Harbor warehouse'],boss:'Mine Foreman Rask'},
 };
 function hashStr(str){ let h=2166136261; for(const c of str) h=Math.imul(h^c.charCodeAt(0),16777619); return h>>>0; }
 function conditions(mapId,slot=condSlot()){
   const mc=MAP_COND[mapId]; const r=mulberry32(hashStr(mapId+':'+slot)); r();
-  const weather=wpick(mc.weather,r), mod=wpick(mc.mods,r);
+  // the time of year (48-year.js) shifts the weather odds and its effects; worked out from the slot so everyone agrees
+  const Y=yearAt(slot*COND_SLOT_MS); const weather=wpick(mc.weather.map(([k,w])=>[k,w*((Y.wx||{})[k]||1)]),r), mod=wpick(mc.mods,r);
   const hot=mod==='hotzone'?mc.hot[Math.floor(r()*mc.hot.length)]:null;
-  return {slot,weather,mod,hot,W:WEATHER[weather],label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)};
+  const W=Object.assign({},WEATHER[weather]); if(weather!=='indoor'){ W.cold*=Y.cold; W.light*=Y.light; W.sight*=Y.sight; W.fog*=Y.fog; W.slip=(W.slip||1)*(Y.slip||1); W.hear=(W.hear||1)*(Y.hear||1); if(Y.dark) W.dark=true; }
+  return {slot,weather,mod,hot,W,year:weather==='indoor'?null:Y,label:WEATHER[weather].name,modText:RMODS[mod].desc(mod==='hotzone'?hot:mc.boss)};
 }
 function rotateIn(){ const ms=(condSlot()+1)*COND_SLOT_MS-Date.now(); const h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60; return h?`${h} h ${m} min`:`${m} min`; }
-function condHtml(c){ return `<span class="wx wx-${c.weather}">${esc(c.label)}</span>${c.modText?`<span class="md">${esc(c.modText)}</span>`:''}`; }
+function condHtml(c){ return `${c.year?`<span class="wx yr yr-${c.year.id}">${esc(c.year.name)}</span>`:''}<span class="wx wx-${c.weather}">${esc(c.label)}</span>${c.modText?`<span class="md">${esc(c.modText)}</span>`:''}`; }
 const KV_POI=[['Comms',0,0,20,14],['Barracks',-55,-50,30,10],['Lab',55,-50,20,18],['Garage',-55,45,26,16],['Warehouse',-78,0,14,22],['Pump hut',50,55,7,6],['Boathouse',84,-8,9,10],['Hut',-20,72,7,6],['Hut',25,-78,7,6],['Hut',-82,75,8,7]];
 const KV_EX=[['Helipad',-85,-85],['North gate',0,-94],['Ice road',-5,94],['Pier boat',95,22]];
 const MAPS={
@@ -2816,10 +2838,11 @@ function renderDeploy(body){
    <section class="online"><div class="col" id="lobbyArea"></div>
     <div class="chatbox col"><div class="colhead"><h2 class="h2">Radio</h2><span class="lbl" id="chatHint"></span></div><div class="chatlog" id="chatLog" aria-live="polite"></div>
      <form class="chatform" id="chatForm" autocomplete="off"><select id="chatCh" aria-label="Channel"><option value="squad">Squad</option><option value="lobby">Lobby</option><option value="global">Everyone</option></select><input id="chatIn" maxlength="200" aria-label="Message" placeholder="Message"><button class="btn sm" type="submit">Send</button></form></div></section>`:''}
+   ${yearHtml()}
    <div class="colhead" style="margin-block:${online?'28px':'0'} 14px"><h2 class="h2">${online?'Maps':'Choose a raid'}</h2><span class="lbl">Conditions change in ${rotateIn()}</span><span class="lbl">Loadout worth ${fmt$(carriedValue())} · you lose it all if you die</span></div>
    <div class="diffbar"><span class="lbl">Difficulty</span><div class="seg" role="radiogroup">${Object.entries(DIFF).map(([k,d])=>`<button type="button" role="radio" data-diff="${k}" aria-checked="${(OPTS.diff||'normal')===k}">${d.name}</button>`).join('')}</div><div class="seg" role="radiogroup" style="margin-left:12px" title="AI planes on Skjærgård">${[['0','No AI planes'],['1','2 AI planes a side'],['2','4 AI planes a side']].map(([k,n])=>`<button type="button" role="radio" data-air="${k}" aria-checked="${String(OPTS.air??1)===k}">${n}</button>`).join('')}</div><small>${esc(DIFF[OPTS.diff||'normal'].desc)} ${online?'Used for your solo raids and lobbies you host; the lobby leader can change it.':''}</small></div>
    <div class="maps">${Object.entries(MAPS).map(([k,m])=>{ const fee=m.fee||0; return `<div class="mapc"><canvas data-map="${k}" width="640" height="400"></canvas><div class="bodyc"><h3>${m.name}</h3><p class="muted" style="margin:0">${m.blurb}</p><div class="kv"><span>Raid <b>${m.time/60} min</b></span><span>Threat <b>${m.threat}</b></span><span>Cold <b>${k==='whiteout'?'Severe':k==='vault'?'None':k==='skarsvik'?'Harsh, long':'Harsh'}</b></span>${fee?`<span>Entry <b class="cash">${fmt$(fee)}</b></span>`:''}</div><div class="condline">${condHtml(conditions(k))}</div><div class="acts">${m.coop?`<button class="btn" data-go="${k}">Solo raid</button>${online?`<button class="btn ghost" data-host="${k}">Host lobby</button>`:''}<span class="lbl coopnote">Co-op boss</span>`:m.pvp?(online?`<button class="btn" data-host="${k}">Host lobby</button><span class="lbl pvpnote">PvP only · needs 2+ sides</span>`:'<span class="lbl pvpnote">PvP only · play it on your server</span>'):`<button class="btn" data-go="${k}" ${S.cash<fee?'disabled':''}>Solo raid</button>${online?`<button class="btn ghost" data-host="${k}">Host lobby</button>`:''}`}</div></div></div>`; }).join('')}</div>
-   <div class="controls">${[['WASD','Move'],['Shift','Sprint'],['Ctrl','Sneak (toggle)'],['C','Crouch'],['Space','Jump · onto crates and low walls'],['F (hold)','Revive a downed squadmate'],['Mouse L','Fire / punch'],['Mouse R','Aim / scope'],['R','Reload'],['I','Inspect your weapon'],['1 · 2 · 3','Primary · sidearm · fists'],['B','Fire mode'],['E','Search / loot'],['Tab','Inventory'],['4','Bandage'],['5','Splint'],['6','Medkit'],['7','Cocoa'],['Enter','Chat · Tab switches · @name DMs a friend'],['Esc','Pause']].map(([k,v])=>`<div><kbd>${k}</kbd>${v}</div>`).join('')}</div>
+   <div class="controls">${[['WASD','Move'],['Shift','Sprint'],['Ctrl','Sneak (toggle)'],['C','Crouch'],['Space','Jump · onto crates and low walls'],['F (hold)','Revive a downed player (a stranger costs a med kit)'],['Mouse L','Fire / punch'],['Mouse R','Aim / scope'],['R','Reload'],['I','Inspect your weapon'],['1 · 2 · 3','Primary · sidearm · fists'],['B','Fire mode'],['E','Search / loot'],['Tab','Inventory'],['4','Bandage'],['5','Splint'],['6','Medkit'],['7','Cocoa'],['Enter','Chat · Tab switches · @name DMs a friend'],['Esc','Pause']].map(([k,v])=>`<div><kbd>${k}</kbd>${v}</div>`).join('')}</div>
    <p class="muted" style="max-width:70ch">Find an active extract and stand in it for 7 seconds to get out with everything you carry. Body heat drops outside; get indoors or near a heater. Sneaking keeps you quiet; sprinting is heard from 14 m. Bring cash bundles home and they go straight into your balance.</p>`;
   body.querySelectorAll('canvas[data-map]').forEach(c=>drawMapCard(c,c.dataset.map));
   body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>startRaid(b.dataset.go,null));
@@ -2843,6 +2866,7 @@ function renderLobbyArea(){
   if(l){
     const me=l.members.find(m=>m.id===NET.id)||{}; const owner=l.owner===NET.id; const nReady=l.members.filter(m=>m.ready).length; const allReady=nReady===l.members.length; const sides=new Set(l.members.map(m=>m.squad?'s'+m.squad:m.id)).size; const dm=!!DM_INFO[l.mode]; const teams=!!MAPS[l.map].teams||l.mode==='tdm'; const pvpShort=dm?l.members.length<2:(!!MAPS[l.map].pvp&&sides<2);
     const fee=MAPS[l.map].fee||0; const broke=S.cash<fee; const waiting=l.state==='waiting';
+    if(waiting&&broke&&me.ready&&!NET.feeUnready){ NET.feeUnready=true; wsend({t:'lready',ready:false}); toast(`Un-readied: you can't pay the ${fmt$(fee)} entry for ${MAPS[l.map].name}.`); setTimeout(()=>NET.feeUnready=false,1500); }
     el.innerHTML=`<div class="colhead"><h2 class="h2">${esc(l.name)}</h2><span class="lbl">${waiting?(allReady?'Everyone is ready':`${nReady} of ${l.members.length} ready`):`In raid · ${fmtTime(lobbyTL(l))} left`}</span></div>
      <div class="lobbymap">${owner&&waiting?`<label class="lbl" for="lobbyMode">Mode</label><select id="lobbyMode">${[['raid','Extraction raid'],['tdm','Team deathmatch'],['ffa','Free for all']].map(([k,n])=>`<option value="${k}" ${k===(l.mode||'raid')?'selected':''}>${n}</option>`).join('')}</select>`:`<span class="lbl">Mode</span><b>${dm?esc(DM_INFO[l.mode].name):'Extraction raid'}</b>`}</div>
      ${dm?`<p class="muted" style="margin:0;font-size:13px">${esc(DM_INFO[l.mode].how)} No AI, 10 minutes, respawns, the same kit for everyone. Your own gear stays home. $${DM_PAY.kill} a kill, $${DM_PAY.win.toLocaleString()} for the win.</p>`:''}
@@ -3383,6 +3407,60 @@ function dmFinish(kind){
   $('#backBtn').onclick=goHub;
 }
 
+/* 47-melee: branches, shivs and spears
+   In a raid, walk up to a tree and press E to cut a branch (2.5 s, it makes some noise; each tree gives two). In the
+   item panel, one branch carves into a shiv and two make a spear, in a raid or at the hideout. A shiv or spear you
+   carry anywhere (pockets, rig, pack, pouch) replaces your fists on key 3: the best one you have is used. Each hit
+   wears it down and it breaks when worn out. Online, the damage comes from the item (ITEMS.shiv / ITEMS.spear). */
+const CUT={time:2.5, perTree:2, reach:1.9};
+// the best melee item you carry, if any
+function meleeItem(){ if(!S||!S.eq) return null; let best=null; for(const sl of ['rig','pockets','pack','pouch']){ const c=S.eq[sl]; if(!c||!c.items) continue; for(const it of c.items){ const d=ITEMS[it.id]; if(d.type==='melee'&&(it.wear??d.wear)>0&&(!best||d.dmg>ITEMS[best.id].dmg)) best=it; } } return best; }
+function meleeWear(it){ const d=ITEMS[it.id]; it.wear=(it.wear??d.wear)-1; if(it.wear>0) return;
+  for(const c of playerConts()){ const i=c.items.indexOf(it); if(i>=0){ c.items.splice(i,1); break; } } msg(`Your ${d.name.toLowerCase()} broke.`); sfxNoise(0.12,1400,0.2,'bandpass'); vmUid=null; }
+
+/* ---- trees ---- */
+function treeGrid(){ if(R.treeGrid) return R.treeGrid; const m=new Map(), C=6; (R.treePts||[]).forEach(([x,y,z],i)=>{ const k=Math.floor(x/C)+','+Math.floor(z/C); let l=m.get(k); if(!l) m.set(k,l=[]); l.push(i); }); return R.treeGrid={m,C}; }
+function nearTree(){ if(!R.treePts||!R.treePts.length||P.down||R.ride||R.fly) return null; const G=treeGrid(), cx=Math.floor(P.pos.x/G.C), cz=Math.floor(P.pos.z/G.C); let best=null, bd=CUT.reach;
+  for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++) for(const i of (G.m.get((cx+a)+','+(cz+b))||[])){ const t=R.treePts[i]; const d=Math.hypot(t[0]-P.pos.x,t[2]-P.pos.z); if(d<bd&&((R.treeCut||{})[i]||0)<CUT.perTree){ bd=d; best=i; } }
+  return best; }
+function startCut(i){ if(R.cutting) return; R.cutting={i,t:0,x:P.pos.x,z:P.pos.z,k:0}; P.trigger=false; hearShot(P.pos.x,P.pos.z,9); }
+function cutTick(dt){ const c=R.cutting; if(!c) return;
+  if(P.dead||P.down||Math.hypot(P.pos.x-c.x,P.pos.z-c.z)>0.7||P.trigger||R.invOpen){ R.cutting=null; return; }
+  c.t+=dt; if(Math.floor(c.t/0.5)>c.k){ c.k++; sfxNoise(0.07,700+Math.random()*300,0.22); }
+  if(c.t<CUT.time) return; R.cutting=null; R.treeCut=R.treeCut||{}; R.treeCut[c.i]=(R.treeCut[c.i]||0)+1;
+  const it=mk('branch'); if(!addToPlayer(it)){ dropToGround(it); msg('Cut a branch. No room, so it is at your feet.'); } else msg(`Cut a branch${R.treeCut[c.i]>=CUT.perTree?'. Nothing more worth cutting on this tree':''}.`); sfxPickup&&sfxPickup(); if(R.invOpen) R.dirty=true; }
+
+/* ---- crafting from the item panel ---- */
+function branchesAround(){ const L=[]; const conts=R?playerConts():[S.stash]; for(const c of conts) for(const it of c.items) if(it.id==='branch') L.push([c,it]); return L; }
+function craftMelee(id,need,first){ const L=branchesAround().sort((a,b)=>(b[1]===first)-(a[1]===first)); if(L.length<need) return;
+  for(const [c,it] of L.slice(0,need)) c.items.splice(c.items.indexOf(it),1);
+  const out=mk(id); const ok=R?addToPlayer(out):place(S.stash,out); if(!ok){ if(R) dropToGround(out); else { for(const [c,it] of L.slice(0,need)) place(c,it); toast('No room in your stash.'); return; } }
+  sfxNoise(0.25,900,0.15); toast(`Made a ${ITEMS[id].name.toLowerCase()}.`); SEL={it:out}; afterChange(); }
+function craftBox(it){ const box=document.createElement('div'); box.className='atts'; const n=branchesAround().length;
+  box.innerHTML=`<span class="lbl">Carve</span>`; const mkb=(label,id,need)=>{ const b=document.createElement('button'); b.className='btn ghost sm'; b.textContent=label; b.disabled=n<need; b.onclick=()=>craftMelee(id,need,it); box.appendChild(b); };
+  mkb('Shiv (1 branch)','shiv',1); mkb(`Spear (2 branches${n<2?`, you have ${n}`:''})`,'spear',2); return box; }
+
+/* 48-year: the time of year
+   Four seasons go round every 8 real days (two days each), the same for everyone, and change every raid: how cold it
+   is, how light, how far everyone sees, how slippery the ground is, how far sound carries, and which weather turns up.
+   (Not to be confused with the leaderboard seasons, which wipe progress.) conditions() in 41-deploy.js folds the time
+   of year into each raid's weather; applyWeather() in 51-maps.js turns it into gameplay. */
+const YEAR_DAYS=2;
+const YEAR=[
+  {id:'polar',name:'Polar night',cold:1.25,light:0.6,sight:0.85,fog:1,dark:true,wx:{aurora:2.5,clear:0.6,calm:1.5,sleet:0.5},
+   desc:'The sun never comes up. Every raid is dark and colder, everyone sees less far, and the aurora is out more often.'},
+  {id:'thaw',name:'Thaw',cold:0.85,light:1,sight:1,fog:1.25,slip:0.7,wx:{sleet:3,icefog:2,blizzard:0.6,clear:0.8,calm:0.6},
+   desc:'Wet snow and slush: the ground is slippery and sleet and ice fog roll in, but it is milder.'},
+  {id:'sun',name:'Midnight sun',cold:0.7,light:1.22,sight:1.2,fog:0.8,wx:{clear:2.5,calm:2,blizzard:0.4,aurora:0.15,sleet:0.6,windstorm:0.5},
+   desc:'It never gets dark. Warmer and brighter, and everyone, enemies included, sees farther.'},
+  {id:'storm',name:'Storm season',cold:1.1,light:0.9,sight:0.95,fog:1.1,hear:0.85,wx:{windstorm:3,blizzard:2,clear:0.5,calm:0.5},
+   desc:'Gales off the sea: windstorms and blizzards are common, and the wind covers footsteps.'},
+];
+const yearIdx=ms=>{ const d=Math.floor(ms/864e5/YEAR_DAYS); return ((d%4)+4)%4; };
+const yearAt=ms=>YEAR[yearIdx(ms)];
+function yearLeft(){ const P0=YEAR_DAYS*864e5, ms=P0-(Date.now()%P0); const h=Math.floor(ms/36e5); return h>=24?`${Math.floor(h/24)} d ${h%24} h`:`${h} h ${Math.floor(ms/6e4)%60} min`; }
+function yearHtml(){ const Y=yearAt(Date.now()), N=YEAR[(yearIdx(Date.now())+1)%4]; return `<div class="yearbar yr-${Y.id}"><span class="lbl">Time of year</span><b>${esc(Y.name)}</b><span class="muted">${esc(Y.desc)}</span><span class="lbl">${esc(N.name)} in ${yearLeft()}</span></div>`; }
+
 /* 50-engine: 3D engine: renderer, textures, materials, collision, map building helpers */
 /* ================= 3D ENGINE ================= */
 let renderer, scene, camera, vmScene, vmCam, vmGun=null, vmUid=null, flash, snow, R=null, P=null;
@@ -3840,7 +3918,7 @@ function applyMods(sps){
   if(R.map==='skarsvik'){ const z=SK_EVAC[Math.floor(rand()*SK_EVAC.length)]; R.evac={t:MAPS.skarsvik.time*rr(0.45,0.6),x:z.x,z:z.z,name:z.name,dur:100,state:'pending'}; R.evacEx={name:'Helicopter evac',x:z.x,z:z.z,r:7,active:false,time:5,evac:true}; R.extracts.push(R.evacEx); }
 }
 function applyWeather(){
-  const W=R.cond.W; R.sight=W.sight;
+  const W=R.cond.W; R.sight=W.sight; R.slip=W.slip||1; R.hear=W.hear||1; R.windy=!!W.wind; // 48-year.js: slippery ground, how far sound carries, gusts
   if(scene.fog) scene.fog.density=Math.min(0.075,scene.fog.density*W.fog);
   R.drain*=W.cold;
   scene.traverse(o=>{ if(o.isHemisphereLight||o.isDirectionalLight) o.intensity*=W.light; });
@@ -4039,7 +4117,7 @@ function canSeeT(e,t,dist){
   if(e.state!=='combat' && dist>5){ const fx=-Math.sin(e.yaw), fz=-Math.cos(e.yaw); const dx=(t.x-e.pos.x)/dist, dz=(t.z-e.pos.z)/dist; if(fx*dx+fz*dz<(e.aware>R.t?-0.25:0.15)) return false; }
   return los(e.pos.x,e.pos.y+eEye(e),e.pos.z,t.x,t.eye,t.z);
 }
-function noiseR(t){ if(t.grace) return 0; if(t.sprint) return 14; if(!t.moving) return 0; if(t.sneak) return 1.2; if(t.crouch) return 2.5; return 6; }
+function noiseR(t){ if(t.grace) return 0; const h=(R&&R.hear)||1; if(t.sprint) return 14*h; if(!t.moving) return 0; if(t.sneak) return 1.2*h; if(t.crouch) return 2.5*h; return 6*h; }
 function bldAt(x,z){ for(const b of R.bld) if(x>b.x0-0.2&&x<b.x1+0.2&&z>b.z0-0.2&&z<b.z1+0.2) return b; return null; }
 // route through a doorway when the enemy and its goal are on different sides of a wall
 function routeVia(e,tx,tz){
@@ -4242,7 +4320,7 @@ function enemyShoot(e,t,dist){
   if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
   else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
-function hearShot(x,z,radius){ if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
+function hearShot(x,z,radius){ radius*=Math.sqrt((R&&R.hear)||1); if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
 function armorRes(a,dmg,pen){ const d=ITEMS[a.id]; const ratio=a.dur/d.dur; const eff=d.cls*10*(0.5+0.5*ratio); const chance=pen>=eff?0.92:Math.pow(pen/eff,2.2)*0.85; const through=rand()<chance; a.dur=Math.max(0,a.dur-(pen/10+(through?0.6:1.4))*(dmg/40)); return through?{d:dmg*(1-0.07*d.cls),pen:true}:{d:dmg*0.12+2,pen:false}; }
 function hitEnemy(e,part,am,pt,by){
   { const sh=by?R.tgts.find(t=>t.id===by):null; e.lastHitFrom=sh?{x:sh.x,z:sh.z}:{x:P.pos.x,z:P.pos.z}; bodyHit(e.rig,e.lastHitFrom.x,e.lastHitFrom.z,part); }
@@ -4312,7 +4390,12 @@ function buildGun(id,w,o={}){
   const glove=(S&&S.cos)?cosMat(o.gloves||S.cos.fit.gloves):MC(0x3a3a2c);
   const skin=o.skin||(S&&S.cos&&id?gunSkin(id):'w_factory'); if(skin!=='w_factory'&&COSM[skin]){ const A=cosMat(skin); wood=olive=steel=snowM=A; dark=cosMat(skin,'dk'); }
   const B=(w,h,d,x,y,z,m,rx=0)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); b.rotation.x=rx; g.add(b); return b; };
-  if(!id){ B(.09,.08,.1,.1,0,0,glove); B(.09,.08,.1,-.14,-.02,.06,glove); g.userData.fists=true; return g; }
+  if(!id){ B(.09,.08,.1,.1,0,0,glove); B(.09,.08,.1,-.14,-.02,.06,glove); g.userData.fists=true;
+    // a shiv or spear in the right hand (47-melee.js)
+    const mi=o.melee!==undefined?o.melee:(typeof meleeItem==='function'&&P?meleeItem():null);
+    if(mi&&mi.id==='shiv'){ B(.022,.026,.12,.1,.02,.0,MC(0x4a3424)); B(.016,.016,.16,.1,.02,-.14,MC(0xc8a676)); B(.008,.008,.04,.1,.02,-.24,MC(0xe8d4a8)); }
+    if(mi&&mi.id==='spear'){ B(.028,.028,1.5,.1,.02,-.45,MC(0x7a5032)); B(.03,.03,.04,.1,.02,-.1,MC(0x3a2a1a)); B(.02,.02,.22,.1,.02,-1.3,MC(0xc8a676)); g.userData.spear=true; }
+    return g; }
   let muz=-0.3;
   const att=(w&&w.att)||{}; const geo=GUNGEO[id]; const pt={}; // moving parts: mag, slide, pump, bolt, and the two hands
   if(id==='makar'){ pt.slide=B(.035,.055,.17,0,0,-.06,dark); B(.03,.09,.04,0,-.06,.01,dark,.2); pt.mag=B(.024,.07,.03,0,-.072,.013,steel,.2); muz=-.15; }
@@ -4374,7 +4457,7 @@ const RETICLES={
 };
 function scopeSvg(){ let dots=''; for(const v of [-24,-16,-8,8,16,24]) dots+=`<circle cx="${v}" cy="0" r=".9"/><circle cx="0" cy="${v}" r=".9"/>`; return `<svg viewBox="-100 -100 200 200" class="scopesvg"><g fill="none" stroke="#000"><path d="M-100 0H100M0 -100V100" stroke-width=".35"/><path d="M-100 0H-32M32 0H100M0 32V100M0 -100V-32" stroke-width="2.4"/></g><g fill="#000">${dots}</g><circle r=".7" fill="#d4241c"/></svg>`; }
 function setReticle(kind){ if(!R||R.ret===kind) return; R.ret=kind; const el=$('#reticle'); el.hidden=!kind; el.innerHTML=kind?RETICLES[kind]:''; $('#prismRing').hidden=kind!=='prism'; }
-function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists')+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
+function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists'+((meleeItem()||{}).uid||''))+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
 
 // guns in other people's hands: the same model as your own first-person gun (factory finish, no hands), merged into one
 // mesh per material and shared, so a raid full of armed scavs costs a few draw calls each
@@ -5176,7 +5259,7 @@ function remotePose(p,dt){ if(!p.rig) return; const st=p.st;
    most a couple of people. You can hear them (a buzz), see their lights, and shoot them down (they drop parts). A
    radio jammer in your gear cuts their link within 40 m: they lose you and drift. */
 const DRONE={hp:45, alt:15, cruise:7, surge:11, sight:62, standoff:26, report:1.0, battery:[240,360], recharge:35, leash:240,
-  count:{kolvik:1,whiteout:1,skarsvik:2,storvidda:2,kaldfjord:5}};
+  count:{kolvik:2,whiteout:2,skarsvik:3,storvidda:3,ravnskar:1,kaldfjord:7}};
 const FLY={n:16, tau:0.08, exc:2, inh:0.3, land:0.12, pflShift:2, turnGain:3.2, loomTh:1, levy:1.6};
 const _th=i=>i/FLY.n*Math.PI*2;                            // preferred direction of column / ring neuron i
 const _wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
@@ -5381,7 +5464,7 @@ function startRaid(mapId,launch){
   const sp0=dmMode?dmStartSpawn():sps2[slot%sps2.length]; const mi=welcome&&welcome.mate||0; const sp={x:sp0.x+(mi?((mi%2)?1:-1)*Math.ceil(mi/2)*(map.heli?11:map.sleds?3.4:1.8):0),z:sp0.z,h:sp0.h}; { const v=new THREE.Vector3(sp.x,0,sp.z); resolve(v,0.4); sp.x=v.x; sp.z=v.z; }
   R.extracts.filter(e=>e.active).forEach(beacon);
   flash=new THREE.PointLight(0xffc070,0,14); scene.add(flash);
-  snow=makeSnow(Math.round((mapId==='whiteout'?1800:mapId==='vault'?0:1100)*R.cond.W.snow),(mapId==='whiteout'?3.2:1.6)*(R.cond.weather==='blizzard'?1.8:1));
+  snow=makeSnow(Math.round((mapId==='whiteout'?1800:mapId==='vault'?0:1100)*R.cond.W.snow),(mapId==='whiteout'?3.2:1.6)*(R.cond.weather==='blizzard'||R.cond.weather==='windstorm'?1.8:R.cond.weather==='sleet'?2.4:1));
   R.targets=R.ray.concat(...R.enemies.map(e=>e.parts));
   spawnCover(sps); applyWeather(); setupCulling(); if(R.enemies.length) buildNav(); if((!welcome||welcome.hostId===welcome.id)&&!dmMode) spawnDrones(mapId);
   P={pos:new THREE.Vector3(sp.x,0,sp.z),yaw:Math.atan2(sp.x,sp.z),pitch:0,vx:0,vz:0,eye:1.62,crouch:false,sprint:false,stam:100,hp:{...MAXHP},bleed:{},frac:{},temp:100,adsHeld:false,adsT:0,trigger:false,semiLock:false,cool:0,reloadT:0,reloadType:null,using:null,auto:true,keys:{},bob:0,kick:0,hurt:0,dead:false,slot:S.eq.primary?'primary':S.eq.secondary?'secondary':'fists',fov:72,sneak:false,punchT:0,grace:SPAWN.grace,stepT:0,shiverT:0,y:0,vy:0,down:null,cam:pmCam(),foot:0,bobW:0,landT:0,fat:0,sprB:0};
@@ -5459,8 +5542,8 @@ function dmgPart(part,amt,cause){
   else spread(amt*0.7,cause);
 }
 function spread(amt,cause){ const alive=PARTS.filter(p=>P.hp[p]>0); if(!alive.length) return die(cause); const each=amt/alive.length; for(const p of alive){ P.hp[p]-=each; if(P.hp[p]<=0){ P.hp[p]=0; if(p==='head'||p==='thorax') return die(cause); } } }
-function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&matesUp()) return goDown(cause); reallyDie(cause); }
-function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
+function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&othersUp()) return goDown(cause); reallyDie(cause); }
+function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { { const by=R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:(R.downBy||null); if(NET.on&&by) nsend({t:'pdied',by}); } if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
 function myBodyItems(){ const out=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; if(it.items){ for(const x of it.items){ delete x.hid; out.push(x); } it.items=[]; } delete it.hid; out.push(it); } for(const x of S.eq.pockets.items){ delete x.hid; out.push(x); } return out.map(x=>reUid(JSON.parse(JSON.stringify(x)))); }
 function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
@@ -5487,14 +5570,17 @@ function fire(w){
   if(ws.noise>=1) flashAt(camera.position.x,camera.position.y,camera.position.z,true);
   sfxShot(w.id,0,ws.noise); const nr=(w.id==='makar'?40:65)*ws.noise; hearShot(P.pos.x,P.pos.z,nr); if(NET.on&&!NET.host) nsend({t:'shot',x:P.pos.x,z:P.pos.z,r:nr});
 }
+// fists, or the shiv or spear you carry (47-melee.js): returns how long until the next swing
 function punch(){
+  const mi=meleeItem(), md=mi?ITEMS[mi.id]:null;
   P.kick=1; P.punchT=1; camera.updateMatrixWorld();
-  _dir.set(0,0,-1).applyQuaternion(camera.quaternion); ray.set(camera.position,_dir); ray.far=2.1;
-  const h=ray.intersectObjects(R.targets,false)[0]; if(!h) { sfxNoise(0.08,900,0.12); return; }
-  const ud=h.object.userData; const am={dmg:34,pen:6}; sfxNoise(0.1,500,0.3);
-  if(ud.enemy&&!ud.enemy.dead) hitEnemy(ud.enemy,ud.part,am,h.point);
-  else if(ud.player){ if(isMate(ud.player)) friendlyFire(ud.player,h.point); else { puff(h.point,0x8a1010,5,1.2); hitmark(ud.part==='head'); nsend({t:'phit',pid:ud.player,part:ud.part,ammo:'fist'}); } }
-  hearShot(P.pos.x,P.pos.z,4);
+  _dir.set(0,0,-1).applyQuaternion(camera.quaternion); ray.set(camera.position,_dir); ray.far=md?md.reach:2.1;
+  const h=ray.intersectObjects(R.targets,false)[0]; if(!h) { sfxNoise(0.08,md?1300:900,0.12); return md?md.rate:0.5; }
+  const ud=h.object.userData; const am=md?{dmg:md.dmg,pen:md.pen,id:mi.id}:{dmg:34,pen:6}; sfxNoise(0.1,md?800:500,0.3); let hit=false;
+  if(ud.enemy&&!ud.enemy.dead){ hitEnemy(ud.enemy,ud.part,am,h.point); hit=true; }
+  else if(ud.player){ if(isMate(ud.player)) friendlyFire(ud.player,h.point); else { puff(h.point,0x8a1010,5,1.2); hitmark(ud.part==='head'); nsend({t:'phit',pid:ud.player,part:ud.part,ammo:md?mi.id:'fist'}); hit=true; } }
+  if(hit&&mi) meleeWear(mi);
+  hearShot(P.pos.x,P.pos.z,4); return md?md.rate:0.5;
 }
 function ammoCount(id){ let n=0; for(const c of playerConts()) for(const it of c.items) if(it.id===id) n+=it.n; return n; }
 function takeAmmoFrom(conts,w){
@@ -5558,6 +5644,7 @@ function pmAccel(tx,tz,onG,dt){
   else if(want<cur-0.05) a=(tx*P.vx+tz*P.vz)<0?M.turn:M.stop;
   else if((tx*P.vx+tz*P.vz)<0) a=M.turn;
   else a=cur>3.6?M.sprintAcc:M.acc;
+  if(onG&&!P.para) a*=R.slip||1; // sleet and slush: slower to get going and to stop
   let dx=tx-P.vx, dz=tz-P.vz; const m=Math.hypot(dx,dz), lim=a*dt; if(m>lim){ dx*=lim/m; dz*=lim/m; }
   P.vx+=dx; P.vz+=dz; }
 function pmLand(v){ const C=P.cam; C.vy-=v*PMOVE.land.dip*8; if(v>PMOVE.land.slowAt) P.landT=0.35; }
@@ -5597,7 +5684,7 @@ function updatePlayer(dt){
   P.sprint=can&&!down&&(k.ShiftLeft||k.ShiftRight)&&fz<0&&!P.crouch&&P.adsT<0.3&&!legs&&P.stam>4&&!P.using&&P.reloadT<=0;
   const onG=P.vy===0;
   let sp=3.5; if(P.sprint) sp=5.9; if(P.crouch) sp=1.9; if(P.sneak&&!P.sprint) sp=Math.min(sp,2.0); if(P.adsT>0.5) sp*=0.6; if(legs) sp*=0.6; if(P.using) sp*=0.5; if(down) sp=0.8; if(P.swim) sp*=0.35; if(P.para) sp=4; if(P.landT>0){ P.landT-=dt; sp*=0.55; }
-  P.stam=clamp(P.stam+(P.sprint?-17:11)*dt,0,100);
+  P.stam=clamp(P.stam+(P.sprint?-17*(R.windy?1.35:1):11)*dt,0,100);
   let tx=0,tz=0; if(len){ fx/=len; fz/=len; const s=Math.sin(P.yaw), c=Math.cos(P.yaw); tx=(fx*c+fz*s)*sp; tz=(-fx*s+fz*c)*sp; }
   pmAccel(tx,tz,onG,dt);
   { const ox=P.pos.x, oz=P.pos.z; moveCol(P.pos,P.vx*dt,P.vz*dt,0.35,P.y); if(R.free&&R.free(P.pos.x,P.pos.z)>2.5){ P.pos.x=ox; P.pos.z=oz; } }
@@ -5609,7 +5696,7 @@ function updatePlayer(dt){
   if(R.race&&!P.dead&&P.y<R.terrainBase(P.pos.z)-2.5) sledCrash('Fell into a crevasse');
   }
   if(P.temp<30&&!P.dead){ P.shiverT-=dt; if(P.shiverT<=0){ P.shiverT=2+rand()*2; sfxShiver(); } }
-  windSet(R.map==='vault'?0.02:P.indoor?0.08:(R.map==='whiteout'?0.45:0.28));
+  windSet(R.map==='vault'?0.02:P.indoor?0.08:(R.map==='whiteout'?0.45:0.28)*(R.windy?1.8:R.cond&&R.cond.weather==='calm'?0.35:1));
   P.eye+=((P.dead?0.3:down?0.42:R.ride?1.32:P.crouch?1.08:1.62)-P.eye)*Math.min(1,dt*10);
   // warmth
   const indoor=inIndoor(P.pos), near=R.heaters.some(h=>Math.hypot(h.x-P.pos.x,h.z-P.pos.z)<3.5);
@@ -5620,14 +5707,14 @@ function updatePlayer(dt){
   P.temp=clamp(P.temp,0,100); P.indoor=indoor; P.nearHeat=near;
   if(P.temp<=0&&!down) spread(2.4*dt,'Froze to death');
   if(!down) for(const p of PARTS) if(P.bleed[p]&&!P.dead) dmgPart(p,1.05*dt,'Bled out');
-  if(down&&!P.dead){ P.down.t-=dt; if(P.down.t<=0) reallyDie('Bled out while down'); else if(!matesUp()) reallyDie(P.down.cause); }
+  if(down&&!P.dead){ P.down.t-=dt; if(P.down.t<=0) reallyDie('Bled out while down'); else if(!othersUp()) reallyDie(P.down.cause); }
   updRevive(dt);
   // weapon
   P.cool-=dt;
   if(P.reloadT>0){ P.reloadT-=dt; if(P.reloadT<=0){ const w=curW(); if(w){ const n=takeAmmoFrom(playerConts(),w); if(R.invOpen) renderRaidInv(); if(!n) msg('Out of ammo.'); } } }
   if(P.using){ P.using.t-=dt; if(P.using.t<=0) finishUse(); }
   const w=curW();
-  if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock){ punch(); P.semiLock=true; P.cool=0.5; } }
+  if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock&&!R.cutting){ P.cool=punch()||0.5; P.semiLock=true; } }
   const wantAds=P.adsHeld&&can&&!P.down&&!P.sprint&&!!w&&P.reloadT<=0;
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
@@ -5636,6 +5723,7 @@ function updatePlayer(dt){
   P.kick=Math.max(0,P.kick-dt*9); P.punchT=Math.max(0,(P.punchT||0)-dt*5); P.hurt=Math.max(0,P.hurt-dt*0.9); P.shake=Math.max(0,(P.shake||0)-dt);
   // camera
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
+  if(R.windy&&!P.dead){ const gust=Math.max(0,Math.sin(R.t*0.6)*Math.sin(R.t*1.7+1)); sway+=Math.sin(R.t*2.3)*0.006*gust*(P.adsT>0.5?1.4:1); swy+=Math.cos(R.t*1.9)*0.003*gust; } // windstorm gusts push your aim
   if(P.hp.larm<=0||P.hp.rarm<=0){ sway+=Math.sin(R.t*1.7)*0.01; swy+=Math.sin(R.t*1.3)*0.008; }
   const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch;
   const sh=(P.shake||0)*0.06;
@@ -5645,7 +5733,7 @@ function updatePlayer(dt){
   // viewmodel pose
   syncVM();
   if(vmGun){ const scoped=(ret==='scope'||ret==='prism')&&P.adsT>0.85; setReticle(!P.dead&&P.adsT>0.8&&(ret==='dot'||ret==='holo'||(ret==='prism'&&scoped))?ret:null); vmGun.visible=!scoped&&!P.dead&&!P.down&&!(R.fly&&!R.fly.hand); $('#scope').hidden=!(scoped&&ret==='scope');
-    if(vmGun.userData.fists){ const pt=P.punchT||0; const us=P.using?1:0; vmGun.position.set(0.02,-0.22-us*0.2,-0.42+Math.sin(pt*Math.PI)*-0.22); vmGun.rotation.set(Math.sin(P.bob)*0.04,0,0); }
+    if(vmGun.userData.fists){ const pt=P.punchT||0; const us=P.using?1:0; vmGun.position.set(0.02,-0.22-us*0.2-(R.cutting?0.08:0),-0.42+Math.sin((R.cutting?(R.cutting.t*2)%1:pt)*Math.PI)*-(vmGun.userData.spear?0.42:0.22)); vmGun.rotation.set(Math.sin(P.bob)*0.04,0,0); }
     else { const d=ITEMS[w.id]; if(!P.vm){ P.vm=vmNew(); for(const o of [...vmScene.children]) if(o.userData.vmProp) vmScene.remove(o); }
       // everything the hands do lives in 56-vm-anim.js; this hands it what the player is doing
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
@@ -5673,12 +5761,17 @@ const mateIds=()=>NET.on?Object.keys(NET.players).filter(id=>isMate(id)&&NET.pla
 // squadmates in this raid who are up (not dead, not down) and could pick you up
 const matesUp=()=>mateIds().some(id=>{ const st=NET.players[id].st; return !st.dead&&!st.down; });
 const DOWN_TIME=60, REVIVE_TIME=4;
+// online, anyone else in the raid who's up could come and get you back on your feet, squad or not (not in deathmatch)
+const othersUp=()=>NET.on&&!(R&&R.dm)&&Object.keys(NET.players).some(id=>{ const st=NET.players[id].st; return st&&!st.dead&&!st.down; });
+// reviving someone outside your squad costs a med kit: the cheapest IFAK, combat medkit or field kit you carry
+function reviveKit(){ let best=null, bc=null; for(const c of playerConts()) for(const it of c.items){ const d=ITEMS[it.id]; if(d.med==='heal'&&(!best||d.value<ITEMS[best.id].value)){ best=it; bc=c; } } return best?{it:best,c:bc}:null; }
 function goDown(cause){
+  R.downBy=R.lastHitBy&&R.t-R.lastHitT<5?R.lastHitBy:null; // whoever put you down gets the kill if you bleed out
   P.down={t:DOWN_TIME,hp:150,cause,by:null}; P.trigger=false; P.adsHeld=false; P.reloadT=0; P.using=null; P.crouch=false; P.sprint=false; P.bleed={}; P.vy=Math.min(P.vy,0);
   if(P.hp.head<=0) P.hp.head=1; if(P.hp.thorax<=0) P.hp.thorax=1;
   if(R.invOpen) closeInv(true); sfxGrunt(0.6,80); P.hurt=1;
   nsend({t:'dbox',cid:'d'+NET.id,x:P.pos.x,z:P.pos.z,name:S.name||'Nomad',items:JSON.parse(JSON.stringify(downItems()))});
-  nsend({t:'msg',text:`${S.name||'Nomad'} is down`}); msg(`You are down. A squadmate has ${DOWN_TIME} s to revive you.`);
+  nsend({t:'msg',text:`${S.name||'Nomad'} is down`}); msg(`You are down. Anyone can get you up in the next ${DOWN_TIME} s (a stranger needs a med kit). Hold G to give up.`);
 }
 // what a squadmate can take from you while you are down: your guns, helmet, armor and whatever is in your pockets, rig and pack
 function downItems(){ const out=[]; for(const sl of ['primary','secondary','helmet','armor']) if(S.eq[sl]) out.push(S.eq[sl]); for(const sl of ['pockets','rig','pack']){ const c=S.eq[sl]; if(c) for(const x of c.items) out.push(x); } return out.map(x=>{ const c=JSON.parse(JSON.stringify(x)); delete c.hid; return c; }); }
@@ -5691,17 +5784,19 @@ function takeMine(uid,from){
 function revived(from){
   if(!P.down) return; P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id});
   for(const p of PARTS) P.hp[p]=Math.max(P.hp[p],Math.round(MAXHP[p]*0.3)); P.bleed={}; P.hurt=0.3;
-  const who=NET.players[from]?NET.players[from].name:'A squadmate'; msg(`${who} got you back up`); nsend({t:'msg',text:`${S.name||'Nomad'} is back up`}); sfxExtracted();
+  const who=NET.players[from]?NET.players[from].name:'Someone'; msg(`${who} got you back up${NET.players[from]&&!isMate(from)?' (a stranger, with their own med kit)':''}`); nsend({t:'msg',text:`${S.name||'Nomad'} is back up`}); sfxExtracted();
 }
 function reviveTarget(){
   if(!NET.on||P.dead||P.down) return null; let best=null,bd=2.3;
-  for(const id of mateIds()){ const q=NET.players[id], st=q.st; if(!st.down||st.dead) continue; const gp=q.g?q.g.position:st; const d=Math.hypot(gp.x-P.pos.x,gp.z-P.pos.z); if(d<bd){ bd=d; best=id; } }
+  for(const id in NET.players){ const q=NET.players[id], st=q.st; if(!st||!st.down||st.dead) continue; const gp=q.g?q.g.position:st; const d=Math.hypot(gp.x-P.pos.x,gp.z-P.pos.z); if(d<bd){ bd=d; best=id; } }
   return best;
 }
 function updRevive(dt){
-  const t=reviveTarget(); const holding=P.keys.KeyF&&!R.invOpen&&t;
+  // hold G while down to give up
+  if(P.down&&P.keys.KeyG){ R.giveUpT=(R.giveUpT||0)+dt; if(R.giveUpT>1.5){ R.giveUpT=0; reallyDie(P.down.cause||'Gave up'); return; } } else R.giveUpT=0;
+  const t0=reviveTarget(); const t=t0&&(isMate(t0)||reviveKit())?t0:null; const holding=P.keys.KeyF&&!R.invOpen&&t;
   if(holding){ if(!R.rev||R.rev.id!==t){ if(R.rev) nsend({t:'reviving',pid:R.rev.id,on:false}); R.rev={id:t,t:0}; nsend({t:'reviving',pid:t,on:true}); }
-    R.rev.t+=dt; if(R.rev.t>=REVIVE_TIME){ nsend({t:'revive',pid:t}); msg(`You got ${NET.players[t].name} back up`); R.rev=null; P.keys.KeyF=false; } }
+    R.rev.t+=dt; if(R.rev.t>=REVIVE_TIME){ let used=''; if(!isMate(t)){ const k=reviveKit(); if(!k){ R.rev=null; return; } used=ITEMS[k.it.id].name; k.c.items.splice(k.c.items.indexOf(k.it),1); } nsend({t:'revive',pid:t}); msg(`You got ${NET.players[t].name} back up${used?` (used your ${used})`:''}`); R.rev=null; P.keys.KeyF=false; } }
   else if(R.rev){ nsend({t:'reviving',pid:R.rev.id,on:false}); R.rev=null; }
 }
 function addDbox(m,from){
@@ -6476,7 +6571,7 @@ function buildHrimfell(){
   { const fr=mulberry32(7); const rk=[]; for(let k=0;k<3000&&rk.length<420;k++){ const x=(fr()*2-1)*200, z=-880+fr()*1040; const d=hrFree(x,z); if(d<3||d>45) continue; const y=hrMeshY(x,z), sl=Math.abs(hrMeshY(x+2,z)-y)+Math.abs(hrMeshY(x,z+2)-y); if(sl<0.9||sl>2.2) continue; rk.push([x,y,z,0.9+fr()*1.6]); }
     const im=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1,0),MC(0x5b636b),rk.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
     rk.forEach(([x,y,z,s0],i)=>{ e.set(fr()*3,fr()*3,fr()*3); q.setFromEuler(e); sc.set(s0*1.3,s0*0.8,s0); ps.set(x,y-s0*0.4,z); m4.compose(ps,q,sc); im.setMatrixAt(i,m4); }); im.frustumCulled=false; scene.add(im); }
-  const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
+  R.treePts=trees; const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
   trees.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); });
   for(const im of [tM,cM,c2M]){ im.frustumCulled=false; scene.add(im); } R.ray.push(tM);
   // start gate at the summit
@@ -6567,7 +6662,7 @@ function buildStorvidda(){
       const s0=0.8+fr()*0.7; trees.push([x,y-0.2,z,s0]); T.obs.push({x,z,r:0.45,y,h:6,name:'a tree'}); R.cols.push({x0:x-0.35,x1:x+0.35,z0:z-0.35,z1:z+0.35,y0:y,y1:y+6,terrain:true}); } }
   for(const pr of TD_CFG.props){ if(pr.t==='tree'){ const x=+pr.x||0, z=+pr.z||0, y=tdTerrain(x,z); trees.push([x,y-0.2,z,1.1]); T.obs.push({x,z,r:0.45,y,h:6,name:'a tree'}); R.cols.push({x0:x-0.35,x1:x+0.35,z0:z-0.35,z1:z+0.35,y0:y,y1:y+6,terrain:true}); } }
   { const trunkG=new THREE.CylinderGeometry(0.22,0.3,2.2,6), coneG=new THREE.ConeGeometry(1.5,3.2,7), cone2=new THREE.ConeGeometry(1.1,2.4,7);
-    const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
+    R.treePts=trees; const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
     trees.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); });
     for(const im of [tM,cM,c2M]){ im.frustumCulled=false; scene.add(im); } R.ray.push(tM); }
   { const fr=mulberry32(7); const rk=[]; for(let k=0;k<6000&&rk.length<Math.round(380*TD_CFG.rocks);k++){ const x=(fr()*2-1)*(TD.B-6), z=(fr()*2-1)*(TD.B-6); let ok=true; for(const p of TD_PADS){ if(Math.hypot(x-p.x,z-p.z)-p.r<(p.kind==='zone'?6:4)){ ok=false; break; } } if(!ok) continue;
@@ -7049,7 +7144,7 @@ function buildSkerries(){
   // trees on the hilly islands
   const trees=[]; { const fr=mulberry32(77); for(let k=0;k<30000&&trees.length<2200;k++){ const x=(fr()*2-1)*SJ.B, z=(fr()*2-1)*SJ.B; const hit=skIsland(x,z); if(!hit) continue; const [I,d]=hit; if(I.base&&(d<0.78||Math.abs(x-I.x)<60)) continue; const y=skRaw(x,z); if(y<2) continue; const sl=Math.abs(skRaw(x+2,z)-y)+Math.abs(skRaw(x,z+2)-y); if(sl>2.2) continue; if(fr()>0.5+fbm(x/120,z/120,2)) continue; if(I.flat&&d<I.fr+0.05) continue; trees.push([x,y-0.2,z,0.8+fr()*0.7]); R.cols.push({x0:x-0.35,x1:x+0.35,z0:z-0.35,z1:z+0.35,y0:y,y1:y+6,terrain:true}); } }
   { const trunkG=new THREE.CylinderGeometry(0.22,0.3,2.2,6), coneG=new THREE.ConeGeometry(1.5,3.2,7), cone2=new THREE.ConeGeometry(1.1,2.4,7);
-    const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
+    R.treePts=trees; const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),trees.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),trees.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),trees.length); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
     trees.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); });
     for(const im of [tM,cM,c2M]){ im.frustumCulled=false; scene.add(im); } R.ray.push(tM); }
   // the two air bases: runway along z, apron and buildings on the seaward side
@@ -7246,7 +7341,7 @@ function buildKaldfjord(){
   const trees=[]; { const fr=mulberry32(77); for(let k=0;k<70000&&trees.length<9500;k++){ const x=(fr()*2-1)*(KF.B-8), z=(fr()*2-1)*(KF.B-8); const dens=fbm(x/200+4,z/200,3); if(fr()>(dens+0.3)) continue; if(!padOk(x,z,7)) continue;
       const y=kfTerrain(x,z), sl=Math.abs(kfTerrain(x+2,z)-y)+Math.abs(kfTerrain(x,z+2)-y); if(sl>1.6) continue; const s0=0.8+fr()*0.7; trees.push([x,y-0.2,z,s0]); T.obs.push({x,z,r:0.45,y,h:6,name:'a tree'}); R.cols.push({x0:x-0.35,x1:x+0.35,z0:z-0.35,z1:z+0.35,y0:y,y1:y+6,terrain:true}); } }
   { const trunkG=new THREE.CylinderGeometry(0.22,0.3,2.2,6), coneG=new THREE.ConeGeometry(1.5,3.2,7), cone2=new THREE.ConeGeometry(1.1,2.4,7); const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
-    const made=kfChunked(trees,240,pts=>{ const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),pts.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),pts.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),pts.length);
+    R.treePts=trees; const made=kfChunked(trees,240,pts=>{ const tM=new THREE.InstancedMesh(trunkG,MC(0x4a3424),pts.length), cM=new THREE.InstancedMesh(coneG,MC(0x2a4a34),pts.length), c2M=new THREE.InstancedMesh(cone2,MC(0x36583e),pts.length);
       pts.forEach(([x,y,z,s0],i)=>{ sc.set(s0,s0,s0); ps.set(x,y+1.1*s0,z); m4.compose(ps,q,sc); tM.setMatrixAt(i,m4); ps.set(x,y+3.2*s0,z); m4.compose(ps,q,sc); cM.setMatrixAt(i,m4); ps.set(x,y+4.8*s0,z); m4.compose(ps,q,sc); c2M.setMatrixAt(i,m4); }); tM.userData.trunk=true; return [tM,cM,c2M]; });
     for(const m of made) if(m.userData.trunk) R.ray.push(m); }
   // boulders
@@ -7350,10 +7445,10 @@ function updHUD(dt){
     <div><div class="t"><span>Stamina</span><span>${P.sneak?'sneaking':P.crouch?'crouched':''}</span></div><div class="bar"><i style="width:${P.stam}%;background:var(--dim)"></i></div></div>`;
   const w=curW();
   if(w){ const d=ITEMS[w.id], ws=wstats(w); $('#weph').innerHTML=`<div class="wn">${esc(d.name)} · ${esc(ITEMS[w.ammo].short)}${d.auto?(P.auto?' · auto':' · semi'):''}</div><div class="am">${w.mag}<small> / ${ws.magSize}</small></div><div class="wn">Reserve ${CALS[d.cal].reduce((s,a)=>s+ammoCount(a),0)}</div>`; }
-  else $('#weph').innerHTML='<div class="wn">Fists · click to punch</div><div class="am">—</div>';
-  const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr;
+  else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; }
+  const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr; R.nearTree=(!R.invOpen&&!P.dead&&!c&&!dr)?nearTree():null;
   const rt=(!R.invOpen&&!R.rev)?reviveTarget():null; const rp=R.airMap?flyPrompt():R.sleds?ridePrompt():'';
-  $('#prompt').innerHTML=rp?rp:(rt?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${c?' · ':''}`:'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
+  $('#prompt').innerHTML=R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
   let center='';
   if(R.exT>0) center=`<div class="big">Extracting ${((R.exNeed||7)-R.exT).toFixed(1)}</div>`;
   else if(R.heli&&R.heli.phase==='in') center=`<div style="color:var(--ok)">Inbound to ${esc((SK_LZ.find(l=>l.x===R.heli.lx)||{}).name||'the landing zone')} · ${Math.max(0,Math.ceil(R.heli.T-R.heli.t))} s · Space jumps out</div>`;
@@ -7363,7 +7458,7 @@ function updHUD(dt){
   else if(P.reloadT>0&&w) center=`<div>Reloading</div><div class="bar"><i style="width:${(1-P.reloadT/ITEMS[w.id].reload)*100}%"></i></div>`;
   else if(P.temp<20) center=`<div style="color:var(--bad)">Freezing. Get indoors or near a heater.</div>`;
   else if(P.dead&&!R.spec&&!R.recap) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
-  if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. A squadmate can hold F to revive you.'}</div>`;
+  if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. Anyone can hold F to get you up (a stranger needs a med kit). Hold G to give up.'}</div>`;
   if(R.rev&&NET.players[R.rev.id]) center=`<div>Reviving ${esc(NET.players[R.rev.id].name)}</div><div class="bar"><i style="width:${R.rev.t/REVIVE_TIME*100}%"></i></div>`;
   $('#center').innerHTML=center;
 }
@@ -7474,7 +7569,7 @@ function loop(now){
     if(R.endAt) R.timeLeft=(R.endAt-performance.now())/1000; else R.timeLeft-=dt;
     for(const w of [120,60,30]) if(tl0>w&&R.timeLeft<=w){ msg(`${w>=60?w/60+' minute'+(w>60?'s':''):w+' seconds'} left${R.dm?'':': get to an extract or lose everything you carry'}`); sfxBeep(); setTimeout(sfxBeep,180); }
     if(R.timeLeft<=0){ endRaid(P.dead?'kia':'mia',P.dead?R.cause:'The raid timer ran out'); return; }
-    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; doorsTick(dt); dropsTick(); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
+    updHelis(dt); updEvents(dt); updatePlayer(dt); if(!R||R.over) return; doorsTick(dt); dropsTick(); cutTick(dt); gpsTick(dt); charSoundsTick(dt); raidMusicTick(dt); goalsTick(dt);
     R.tgts=targets(); if(!NET.on||NET.host) aiTick(dt); for(const e of R.enemies) updEnemy(e,dt); updDrones(dt); if(R.boss&&(!NET.on||NET.host)) updBoss(dt); updMortars(dt); if(R.airMap) updAir(dt); netTick(dt);
     updFx(dt); updSnow(dt); updCulling(dt); updExtract(dt); if(!R||R.over) return;
     if(R.invOpen){ revealTick(dt); if(R.dirty&&!drag){ R.dirty=false; renderRaidInv(); } }
@@ -7517,7 +7612,7 @@ addEventListener('keydown',e=>{
     case 'KeyV': if(R.airMap&&R.fly){ OPTS.chase=!OPTS.chase; saveOpts(); R.stick={x:0,y:0}; if(R.fly.seat===0){ const pl=R.planes[R.fly.i]; if(pl){ planeAxes(pl); P.yaw=Math.atan2(-_pf.x,-_pf.z); P.pitch=Math.asin(clamp(_pf.y,-1,1)); } } msg(OPTS.chase?'Chase camera: the plane flies toward where you point. V for the cockpit.':'Cockpit: the mouse is your stick, A/D rudder. V for the chase camera.'); } break;
     case 'Space': if(P.crouch) P.crouch=false; else P.jumpReq=true; break;
     case 'KeyX': if(R.airMap&&R.fly&&R.planes[R.fly.i]&&!R.planes[R.fly.i].onG) bailOut(); break;
-    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
+    case 'KeyE': { if(R.airMap&&airKey()) break; if(R.sleds&&rideKey()) break; if(!R.near&&!R.nearDoor&&R.nearTree!=null){ startCut(R.nearTree); break; } if(R.nearDoor&&!R.near){ doorUse(R.nearDoor); break; } const c=R.near||nearestCont(); if(c) openInv(c); break; }
     case 'Digit4': if(R.airMap&&R.fly){ seatSwap(3); break; } hotUse(d=>d.med==='bandage'); break;
     case 'Digit5': if(R.airMap&&R.fly){ seatSwap(4); break; } hotUse(d=>d.med==='splint'); break;
     case 'Digit6': hotUse(d=>d.med==='heal'); break;

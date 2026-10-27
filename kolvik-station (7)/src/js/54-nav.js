@@ -136,7 +136,7 @@ function enemyShoot(e,t,dist){
   if(t.id==='me'){ if(hits) for(let i=0;i<hits;i++) playerHit(dmg,am.pen,e.k.name,null,e.pos); else { if(dist<40) sfxWhizz(); if(dist<70) hitDir(e.pos.x,e.pos.z,true); } }
   else if(hits) nsend({t:'eshot',pid:t.id,hits,dmg,pen:am.pen,name:e.k.name,x:e.pos.x,z:e.pos.z,gun:e.gun.id});
 }
-function hearShot(x,z,radius){ if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
+function hearShot(x,z,radius){ radius*=Math.sqrt((R&&R.hear)||1); if(!NET.on||NET.host) aiHeardShot(x,z,radius); for(const e of R.enemies){ if(e.dead||e.sees) continue; const d=Math.hypot(e.pos.x-x,e.pos.z-z); if(d<radius){ e.state='combat'; e.lastSeen={x:x+rr(-5,5),z:z+rr(-5,5)}; e.lostT=0; } } }
 function armorRes(a,dmg,pen){ const d=ITEMS[a.id]; const ratio=a.dur/d.dur; const eff=d.cls*10*(0.5+0.5*ratio); const chance=pen>=eff?0.92:Math.pow(pen/eff,2.2)*0.85; const through=rand()<chance; a.dur=Math.max(0,a.dur-(pen/10+(through?0.6:1.4))*(dmg/40)); return through?{d:dmg*(1-0.07*d.cls),pen:true}:{d:dmg*0.12+2,pen:false}; }
 function hitEnemy(e,part,am,pt,by){
   { const sh=by?R.tgts.find(t=>t.id===by):null; e.lastHitFrom=sh?{x:sh.x,z:sh.z}:{x:P.pos.x,z:P.pos.z}; bodyHit(e.rig,e.lastHitFrom.x,e.lastHitFrom.z,part); }

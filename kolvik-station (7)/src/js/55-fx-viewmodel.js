@@ -33,7 +33,12 @@ function buildGun(id,w,o={}){
   const glove=(S&&S.cos)?cosMat(o.gloves||S.cos.fit.gloves):MC(0x3a3a2c);
   const skin=o.skin||(S&&S.cos&&id?gunSkin(id):'w_factory'); if(skin!=='w_factory'&&COSM[skin]){ const A=cosMat(skin); wood=olive=steel=snowM=A; dark=cosMat(skin,'dk'); }
   const B=(w,h,d,x,y,z,m,rx=0)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); b.rotation.x=rx; g.add(b); return b; };
-  if(!id){ B(.09,.08,.1,.1,0,0,glove); B(.09,.08,.1,-.14,-.02,.06,glove); g.userData.fists=true; return g; }
+  if(!id){ B(.09,.08,.1,.1,0,0,glove); B(.09,.08,.1,-.14,-.02,.06,glove); g.userData.fists=true;
+    // a shiv or spear in the right hand (47-melee.js)
+    const mi=o.melee!==undefined?o.melee:(typeof meleeItem==='function'&&P?meleeItem():null);
+    if(mi&&mi.id==='shiv'){ B(.022,.026,.12,.1,.02,.0,MC(0x4a3424)); B(.016,.016,.16,.1,.02,-.14,MC(0xc8a676)); B(.008,.008,.04,.1,.02,-.24,MC(0xe8d4a8)); }
+    if(mi&&mi.id==='spear'){ B(.028,.028,1.5,.1,.02,-.45,MC(0x7a5032)); B(.03,.03,.04,.1,.02,-.1,MC(0x3a2a1a)); B(.02,.02,.22,.1,.02,-1.3,MC(0xc8a676)); g.userData.spear=true; }
+    return g; }
   let muz=-0.3;
   const att=(w&&w.att)||{}; const geo=GUNGEO[id]; const pt={}; // moving parts: mag, slide, pump, bolt, and the two hands
   if(id==='makar'){ pt.slide=B(.035,.055,.17,0,0,-.06,dark); B(.03,.09,.04,0,-.06,.01,dark,.2); pt.mag=B(.024,.07,.03,0,-.072,.013,steel,.2); muz=-.15; }
@@ -95,7 +100,7 @@ const RETICLES={
 };
 function scopeSvg(){ let dots=''; for(const v of [-24,-16,-8,8,16,24]) dots+=`<circle cx="${v}" cy="0" r=".9"/><circle cx="0" cy="${v}" r=".9"/>`; return `<svg viewBox="-100 -100 200 200" class="scopesvg"><g fill="none" stroke="#000"><path d="M-100 0H100M0 -100V100" stroke-width=".35"/><path d="M-100 0H-32M32 0H100M0 32V100M0 -100V-32" stroke-width="2.4"/></g><g fill="#000">${dots}</g><circle r=".7" fill="#d4241c"/></svg>`; }
 function setReticle(kind){ if(!R||R.ret===kind) return; R.ret=kind; const el=$('#reticle'); el.hidden=!kind; el.innerHTML=kind?RETICLES[kind]:''; $('#prismRing').hidden=kind!=='prism'; }
-function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists')+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
+function syncVM(){ const w=curW(); const id=w?w.id:null; const key=(w?(w.uid+'|'+Object.values(w.att||{}).map(a=>a?a.id:'').join(',')+'|'+gunSkin(w.id)):'fists'+((meleeItem()||{}).uid||''))+'|'+(S.cos?S.cos.fit.gloves:''); if(key===vmUid&&vmGun) return; if(vmGun){ vmScene.remove(vmGun); vmGun.traverse(o=>o.geometry&&o.geometry!==FXGEO&&o.geometry.dispose()); } vmGun=buildGun(id,w); vmScene.add(vmGun); vmUid=key; }
 
 // guns in other people's hands: the same model as your own first-person gun (factory finish, no hands), merged into one
 // mesh per material and shared, so a raid full of armed scavs costs a few draw calls each

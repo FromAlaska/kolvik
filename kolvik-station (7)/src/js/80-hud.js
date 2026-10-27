@@ -23,10 +23,10 @@ function updHUD(dt){
     <div><div class="t"><span>Stamina</span><span>${P.sneak?'sneaking':P.crouch?'crouched':''}</span></div><div class="bar"><i style="width:${P.stam}%;background:var(--dim)"></i></div></div>`;
   const w=curW();
   if(w){ const d=ITEMS[w.id], ws=wstats(w); $('#weph').innerHTML=`<div class="wn">${esc(d.name)} · ${esc(ITEMS[w.ammo].short)}${d.auto?(P.auto?' · auto':' · semi'):''}</div><div class="am">${w.mag}<small> / ${ws.magSize}</small></div><div class="wn">Reserve ${CALS[d.cal].reduce((s,a)=>s+ammoCount(a),0)}</div>`; }
-  else $('#weph').innerHTML='<div class="wn">Fists · click to punch</div><div class="am">—</div>';
-  const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr;
+  else { const mi=meleeItem(); $('#weph').innerHTML=mi?`<div class="wn">${esc(ITEMS[mi.id].name)} · click to strike</div><div class="am">${mi.wear??ITEMS[mi.id].wear}<small> hits left</small></div>`:'<div class="wn">Fists · click to punch</div><div class="am">—</div>'; }
+  const c=(!R.invOpen&&!P.dead)?nearestCont():null; R.near=c; const dr=(!R.invOpen&&!P.dead&&!c)?lockNear():null; R.nearDoor=dr; R.nearTree=(!R.invOpen&&!P.dead&&!c&&!dr)?nearTree():null;
   const rt=(!R.invOpen&&!R.rev)?reviveTarget():null; const rp=R.airMap?flyPrompt():R.sleds?ridePrompt():'';
-  $('#prompt').innerHTML=rp?rp:(rt?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${c?' · ':''}`:'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
+  $('#prompt').innerHTML=R.cutting?`Cutting a branch… ${Math.round(R.cutting.t/CUT.time*100)}%`:(!rp&&!c&&!dr&&R.nearTree!=null&&!rt)?`<kbd>E</kbd>Cut a branch`:rp?rp:(rt?(isMate(rt)||reviveKit()?`<kbd>F</kbd>Hold to revive ${esc(NET.players[rt].name)}${isMate(rt)?'':` (uses your ${esc(ITEMS[reviveKit().it.id].short)})`}${c?' · ':''}`:`<span class="muted">You need a med kit to revive ${esc(NET.players[rt].name)}</span>${c?' · ':''}`):'')+(c?`<kbd>E</kbd>${c.mate?'Take their gear':c.drop?'Pick up':c.body?'Search body':c.opened?'Open':'Search'} · ${esc(c.name)}`:dr?doorPrompt(dr):'');
   let center='';
   if(R.exT>0) center=`<div class="big">Extracting ${((R.exNeed||7)-R.exT).toFixed(1)}</div>`;
   else if(R.heli&&R.heli.phase==='in') center=`<div style="color:var(--ok)">Inbound to ${esc((SK_LZ.find(l=>l.x===R.heli.lx)||{}).name||'the landing zone')} · ${Math.max(0,Math.ceil(R.heli.T-R.heli.t))} s · Space jumps out</div>`;
@@ -36,7 +36,7 @@ function updHUD(dt){
   else if(P.reloadT>0&&w) center=`<div>Reloading</div><div class="bar"><i style="width:${(1-P.reloadT/ITEMS[w.id].reload)*100}%"></i></div>`;
   else if(P.temp<20) center=`<div style="color:var(--bad)">Freezing. Get indoors or near a heater.</div>`;
   else if(P.dead&&!R.spec&&!R.recap) center=`<div class="big" style="color:var(--bad)">Dead</div>`;
-  if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. A squadmate can hold F to revive you.'}</div>`;
+  if(P.down) center=`<div class="big" style="color:var(--bad)">Down · ${Math.ceil(P.down.t)}</div><div>${P.down.by?`${esc(P.down.by)} is reviving you…`:'Crawl to cover. Anyone can hold F to get you up (a stranger needs a med kit). Hold G to give up.'}</div>`;
   if(R.rev&&NET.players[R.rev.id]) center=`<div>Reviving ${esc(NET.players[R.rev.id].name)}</div><div class="bar"><i style="width:${R.rev.t/REVIVE_TIME*100}%"></i></div>`;
   $('#center').innerHTML=center;
 }

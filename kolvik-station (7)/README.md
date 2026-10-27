@@ -138,6 +138,52 @@ never closed, and brings the hideout back (and reports it in the admin Log tab).
 carry the shooter's position and weapon, so the hit direction and the death card are right for everyone, not just
 the host.
 
+## Time of year and weather
+
+Four times of year go round every 8 real days (two days each), the same for everyone on the server. The current one
+and the next show at the top of the Deploy tab, and every map card and briefing shows both the time of year and the
+weather. (These are separate from leaderboard seasons, which wipe progress.)
+
+| Time of year | Effect |
+|---|---|
+| Polar night | Every raid is dark (light 60%), 25% colder, everyone sees 15% less far; aurora and still frost more likely |
+| Thaw | 15% milder but slippery underfoot (slower to start and stop); sleet and ice fog more likely, blizzards less |
+| Midnight sun | Bright (light +22%), 30% milder, everyone (enemies too) sees 20% farther; clear skies and still frost common |
+| Storm season | 10% colder, wind covers footsteps (enemies hear 15% less); windstorms and blizzards common |
+
+New weather, on every outdoor map, on top of overcast, clear, blizzard and aurora:
+
+- **Freezing sleet:** heavy and fast precipitation, 45% colder, footing is slippery, enemies hear you 20% less.
+- **Ice fog:** the thickest fog in the game (sight halved) and sound carries: enemies hear you 30% farther.
+- **Windstorm:** 60% colder, gusts push your aim (more when aiming down sights), sprinting tires you 35% faster, the
+  wind is loud and covers your steps (enemies hear 45% less).
+- **Still frost:** clear and very cold, almost no fog, and dead quiet: footsteps and shots carry 40% farther.
+
+## Shivs and spears
+
+On maps with trees (Storvidda, Kaldfjord, Skjærgård and Hrimfell), walk up to a tree and press **E** to cut a
+branch: it takes 2.5 seconds, makes some noise, and each tree gives two. Click a branch in your inventory to carve it:
+
+- **Shiv** (1 branch): 52 damage, 1.7 m reach, quick (0.42 s), breaks after 15 hits.
+- **Spear** (2 branches): 78 damage, 2.7 m reach, slow (0.85 s), breaks after 25 hits.
+
+Carry one anywhere (pockets, rig, pack or pouch) and it replaces your fists on key **3**; the best one you have is used,
+the hand shows it, and the weapon panel counts the hits left. Each hit wears it down; it breaks when worn out. They
+work online against players too. Crafting also works at the hideout from branches in your stash.
+
+## Reviving anyone
+
+Online (not in the deathmatch modes), you go **down** instead of dying whenever anyone else in the raid is still up,
+not just your squad. Anyone can hold **F** next to you to get you back up: squadmates for free, anyone else by using
+one of their own med kits (the cheapest IFAK, combat medkit or field kit they carry). Without one, the prompt says so.
+While down you can be finished off, and you can hold **G** to give up. If you bleed out, whoever put you down still
+gets the kill.
+
+## Lobby ready-ups
+
+Changing the map, mode, difficulty or AI planes no longer un-readies everyone, and neither does switching teams. If
+the new map has an entry fee you can't pay, your game un-readies you and says why.
+
 ## Online fixes (0.19.1)
 
 - **Guns in people's hands** are the real models now. Scavs, bosses and other players used to hold the same plain
@@ -406,8 +452,8 @@ whole brain costs about a third of a millisecond per frame with a dozen alert en
 
 ## Drones
 
-Recon quadcopters patrol Kolvik, Whiteout, Skarsvik, Storvidda and Kaldfjord Reach (one to five, more on harder
-difficulties). They never shoot: they look, and they tell. A drone that sees you holds off about 26 m, circles, and
+Recon quadcopters patrol Kolvik (2), Whiteout (2), Skarsvik (3), Storvidda (3), Fort Ravnskar (1) and Kaldfjord Reach
+(7), on Normal; more on harder difficulties, fewer on Recruit. They never shoot: they look, and they tell. A drone that sees you holds off about 26 m, circles, and
 radios your position every second; ground groups nearby send a couple of people (see *Who knows what*). At most two
 drones go after one person; the rest keep searching.
 
@@ -1005,7 +1051,7 @@ browsers still allow it, but a few do not.
     `22-tasks` · `23-seasons` · `24-save` · `25-goals` (goals, titles, collection log) · `30-music` · `31-sfx` · `32-music-slavic` (the Russian instruments and tracks) · `33-music-chant` (the church pieces) · `34-voices` (footsteps, voices, positional sound) · `35-raid-music` · `40-hub` · `41-deploy` (conditions rotation, Deploy tab, lobbies
     and teams) · `42-leaderboard-maps` (leaderboard, overview maps) · `50-engine` (renderer, textures, collision, building helpers) · `51-maps`
     (Kolvik, Whiteout, Vault, Skarsvik, Ironfjord, Ravnskar) · `52-helis-drops` · `53-enemies` · `54-nav` ·
-    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `70-hrimfell` (also the snowmobile physics and the
+    `55-fx-viewmodel` (gun models and hands) · `56-vm-anim` (first-person animation) · `57-ai` (enemy guesswork, tactics and learning) · `58-body` (how bodies move) · `59-drones` (recon drones and their fly brain) · `60-raid` · `61-player` · `62-squad` · `63-locks` (locked rooms, keys, lockpicks) · `64-gps` (map, GPS, minimap) · `65-drops` (dropping and picking up) · `66-recap` (the death screen and keeping the secure pouch saved) · `67-spawn` (insertion cover and the fair start) · `68-vehicles` (running people over) · `43-recroom` (rec-room games and party rounds) · `44-trade` (trading with friends) · `45-tips` (tab tips and the guest bar) · `46-deathmatch` (team deathmatch and free for all) · `47-melee` (branches, shivs, spears) · `48-year` (time of year) · `70-hrimfell` (also the snowmobile physics and the
     world config) · `71-storvidda` · `72-skjaergard` (aircraft) · `73-boss` · `74-kaldfjord` (Kaldfjord Reach) · `80-hud` · `81-loop-input` · `90-net` ·
     `91-accounts` · `99-boot`
 - `build.js` – `node build.js` assembles `src/` into `game.html`, and checks it: a syntax error in a file is reported

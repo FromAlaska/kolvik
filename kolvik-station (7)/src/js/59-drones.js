@@ -22,7 +22,7 @@
    most a couple of people. You can hear them (a buzz), see their lights, and shoot them down (they drop parts). A
    radio jammer in your gear cuts their link within 40 m: they lose you and drift. */
 const DRONE={hp:45, alt:15, cruise:7, surge:11, sight:62, standoff:26, report:1.0, battery:[240,360], recharge:35, leash:240,
-  count:{kolvik:1,whiteout:1,skarsvik:2,storvidda:2,kaldfjord:5}};
+  count:{kolvik:2,whiteout:2,skarsvik:3,storvidda:3,ravnskar:1,kaldfjord:7}};
 const FLY={n:16, tau:0.08, exc:2, inh:0.3, land:0.12, pflShift:2, turnGain:3.2, loomTh:1, levy:1.6};
 const _th=i=>i/FLY.n*Math.PI*2;                            // preferred direction of column / ring neuron i
 const _wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));

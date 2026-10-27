@@ -23,8 +23,8 @@ function dmgPart(part,amt,cause){
   else spread(amt*0.7,cause);
 }
 function spread(amt,cause){ const alive=PARTS.filter(p=>P.hp[p]>0); if(!alive.length) return die(cause); const each=amt/alive.length; for(const p of alive){ P.hp[p]-=each; if(P.hp[p]<=0){ P.hp[p]=0; if(p==='head'||p==='thorax') return die(cause); } } }
-function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&matesUp()) return goDown(cause); reallyDie(cause); }
-function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { if(NET.on&&R.lastHitBy&&R.t-R.lastHitT<15) nsend({t:'pdied',by:R.lastHitBy}); if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
+function die(cause){ if(P.dead) return; if(!P.down&&!R.dm&&othersUp()) return goDown(cause); reallyDie(cause); }
+function reallyDie(cause){ if(P.dead) return; if(P.down){ P.down=null; nsend({t:'dboxgone',cid:'d'+NET.id}); } P.dead=true; R.cause=cause; sfxDeath(); windSet(0); if(R.dm){ nsend({t:'pdied',by:R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:null}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } else { { const by=R.lastHitBy&&R.t-R.lastHitT<15?R.lastHitBy:(R.downBy||null); if(NET.on&&by) nsend({t:'pdied',by}); } if(NET.on){ nsend({t:'body',cid:'b'+NET.id+'-'+(R.bodyN++),x:P.pos.x,z:P.pos.z,name:(S.name||'Nomad')+' (player)',items:JSON.parse(JSON.stringify(myBodyItems()))}); nsend({t:'msg',text:`${S.name||'Nomad'} ${cause.toLowerCase()}`}); } } R.deadT=R.dm?0.8:1.6; P.trigger=false; $('#deathfade').style.opacity=0.85; if(R.invOpen) closeInv(true); }
 function myBodyItems(){ const out=[]; for(const sl of SLOTS){ const it=S.eq[sl]; if(!it) continue; if(it.items){ for(const x of it.items){ delete x.hid; out.push(x); } it.items=[]; } delete it.hid; out.push(it); } for(const x of S.eq.pockets.items){ delete x.hid; out.push(x); } return out.map(x=>reUid(JSON.parse(JSON.stringify(x)))); }
 function totalHP(){ return PARTS.reduce((s,p)=>s+P.hp[p],0); }
 function fire(w){
@@ -51,14 +51,17 @@ function fire(w){
   if(ws.noise>=1) flashAt(camera.position.x,camera.position.y,camera.position.z,true);
   sfxShot(w.id,0,ws.noise); const nr=(w.id==='makar'?40:65)*ws.noise; hearShot(P.pos.x,P.pos.z,nr); if(NET.on&&!NET.host) nsend({t:'shot',x:P.pos.x,z:P.pos.z,r:nr});
 }
+// fists, or the shiv or spear you carry (47-melee.js): returns how long until the next swing
 function punch(){
+  const mi=meleeItem(), md=mi?ITEMS[mi.id]:null;
   P.kick=1; P.punchT=1; camera.updateMatrixWorld();
-  _dir.set(0,0,-1).applyQuaternion(camera.quaternion); ray.set(camera.position,_dir); ray.far=2.1;
-  const h=ray.intersectObjects(R.targets,false)[0]; if(!h) { sfxNoise(0.08,900,0.12); return; }
-  const ud=h.object.userData; const am={dmg:34,pen:6}; sfxNoise(0.1,500,0.3);
-  if(ud.enemy&&!ud.enemy.dead) hitEnemy(ud.enemy,ud.part,am,h.point);
-  else if(ud.player){ if(isMate(ud.player)) friendlyFire(ud.player,h.point); else { puff(h.point,0x8a1010,5,1.2); hitmark(ud.part==='head'); nsend({t:'phit',pid:ud.player,part:ud.part,ammo:'fist'}); } }
-  hearShot(P.pos.x,P.pos.z,4);
+  _dir.set(0,0,-1).applyQuaternion(camera.quaternion); ray.set(camera.position,_dir); ray.far=md?md.reach:2.1;
+  const h=ray.intersectObjects(R.targets,false)[0]; if(!h) { sfxNoise(0.08,md?1300:900,0.12); return md?md.rate:0.5; }
+  const ud=h.object.userData; const am=md?{dmg:md.dmg,pen:md.pen,id:mi.id}:{dmg:34,pen:6}; sfxNoise(0.1,md?800:500,0.3); let hit=false;
+  if(ud.enemy&&!ud.enemy.dead){ hitEnemy(ud.enemy,ud.part,am,h.point); hit=true; }
+  else if(ud.player){ if(isMate(ud.player)) friendlyFire(ud.player,h.point); else { puff(h.point,0x8a1010,5,1.2); hitmark(ud.part==='head'); nsend({t:'phit',pid:ud.player,part:ud.part,ammo:md?mi.id:'fist'}); hit=true; } }
+  if(hit&&mi) meleeWear(mi);
+  hearShot(P.pos.x,P.pos.z,4); return md?md.rate:0.5;
 }
 function ammoCount(id){ let n=0; for(const c of playerConts()) for(const it of c.items) if(it.id===id) n+=it.n; return n; }
 function takeAmmoFrom(conts,w){
@@ -122,6 +125,7 @@ function pmAccel(tx,tz,onG,dt){
   else if(want<cur-0.05) a=(tx*P.vx+tz*P.vz)<0?M.turn:M.stop;
   else if((tx*P.vx+tz*P.vz)<0) a=M.turn;
   else a=cur>3.6?M.sprintAcc:M.acc;
+  if(onG&&!P.para) a*=R.slip||1; // sleet and slush: slower to get going and to stop
   let dx=tx-P.vx, dz=tz-P.vz; const m=Math.hypot(dx,dz), lim=a*dt; if(m>lim){ dx*=lim/m; dz*=lim/m; }
   P.vx+=dx; P.vz+=dz; }
 function pmLand(v){ const C=P.cam; C.vy-=v*PMOVE.land.dip*8; if(v>PMOVE.land.slowAt) P.landT=0.35; }
@@ -161,7 +165,7 @@ function updatePlayer(dt){
   P.sprint=can&&!down&&(k.ShiftLeft||k.ShiftRight)&&fz<0&&!P.crouch&&P.adsT<0.3&&!legs&&P.stam>4&&!P.using&&P.reloadT<=0;
   const onG=P.vy===0;
   let sp=3.5; if(P.sprint) sp=5.9; if(P.crouch) sp=1.9; if(P.sneak&&!P.sprint) sp=Math.min(sp,2.0); if(P.adsT>0.5) sp*=0.6; if(legs) sp*=0.6; if(P.using) sp*=0.5; if(down) sp=0.8; if(P.swim) sp*=0.35; if(P.para) sp=4; if(P.landT>0){ P.landT-=dt; sp*=0.55; }
-  P.stam=clamp(P.stam+(P.sprint?-17:11)*dt,0,100);
+  P.stam=clamp(P.stam+(P.sprint?-17*(R.windy?1.35:1):11)*dt,0,100);
   let tx=0,tz=0; if(len){ fx/=len; fz/=len; const s=Math.sin(P.yaw), c=Math.cos(P.yaw); tx=(fx*c+fz*s)*sp; tz=(-fx*s+fz*c)*sp; }
   pmAccel(tx,tz,onG,dt);
   { const ox=P.pos.x, oz=P.pos.z; moveCol(P.pos,P.vx*dt,P.vz*dt,0.35,P.y); if(R.free&&R.free(P.pos.x,P.pos.z)>2.5){ P.pos.x=ox; P.pos.z=oz; } }
@@ -173,7 +177,7 @@ function updatePlayer(dt){
   if(R.race&&!P.dead&&P.y<R.terrainBase(P.pos.z)-2.5) sledCrash('Fell into a crevasse');
   }
   if(P.temp<30&&!P.dead){ P.shiverT-=dt; if(P.shiverT<=0){ P.shiverT=2+rand()*2; sfxShiver(); } }
-  windSet(R.map==='vault'?0.02:P.indoor?0.08:(R.map==='whiteout'?0.45:0.28));
+  windSet(R.map==='vault'?0.02:P.indoor?0.08:(R.map==='whiteout'?0.45:0.28)*(R.windy?1.8:R.cond&&R.cond.weather==='calm'?0.35:1));
   P.eye+=((P.dead?0.3:down?0.42:R.ride?1.32:P.crouch?1.08:1.62)-P.eye)*Math.min(1,dt*10);
   // warmth
   const indoor=inIndoor(P.pos), near=R.heaters.some(h=>Math.hypot(h.x-P.pos.x,h.z-P.pos.z)<3.5);
@@ -184,14 +188,14 @@ function updatePlayer(dt){
   P.temp=clamp(P.temp,0,100); P.indoor=indoor; P.nearHeat=near;
   if(P.temp<=0&&!down) spread(2.4*dt,'Froze to death');
   if(!down) for(const p of PARTS) if(P.bleed[p]&&!P.dead) dmgPart(p,1.05*dt,'Bled out');
-  if(down&&!P.dead){ P.down.t-=dt; if(P.down.t<=0) reallyDie('Bled out while down'); else if(!matesUp()) reallyDie(P.down.cause); }
+  if(down&&!P.dead){ P.down.t-=dt; if(P.down.t<=0) reallyDie('Bled out while down'); else if(!othersUp()) reallyDie(P.down.cause); }
   updRevive(dt);
   // weapon
   P.cool-=dt;
   if(P.reloadT>0){ P.reloadT-=dt; if(P.reloadT<=0){ const w=curW(); if(w){ const n=takeAmmoFrom(playerConts(),w); if(R.invOpen) renderRaidInv(); if(!n) msg('Out of ammo.'); } } }
   if(P.using){ P.using.t-=dt; if(P.using.t<=0) finishUse(); }
   const w=curW();
-  if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock){ punch(); P.semiLock=true; P.cool=0.5; } }
+  if(P.trigger&&can&&!P.down&&P.cool<=0&&P.reloadT<=0&&!P.using&&!P.sprint&&!(R.fly&&!R.fly.hand)){ if(w){ const d=ITEMS[w.id]; if((d.auto&&P.auto)||!P.semiLock){ fire(w); P.semiLock=true; P.cool=60/d.rpm; } } else if(!P.semiLock&&!R.cutting){ P.cool=punch()||0.5; P.semiLock=true; } }
   const wantAds=P.adsHeld&&can&&!P.down&&!P.sprint&&!!w&&P.reloadT<=0;
   const ws2=w?wstats(w):null; const ret=ws2?ws2.reticle:null; const adsSp=ws2?ws2.adsSpeed:6;
   P.adsT=clamp(P.adsT+(wantAds?dt*adsSp:-dt*7),0,1);
@@ -200,6 +204,7 @@ function updatePlayer(dt){
   P.kick=Math.max(0,P.kick-dt*9); P.punchT=Math.max(0,(P.punchT||0)-dt*5); P.hurt=Math.max(0,P.hurt-dt*0.9); P.shake=Math.max(0,(P.shake||0)-dt);
   // camera
   let sway=0, swy=0; if(P.temp<30){ const s=(30-P.temp)/30; sway=Math.sin(R.t*11)*0.006*s; swy=Math.cos(R.t*7)*0.005*s; }
+  if(R.windy&&!P.dead){ const gust=Math.max(0,Math.sin(R.t*0.6)*Math.sin(R.t*1.7+1)); sway+=Math.sin(R.t*2.3)*0.006*gust*(P.adsT>0.5?1.4:1); swy+=Math.cos(R.t*1.9)*0.003*gust; } // windstorm gusts push your aim
   if(P.hp.larm<=0||P.hp.rarm<=0){ sway+=Math.sin(R.t*1.7)*0.01; swy+=Math.sin(R.t*1.3)*0.008; }
   const C=pmCamera(sp2,dt); sway+=C.yaw; swy+=C.pitch;
   const sh=(P.shake||0)*0.06;
@@ -209,7 +214,7 @@ function updatePlayer(dt){
   // viewmodel pose
   syncVM();
   if(vmGun){ const scoped=(ret==='scope'||ret==='prism')&&P.adsT>0.85; setReticle(!P.dead&&P.adsT>0.8&&(ret==='dot'||ret==='holo'||(ret==='prism'&&scoped))?ret:null); vmGun.visible=!scoped&&!P.dead&&!P.down&&!(R.fly&&!R.fly.hand); $('#scope').hidden=!(scoped&&ret==='scope');
-    if(vmGun.userData.fists){ const pt=P.punchT||0; const us=P.using?1:0; vmGun.position.set(0.02,-0.22-us*0.2,-0.42+Math.sin(pt*Math.PI)*-0.22); vmGun.rotation.set(Math.sin(P.bob)*0.04,0,0); }
+    if(vmGun.userData.fists){ const pt=P.punchT||0; const us=P.using?1:0; vmGun.position.set(0.02,-0.22-us*0.2-(R.cutting?0.08:0),-0.42+Math.sin((R.cutting?(R.cutting.t*2)%1:pt)*Math.PI)*-(vmGun.userData.spear?0.42:0.22)); vmGun.rotation.set(Math.sin(P.bob)*0.04,0,0); }
     else { const d=ITEMS[w.id]; if(!P.vm){ P.vm=vmNew(); for(const o of [...vmScene.children]) if(o.userData.vmProp) vmScene.remove(o); }
       // everything the hands do lives in 56-vm-anim.js; this hands it what the player is doing
       vmAnimate(vmGun,P.vm,{ads:P.adsT,sightY:vmGun.userData.sightY,sprint:P.sprint,moving:sp2>0.3,bob:P.bob,kick:P.kick,strafe:P.cam.lat,dip:P.cam.y,yaw:P.yaw,pitch:P.pitch,uid:w.uid,id:w.id,
